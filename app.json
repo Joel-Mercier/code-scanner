@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "code-scanner",
+    "name": "Code Scanner",
     "slug": "code-scanner",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,12 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.rapidodevis.codescanner"
     },
     "web": {
       "bundler": "metro",
@@ -33,10 +38,22 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "44d8764c-1348-43ab-9361-42fbf36c9aaf"
+      }
     }
   }
 }
