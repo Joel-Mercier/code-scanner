@@ -3,7 +3,7 @@ import type { TextProps } from "react-native";
 import { StyleSheet, Text } from "react-native";
 
 export type ThemedTextProps = TextProps & {
-	variant?: "default" | "title" | "subtitle" | "link";
+	variant?: "default" | "small" | "title" | "subtitle" | "link";
 };
 
 export function ThemedText({
@@ -19,6 +19,12 @@ const styles = StyleSheet.create({
 		fontFamily: "Inter_400Regular",
 		fontSize: 16,
 		lineHeight: 24,
+		color: Colors.white,
+	},
+	small: {
+		fontFamily: "Inter_400Regular",
+		fontSize: 12,
+		lineHeight: 18,
 		color: Colors.white,
 	},
 	title: {

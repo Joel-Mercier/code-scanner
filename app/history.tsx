@@ -1,5 +1,7 @@
 import { ScannerResultListItem } from "@/components/ScannerResultListItem";
 import { ThemedText } from "@/components/ui/ThemedText";
+import { Colors } from "@/constants/Colors";
+import { Spacings } from "@/constants/Spacings";
 import useScannerResults from "@/stores/scannerResultsStore";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
@@ -7,7 +9,7 @@ import { ArrowLeft } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ScannerResultsScreen() {
+export default function HistoryScreen() {
 	const scannerResults = useScannerResults.use.scannerResults();
 	const router = useRouter();
 	return (
@@ -27,8 +29,8 @@ export default function ScannerResultsScreen() {
 						>
 							<ArrowLeft size={24} color="white" />
 						</Pressable>
-						<ThemedText variant="title">Codes scannés précédemment</ThemedText>
-						<View />
+						<ThemedText variant="title">Historique</ThemedText>
+						<View style={{ width: 24 }} />
 					</View>
 				}
 			/>
@@ -41,10 +43,12 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingVertical: 24,
 		paddingHorizontal: 24,
+		backgroundColor: Colors.background,
 	},
 	headerContainer: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
+		marginBottom: Spacings.lg,
 	},
 });
