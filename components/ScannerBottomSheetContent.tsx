@@ -1,7 +1,12 @@
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
-import type { BarcodeScanningResult, BarcodeType } from "expo-camera";
+import useScannerResults, {
+	type ScannerResult,
+} from "@/stores/scannerResultsStore";
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import type { BarcodeType } from "expo-camera";
 import * as Clipboard from "expo-clipboard";
+import { useRouter } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
 import {
 	Barcode,
@@ -16,7 +21,8 @@ import { Pressable, Share, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ui/ThemedText";
 
 type ScannerResultProps = {
-	currentBarcode: BarcodeScanningResult | null;
+	currentBarcode: ScannerResult | null;
+	bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
 };
 
 const barcodeTypeLabels: Record<BarcodeType, string> = {
@@ -37,8 +43,12 @@ const barcodeTypeLabels: Record<BarcodeType, string> = {
 
 export function ScannerBottomSheetContent({
 	currentBarcode,
+	bottomSheetModalRef,
 }: ScannerResultProps) {
 	const [isCopied, setIsCopied] = useState(false);
+	const router = useRouter();
+	const setCurrentScannerResult =
+		useScannerResults.use.setCurrentScannerResult();
 
 	useEffect(() => {
 		if (isCopied) {
@@ -60,7 +70,9 @@ export function ScannerBottomSheetContent({
 	};
 
 	const handleShowCodePress = () => {
-		console.log(currentBarcode?.data);
+		setCurrentScannerResult(currentBarcode);
+		router.navigate("/code");
+		bottomSheetModalRef.current?.dismiss();
 	};
 
 	const handleCopyPress = async () => {

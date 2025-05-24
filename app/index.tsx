@@ -3,7 +3,11 @@ import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
 import useScannerResults from "@/stores/scannerResultsStore";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+	BottomSheetBackdrop,
+	BottomSheetModal,
+	BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import {
 	Canvas,
 	Group,
@@ -23,7 +27,10 @@ import {
 	Flashlight,
 	FlashlightOff,
 	List,
+	PlusCircle,
+	QrCode,
 	Scan,
+	Slash,
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
@@ -31,8 +38,6 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-	const [currentBarcode, setCurrentBarcode] =
-		useState<BarcodeScanningResult | null>(null);
 	const [torchEnabled, setTorchEnabled] = useState(false);
 	const [overlayVisible, setOverlayVisible] = useState(false);
 	const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -45,6 +50,9 @@ export default function HomeScreen() {
 		useBottomSheetBackHandler(bottomSheetModalRef);
 	const scannerResults = useScannerResults.use.scannerResults();
 	const addScannerResult = useScannerResults.use.addScannerResult();
+	const currentScannerResult = useScannerResults.use.currentScannerResult();
+	const setCurrentScannerResult =
+		useScannerResults.use.setCurrentScannerResult();
 	const router = useRouter();
 	const navigation = useNavigation();
 	const isFocused = navigation.isFocused();
@@ -58,15 +66,14 @@ export default function HomeScreen() {
 	}, []);
 
 	const handleBarcodeScanned = (scanningResult: BarcodeScanningResult) => {
-		console.log(scanningResult);
-		if (!currentBarcode) {
-			setCurrentBarcode(scanningResult);
-			bottomSheetModalRef.current?.present();
+		if (!currentScannerResult) {
 			const scannerResult = {
 				...scanningResult,
 				createdAt: new Date(),
 			};
 			addScannerResult(scannerResult);
+			setCurrentScannerResult(scannerResult);
+			bottomSheetModalRef.current?.present();
 		}
 	};
 
@@ -127,7 +134,6 @@ export default function HomeScreen() {
 					exiting={FadeOut}
 					style={styles.overlay}
 				>
-					{/* <View style={styles.overlayScanner} /> */}
 					<Canvas style={{ width: "100%", height: "100%" }}>
 						<Mask
 							mode="luminance"
@@ -157,7 +163,7 @@ export default function HomeScreen() {
 								width={screenWidth}
 								height={screenHeight}
 								color="black"
-								opacity={0.75}
+								opacity={0.85}
 							/>
 						</Mask>
 					</Canvas>
@@ -187,9 +193,9 @@ export default function HomeScreen() {
 						onPress={() => setTorchEnabled(!torchEnabled)}
 					>
 						{torchEnabled ? (
-							<Flashlight color={Colors.white} size={24} />
-						) : (
 							<FlashlightOff color={Colors.white} size={24} />
+						) : (
+							<Flashlight color={Colors.white} size={24} />
 						)}
 					</Pressable>
 					<Pressable
@@ -203,7 +209,21 @@ export default function HomeScreen() {
 						]}
 						onPress={() => setOverlayVisible(!overlayVisible)}
 					>
-						<Scan color={Colors.white} size={24} />
+						{overlayVisible ? (
+							<>
+								<Scan color={Colors.white} size={24} />
+								<Slash
+									size={24}
+									color={Colors.white}
+									style={{
+										position: "absolute",
+										transform: [{ rotate: "90deg" }],
+									}}
+								/>
+							</>
+						) : (
+							<Scan color={Colors.white} size={24} />
+						)}
 					</Pressable>
 					<Pressable
 						style={({ pressed }) => [
@@ -218,33 +238,60 @@ export default function HomeScreen() {
 						<Camera color={Colors.white} size={24} />
 					</Pressable>
 				</View>
-
-				{scannerResults.length > 0 && (
+				<View>
+					{scannerResults.length > 0 && (
+						<Pressable
+							style={({ pressed }) => [
+								pressed && {
+									backgroundColor: Colors.darkBackgroundPressed,
+									opacity: 0.75,
+								},
+								styles.iconWrapper,
+								{ marginBottom: Spacings.md },
+							]}
+							onPress={() => router.navigate("/history")}
+						>
+							<List color={Colors.white} size={24} />
+						</Pressable>
+					)}
 					<Pressable
+						onPress={() => router.navigate("/new-code")}
 						style={({ pressed }) => [
-							pressed && {
-								backgroundColor: Colors.darkBackgroundPressed,
-								opacity: 0.75,
-							},
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
 							styles.iconWrapper,
 						]}
-						onPress={() => router.navigate("/history")}
 					>
-						<List color={Colors.white} size={24} />
+						<QrCode color={Colors.white} size={24} />
+						<PlusCircle
+							size={16}
+							color={Colors.white}
+							style={{ position: "absolute", bottom: 8, right: 8 }}
+							fill={Colors.darkBackground}
+						/>
 					</Pressable>
-				)}
+				</View>
 			</View>
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
 				onChange={handleSheetPositionChange}
-				onDismiss={() => setCurrentBarcode(null)}
+				onDismiss={() => setCurrentScannerResult(null)}
 				backgroundStyle={{ backgroundColor: Colors.darkBackground }}
 				handleIndicatorStyle={{
 					backgroundColor: "#b3b3b3",
 				}}
+				backdropComponent={(props) => (
+					<BottomSheetBackdrop
+						{...props}
+						appearsOnIndex={0}
+						disappearsOnIndex={-1}
+					/>
+				)}
 			>
 				<BottomSheetView style={styles.bottomSheetContentContainer}>
-					<ScannerBottomSheetContent currentBarcode={currentBarcode} />
+					<ScannerBottomSheetContent
+						currentBarcode={currentScannerResult}
+						bottomSheetModalRef={bottomSheetModalRef}
+					/>
 				</BottomSheetView>
 			</BottomSheetModal>
 		</View>
@@ -287,6 +334,8 @@ const styles = StyleSheet.create({
 		backgroundColor: Colors.darkBackground,
 		alignItems: "center",
 		justifyContent: "center",
+		borderWidth: StyleSheet.hairlineWidth,
+		borderColor: Colors.white,
 	},
 	bottomSheetContentContainer: {
 		padding: 0,

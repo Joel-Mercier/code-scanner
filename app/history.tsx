@@ -33,6 +33,11 @@ export default function HistoryScreen() {
 						<View style={{ width: 24 }} />
 					</View>
 				}
+				ListEmptyComponent={
+					<ThemedText style={{ color: Colors.mutedText, textAlign: "center" }}>
+						Aucun historique
+					</ThemedText>
+				}
 			/>
 		</SafeAreaView>
 	);

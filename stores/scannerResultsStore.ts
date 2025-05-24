@@ -9,6 +9,8 @@ export type ScannerResult = BarcodeScanningResult & {
 };
 interface ScannerResultsStore {
 	scannerResults: ScannerResult[];
+	currentScannerResult: ScannerResult | null;
+	setCurrentScannerResult: (scannerResult: ScannerResult | null) => void;
 	addScannerResult: (scannerResult: ScannerResult) => void;
 }
 
@@ -16,6 +18,10 @@ const useScannerResultsBase = create<ScannerResultsStore>()(
 	persist(
 		(set) => ({
 			scannerResults: [],
+			currentScannerResult: null,
+			setCurrentScannerResult: (scannerResult: ScannerResult | null) => {
+				set({ currentScannerResult: scannerResult });
+			},
 			addScannerResult: (scannerResult: ScannerResult) => {
 				set((state) => {
 					if (

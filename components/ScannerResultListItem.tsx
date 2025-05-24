@@ -2,7 +2,12 @@ import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
 import type { ScannerResult } from "@/stores/scannerResultsStore";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import useScannerResults from "@/stores/scannerResultsStore";
+import {
+	BottomSheetBackdrop,
+	BottomSheetModal,
+	BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Barcode, EllipsisVertical, QrCode } from "lucide-react-native";
@@ -21,6 +26,8 @@ export function ScannerResultListItem({
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 	const { handleSheetPositionChange } =
 		useBottomSheetBackHandler(bottomSheetModalRef);
+	const setCurrentScannerResult =
+		useScannerResults.use.setCurrentScannerResult();
 
 	const handleShowBottomSheetPress = () => {
 		bottomSheetModalRef.current?.present();
@@ -51,9 +58,20 @@ export function ScannerResultListItem({
 				handleIndicatorStyle={{
 					backgroundColor: "#b3b3b3",
 				}}
+				backdropComponent={(props) => (
+					<BottomSheetBackdrop
+						{...props}
+						appearsOnIndex={0}
+						disappearsOnIndex={-1}
+					/>
+				)}
+				onDismiss={() => setCurrentScannerResult(null)}
 			>
 				<BottomSheetView style={styles.bottomSheetContentContainer}>
-					<ScannerBottomSheetContent currentBarcode={scannerResult} />
+					<ScannerBottomSheetContent
+						currentBarcode={scannerResult}
+						bottomSheetModalRef={bottomSheetModalRef}
+					/>
 				</BottomSheetView>
 			</BottomSheetModal>
 		</View>
@@ -69,8 +87,6 @@ const styles = StyleSheet.create({
 		paddingVertical: Spacings.md,
 	},
 	bottomSheetContentContainer: {
-		flex: 1,
-		alignItems: "center",
 		padding: 0,
 	},
 });

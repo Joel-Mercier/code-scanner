@@ -52,6 +52,11 @@ export default function RootLayout() {
 					<Stack>
 						<Stack.Screen name="index" options={{ headerShown: false }} />
 						<Stack.Screen name="history" options={{ headerShown: false }} />
+						<Stack.Screen
+							name="code"
+							options={{ headerShown: false, presentation: "transparentModal" }}
+						/>
+						<Stack.Screen name="new-code" options={{ headerShown: false }} />
 						<Stack.Screen name="+not-found" />
 					</Stack>
 					<StatusBar style="auto" />
