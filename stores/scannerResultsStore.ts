@@ -6,6 +6,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 export type ScannerResult = BarcodeScanningResult & {
 	createdAt: Date;
+	source: "scanner" | "form";
 };
 interface ScannerResultsStore {
 	scannerResults: ScannerResult[];
@@ -42,6 +43,12 @@ const useScannerResultsBase = create<ScannerResultsStore>()(
 		{
 			name: "scannerResults",
 			storage: createJSONStorage(() => zustandStorage),
+			partialize: (state) =>
+				Object.fromEntries(
+					Object.entries(state).filter(
+						([key]) => !["currentScannerResult"].includes(key),
+					),
+				),
 		},
 	),
 );

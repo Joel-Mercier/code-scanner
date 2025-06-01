@@ -22,6 +22,9 @@
 			"recommended": true,
 			"correctness": {
 				"useExhaustiveDependencies": "info"
+			},
+			"suspicious": {
+				"noArrayIndexKey": "info"
 			}
 		}
 	},

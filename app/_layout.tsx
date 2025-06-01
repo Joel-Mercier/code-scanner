@@ -54,7 +54,11 @@ export default function RootLayout() {
 						<Stack.Screen name="history" options={{ headerShown: false }} />
 						<Stack.Screen
 							name="code"
-							options={{ headerShown: false, presentation: "transparentModal" }}
+							options={{
+								headerShown: false,
+								presentation: "transparentModal",
+								animation: "fade_from_bottom",
+							}}
 						/>
 						<Stack.Screen name="new-code" options={{ headerShown: false }} />
 						<Stack.Screen name="+not-found" />

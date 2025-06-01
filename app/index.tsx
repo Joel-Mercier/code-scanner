@@ -2,7 +2,9 @@ import { ScannerBottomSheetContent } from "@/components/ScannerBottomSheetConten
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
-import useScannerResults from "@/stores/scannerResultsStore";
+import useScannerResults, {
+	type ScannerResult,
+} from "@/stores/scannerResultsStore";
 import {
 	BottomSheetBackdrop,
 	BottomSheetModal,
@@ -67,9 +69,10 @@ export default function HomeScreen() {
 
 	const handleBarcodeScanned = (scanningResult: BarcodeScanningResult) => {
 		if (!currentScannerResult) {
-			const scannerResult = {
+			const scannerResult: ScannerResult = {
 				...scanningResult,
 				createdAt: new Date(),
+				source: "scanner",
 			};
 			addScannerResult(scannerResult);
 			setCurrentScannerResult(scannerResult);

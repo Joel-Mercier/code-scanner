@@ -45,7 +45,7 @@ export function ScannerResultListItem({
 					{scannerResult.data}
 				</ThemedText>
 				<ThemedText variant="small" style={{ color: Colors.mutedText }}>
-					{`Il y a ${formatDistanceToNow(scannerResult.createdAt, { locale: fr })}`}
+					{`${scannerResult.source === "form" ? "Créé" : "Scanné"} il y a ${formatDistanceToNow(scannerResult.createdAt, { locale: fr })}`}
 				</ThemedText>
 			</View>
 			<Pressable onPress={handleShowBottomSheetPress}>
