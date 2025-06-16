@@ -8,6 +8,9 @@ export const Colors = {
 	primary: "#155dfc",
 	primaryPressed: "#1447E6",
 	error: "#c10007",
+	green: {
+		500: "#22c55e",
+	},
 	slate: {
 		50: "#f8fafc",
 		100: "#f1f5f9",

@@ -10,7 +10,7 @@
 		"newArchEnabled": true,
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.rapidodevis.codescanner"
+			"bundleIdentifier": "com.jmercier.codescanner"
 		},
 		"android": {
 			"adaptiveIcon": {
@@ -18,11 +18,58 @@
 				"backgroundColor": "#1d293d"
 			},
 			"edgeToEdgeEnabled": true,
+			"intentFilters": [
+				{
+					"action": "VIEW",
+					"autoVerify": true,
+					"data": [
+						{
+							"scheme": "https"
+						}
+					]
+				},
+				{
+					"action": "VIEW",
+					"autoVerify": true,
+					"data": [
+						{
+							"scheme": "http"
+						}
+					]
+				},
+				{
+					"action": "VIEW",
+					"autoVerify": true,
+					"data": [
+						{
+							"scheme": "mailto"
+						}
+					]
+				},
+				{
+					"action": "VIEW",
+					"autoVerify": true,
+					"data": [
+						{
+							"scheme": "tel"
+						}
+					]
+				},
+				{
+					"action": "VIEW",
+					"autoVerify": true,
+					"data": [
+						{
+							"scheme": "sms"
+						}
+					]
+				}
+			],
 			"permissions": [
 				"android.permission.CAMERA",
 				"android.permission.RECORD_AUDIO"
 			],
-			"package": "com.rapidodevis.codescanner"
+			"package": "com.jmercier.codescanner"
 		},
 		"web": {
 			"bundler": "metro",
@@ -43,15 +90,21 @@
 			[
 				"expo-camera",
 				{
-					"cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
+					"cameraPermission": "Autoriser $(PRODUCT_NAME) à accéder à votre caméra."
 				}
 			],
 			[
 				"expo-media-library",
 				{
-					"photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
-					"savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos.",
+					"savePhotosPermission": "Autoriser $(PRODUCT_NAME) à enregistrer des photos.",
 					"isAccessMediaLocationEnabled": true
+				}
+			],
+			[
+				"expo-image-picker",
+				{
+					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos."
 				}
 			]
 		],

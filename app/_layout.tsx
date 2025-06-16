@@ -11,6 +11,7 @@ import {
 	DefaultTheme,
 	ThemeProvider,
 } from "@react-navigation/native";
+import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -63,6 +64,7 @@ export default function RootLayout() {
 						<Stack.Screen name="new-code" options={{ headerShown: false }} />
 						<Stack.Screen name="+not-found" />
 					</Stack>
+					<PortalHost />
 					<StatusBar style="auto" />
 				</ThemeProvider>
 			</BottomSheetModalProvider>

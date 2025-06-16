@@ -17,7 +17,7 @@ import {
 	Share2,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Pressable, Share, StyleSheet, View } from "react-native";
+import { Linking, Pressable, Share, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ui/ThemedText";
 
 type ScannerResultProps = {
@@ -59,7 +59,23 @@ export function ScannerBottomSheetContent({
 	}, [isCopied]);
 
 	const handleOpenUrlPress = async () => {
+		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in browser`);
 		await openBrowserAsync(currentBarcode?.extra?.url);
+	};
+
+	const handleOpenEmailPress = async () => {
+		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in email app`);
+		await Linking.openURL(currentBarcode?.extra?.url);
+	};
+
+	const handleOpenSMSPress = async () => {
+		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in sms app`);
+		await Linking.openURL(currentBarcode?.extra?.url);
+	};
+
+	const handleOpenLocationPress = async () => {
+		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in maps app`);
+		await Linking.openURL(currentBarcode?.extra?.url);
 	};
 
 	const handleSharePress = async () => {
@@ -111,6 +127,70 @@ export function ScannerBottomSheetContent({
 							style={{ marginRight: Spacings.md }}
 						/>
 						<ThemedText>Voir le site web</ThemedText>
+					</Pressable>
+				)}
+				{currentBarcode?.extra && currentBarcode?.extra.type === "email" && (
+					<Pressable
+						onPress={handleOpenEmailPress}
+						style={({ pressed }) => [
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
+							styles.buttonContainer,
+						]}
+					>
+						<Link
+							size={16}
+							color={Colors.white}
+							style={{ marginRight: Spacings.md }}
+						/>
+						<ThemedText>Ouvrir le message</ThemedText>
+					</Pressable>
+				)}
+				{currentBarcode?.extra && currentBarcode?.extra.type === "phone" && (
+					<Pressable
+						onPress={handleOpenSMSPress}
+						style={({ pressed }) => [
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
+							styles.buttonContainer,
+						]}
+					>
+						<Link
+							size={16}
+							color={Colors.white}
+							style={{ marginRight: Spacings.md }}
+						/>
+						<ThemedText>Ouvrir le message</ThemedText>
+					</Pressable>
+				)}
+				{currentBarcode?.extra && currentBarcode?.extra.type === "sms" && (
+					<Pressable
+						onPress={handleOpenSMSPress}
+						style={({ pressed }) => [
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
+							styles.buttonContainer,
+						]}
+					>
+						<Link
+							size={16}
+							color={Colors.white}
+							style={{ marginRight: Spacings.md }}
+						/>
+						<ThemedText>Ouvrir le message</ThemedText>
+					</Pressable>
+				)}
+				{currentBarcode?.extra && currentBarcode?.extra.type === "geoPoint" && (
+					<Pressable
+						onPress={handleOpenLocationPress}
+						style={({ pressed }) => [
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
+							styles.buttonContainer,
+						]}
+					>
+						<Link
+							size={16}
+							color={Colors.white}
+							style={{ marginRight: Spacings.md }}
+						/>
+						<ThemedText>Ouvrir le message</ThemedText>
 					</Pressable>
 				)}
 				<Pressable

@@ -13,6 +13,7 @@ interface ScannerResultsStore {
 	currentScannerResult: ScannerResult | null;
 	setCurrentScannerResult: (scannerResult: ScannerResult | null) => void;
 	addScannerResult: (scannerResult: ScannerResult) => void;
+	clearScannerResults: () => void;
 }
 
 const useScannerResultsBase = create<ScannerResultsStore>()(
@@ -38,6 +39,9 @@ const useScannerResultsBase = create<ScannerResultsStore>()(
 					}
 					return { scannerResults: state.scannerResults };
 				});
+			},
+			clearScannerResults: () => {
+				set({ scannerResults: [] });
 			},
 		}),
 		{
