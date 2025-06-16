@@ -1,4 +1,4 @@
-package com.rapidodevis.codescanner
+package com.jmercier.codescanner
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

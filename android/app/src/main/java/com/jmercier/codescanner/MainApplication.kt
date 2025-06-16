@@ -1,4 +1,4 @@
-package com.rapidodevis.codescanner
+package com.jmercier.codescanner
 
 import android.app.Application
 import android.content.res.Configuration
