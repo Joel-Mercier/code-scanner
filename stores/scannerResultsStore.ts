@@ -16,7 +16,7 @@ interface ScannerResultsStore {
 	clearScannerResults: () => void;
 }
 
-const useScannerResultsBase = create<ScannerResultsStore>()(
+export const useScannerResultsBase = create<ScannerResultsStore>()(
 	persist(
 		(set) => ({
 			scannerResults: [],

@@ -2,17 +2,19 @@ import { Button } from "@/components/ui/Button";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useQRCode } from "@/hooks/useQRCode";
-import useScannerResults from "@/stores/scannerResultsStore";
 import * as MediaLibrary from "expo-media-library";
+import { useLocalSearchParams } from "expo-router";
 import { Download } from "lucide-react-native";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { SvgXml } from "react-native-svg";
 import ViewShot, { captureRef } from "react-native-view-shot";
 
 export default function CodeScreen() {
-	const currentScannerResult = useScannerResults.use.currentScannerResult();
-	const { svg } = useQRCode(currentScannerResult?.data);
+	const { t } = useTranslation();
+	const { content } = useLocalSearchParams<{ content: string }>();
+	const { svg } = useQRCode(content);
 	const viewShotRef = useRef<ViewShot>(null);
 	const [mediaLibraryPermission, requestMediaLibraryPermission] =
 		MediaLibrary.usePermissions();
@@ -30,10 +32,10 @@ export default function CodeScreen() {
 			});
 			await MediaLibrary.saveToLibraryAsync(tmpFileUri);
 		} catch (error) {
-			console.log(
+			console.error(
 				"An error occurred while saving the picture to the media library : ",
 			);
-			console.log(error);
+			console.error(error);
 		}
 	};
 
@@ -42,11 +44,7 @@ export default function CodeScreen() {
 			<View style={styles.container}>
 				<View>
 					<ViewShot ref={viewShotRef}>
-						<SvgXml
-							width="100%"
-							xml={svg}
-							style={{ backgroundColor: "red", aspectRatio: 1 }}
-						/>
+						<SvgXml width="100%" xml={svg} style={{ aspectRatio: 1 }} />
 					</ViewShot>
 				</View>
 				<View style={styles.actionsContainer}>
@@ -54,7 +52,7 @@ export default function CodeScreen() {
 						buttonColor={Colors.slate["500"]}
 						textColor={Colors.white}
 						onPress={handleSavePress}
-						title={"Enregistrer"}
+						title={t("app.qr_code.save")}
 						reduceMotion="system"
 						Icon={
 							<Download

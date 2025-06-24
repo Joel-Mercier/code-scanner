@@ -8,6 +8,7 @@ import * as AlertDialogPrimitive from "@rn-primitives/alert-dialog";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { ArrowLeft, BrushCleaning } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import {
 	SafeAreaView,
@@ -15,6 +16,7 @@ import {
 } from "react-native-safe-area-context";
 
 export default function HistoryScreen() {
+	const { t } = useTranslation();
 	const scannerResults = useScannerResults.use.scannerResults();
 	const clearScannerResults = useScannerResults.use.clearScannerResults();
 	const insets = useSafeAreaInsets();
@@ -33,12 +35,12 @@ export default function HistoryScreen() {
 						<View style={styles.headerContainer}>
 							<Pressable
 								onPress={() => router.back()}
-								style={{ marginRight: 24 }}
+								style={{ marginRight: Spacings.lg }}
 							>
 								<ArrowLeft size={24} color="white" />
 							</Pressable>
-							<ThemedText variant="title">Historique</ThemedText>
-							<AlertDialogPrimitive.Trigger style={{ marginLeft: 24 }}>
+							<ThemedText variant="title">{t("app.history.title")}</ThemedText>
+							<AlertDialogPrimitive.Trigger style={{ marginLeft: Spacings.lg }}>
 								<BrushCleaning size={24} color="white" />
 							</AlertDialogPrimitive.Trigger>
 						</View>
@@ -47,7 +49,7 @@ export default function HistoryScreen() {
 						<ThemedText
 							style={{ color: Colors.mutedText, textAlign: "center" }}
 						>
-							Aucun historique
+							{t("app.history.no_history")}
 						</ThemedText>
 					}
 				/>
@@ -61,16 +63,14 @@ export default function HistoryScreen() {
 					>
 						<AlertDialogPrimitive.Content>
 							<AlertDialogPrimitive.Title style={{ marginBottom: Spacings.lg }}>
-								<ThemedText variant="title">Effacer l'historique ?</ThemedText>
+								<ThemedText variant="title">
+									{t("app.history.delete_title")}
+								</ThemedText>
 							</AlertDialogPrimitive.Title>
 							<AlertDialogPrimitive.Description
 								style={{ marginBottom: Spacings.lg }}
 							>
-								<ThemedText>
-									Cette action est irréversible et entrainera l'effacement de
-									toutes les données de votre historique. Êtes-vous sûr de
-									vouloir continuer ?
-								</ThemedText>
+								<ThemedText>{t("app.history.delete_content")}</ThemedText>
 							</AlertDialogPrimitive.Description>
 							<View
 								style={{
@@ -85,7 +85,7 @@ export default function HistoryScreen() {
 										buttonColor={Colors.slate["500"]}
 										textColor={Colors.white}
 										onPress={() => {}}
-										title={"Annuler"}
+										title={t("app.shared.cancel")}
 										reduceMotion="system"
 									/>
 								</AlertDialogPrimitive.Cancel>
@@ -94,7 +94,7 @@ export default function HistoryScreen() {
 										buttonColor={Colors.error}
 										textColor={Colors.white}
 										onPress={() => clearScannerResults()}
-										title={"Effacer"}
+										title={t("app.history.delete_action")}
 										reduceMotion="system"
 									/>
 								</AlertDialogPrimitive.Action>

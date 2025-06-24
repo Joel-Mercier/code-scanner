@@ -3,6 +3,7 @@ import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
 import type { ScannerResult } from "@/stores/scannerResultsStore";
 import useScannerResults from "@/stores/scannerResultsStore";
+import { barcodeTypes } from "@/utils/data";
 import {
 	BottomSheetBackdrop,
 	BottomSheetModal,
@@ -12,6 +13,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Barcode, EllipsisVertical, QrCode } from "lucide-react-native";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ScannerBottomSheetContent } from "./ScannerBottomSheetContent";
 import { ThemedText } from "./ui/ThemedText";
@@ -23,6 +25,7 @@ type ScannerResultListItemProps = {
 export function ScannerResultListItem({
 	scannerResult,
 }: ScannerResultListItemProps) {
+	const { t, i18n } = useTranslation();
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 	const { handleSheetPositionChange } =
 		useBottomSheetBackHandler(bottomSheetModalRef);
@@ -44,9 +47,27 @@ export function ScannerResultListItem({
 				<ThemedText numberOfLines={1} style={{ flex: 1 }}>
 					{scannerResult.data}
 				</ThemedText>
-				<ThemedText variant="small" style={{ color: Colors.mutedText }}>
-					{`${scannerResult.source === "form" ? "Créé" : "Scanné"} il y a ${formatDistanceToNow(scannerResult.createdAt, { locale: fr })}`}
-				</ThemedText>
+				<View style={{ flexDirection: "row", alignItems: "center" }}>
+					<View
+						style={{
+							paddingVertical: Spacings.sm / 2,
+							paddingHorizontal: Spacings.md / 2,
+							backgroundColor: Colors.slate["800"],
+							borderRadius: Spacings.xl,
+							marginRight: Spacings.sm,
+						}}
+					>
+						<ThemedText variant="small" style={{ color: Colors.mutedText }}>
+							{
+								barcodeTypes.find((type) => type.value === scannerResult.type)
+									?.label
+							}
+						</ThemedText>
+					</View>
+					<ThemedText variant="small" style={{ color: Colors.mutedText }}>
+						{`${scannerResult.source === "form" ? t("app.scanner_result.created") : t("app.scanner_result.scanned")} ${t("app.scanner_result.ago", { time: formatDistanceToNow(scannerResult.createdAt, { locale: i18n.language === "fr" ? fr : undefined }) })}`}
+					</ThemedText>
+				</View>
 			</View>
 			<Pressable onPress={handleShowBottomSheetPress}>
 				<EllipsisVertical size={24} color="white" />

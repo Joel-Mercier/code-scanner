@@ -32,6 +32,7 @@ import {
 	PlusCircle,
 	QrCode,
 	Scan,
+	Settings,
 	Slash,
 } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -262,6 +263,7 @@ export default function HomeScreen() {
 						style={({ pressed }) => [
 							pressed && { backgroundColor: Colors.darkBackgroundPressed },
 							styles.iconWrapper,
+							{ marginBottom: Spacings.md },
 						]}
 					>
 						<QrCode color={Colors.white} size={24} />
@@ -271,6 +273,15 @@ export default function HomeScreen() {
 							style={{ position: "absolute", bottom: 8, right: 8 }}
 							fill={Colors.darkBackground}
 						/>
+					</Pressable>
+					<Pressable
+						onPress={() => router.navigate("/settings")}
+						style={({ pressed }) => [
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
+							styles.iconWrapper,
+						]}
+					>
+						<Settings color={Colors.white} size={24} />
 					</Pressable>
 				</View>
 			</View>

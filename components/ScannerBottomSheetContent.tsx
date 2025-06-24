@@ -17,6 +17,7 @@ import {
 	Share2,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Linking, Pressable, Share, StyleSheet, View } from "react-native";
 import { ThemedText } from "./ui/ThemedText";
 
@@ -45,6 +46,7 @@ export function ScannerBottomSheetContent({
 	currentBarcode,
 	bottomSheetModalRef,
 }: ScannerResultProps) {
+	const { t } = useTranslation();
 	const [isCopied, setIsCopied] = useState(false);
 	const router = useRouter();
 	const setCurrentScannerResult =
@@ -87,7 +89,15 @@ export function ScannerBottomSheetContent({
 
 	const handleShowCodePress = () => {
 		setCurrentScannerResult(currentBarcode);
-		router.navigate("/code");
+		currentBarcode?.type === "qr"
+			? router.navigate({
+					pathname: "/qr-code",
+					params: { content: currentBarcode?.data },
+				})
+			: router.navigate({
+					pathname: "/barcode",
+					params: { content: currentBarcode?.data, type: currentBarcode?.type },
+				});
 		bottomSheetModalRef.current?.dismiss();
 	};
 
@@ -126,7 +136,7 @@ export function ScannerBottomSheetContent({
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>Voir le site web</ThemedText>
+						<ThemedText>{t("app.scanner_bottom_sheet.see_website")}</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "email" && (
@@ -142,7 +152,9 @@ export function ScannerBottomSheetContent({
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>Ouvrir le message</ThemedText>
+						<ThemedText>
+							{t("app.scanner_bottom_sheet.open_message")}
+						</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "phone" && (
@@ -158,7 +170,9 @@ export function ScannerBottomSheetContent({
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>Ouvrir le message</ThemedText>
+						<ThemedText>
+							{t("app.scanner_bottom_sheet.open_message")}
+						</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "sms" && (
@@ -174,7 +188,9 @@ export function ScannerBottomSheetContent({
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>Ouvrir le message</ThemedText>
+						<ThemedText>
+							{t("app.scanner_bottom_sheet.open_message")}
+						</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "geoPoint" && (
@@ -190,7 +206,9 @@ export function ScannerBottomSheetContent({
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>Ouvrir le message</ThemedText>
+						<ThemedText>
+							{t("app.scanner_bottom_sheet.open_message")}
+						</ThemedText>
 					</Pressable>
 				)}
 				<Pressable
@@ -214,7 +232,7 @@ export function ScannerBottomSheetContent({
 						/>
 					)}
 
-					<ThemedText>Copier le contenu du code</ThemedText>
+					<ThemedText>{t("app.scanner_bottom_sheet.copy")}</ThemedText>
 				</Pressable>
 				<Pressable
 					onPress={handleSharePress}
@@ -228,7 +246,7 @@ export function ScannerBottomSheetContent({
 						color={Colors.white}
 						style={{ marginRight: Spacings.md }}
 					/>
-					<ThemedText>Partager</ThemedText>
+					<ThemedText>{t("app.scanner_bottom_sheet.share")}</ThemedText>
 				</Pressable>
 				<Pressable
 					onPress={handleShowCodePress}
@@ -250,7 +268,7 @@ export function ScannerBottomSheetContent({
 							style={{ marginRight: Spacings.md }}
 						/>
 					)}
-					<ThemedText>Afficher le code</ThemedText>
+					<ThemedText>{t("app.scanner_bottom_sheet.show_code")}</ThemedText>
 				</Pressable>
 			</View>
 		</View>
