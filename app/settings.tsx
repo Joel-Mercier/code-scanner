@@ -13,7 +13,7 @@ import {
 } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
-	const { t, i18n } = useTranslation();
+	const { t } = useTranslation();
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const locale = useApp.use.locale();
@@ -52,30 +52,14 @@ export default function SettingsScreen() {
 								]}
 							>
 								<ThemedText>
-									{t(`app.settings.form.language.options.${language}`)}
+									{t(`app.settings.form.language.options.${language}`, {
+										lng: language,
+									})}
 								</ThemedText>
 							</Pressable>
 						))}
 					</View>
 				</View>
-				{/* <Button
-					key={"en"}
-					buttonColor={Colors.primary}
-					textColor={Colors.white}
-					onPress={() => setLocale("en")}
-					title={"en"}
-					reduceMotion="system"
-					style={{ marginVertical: Spacings.sm }}
-				/>
-				<Button
-					key={"fr"}
-					buttonColor={Colors.primary}
-					textColor={Colors.white}
-					onPress={() => setLocale("fr")}
-					title={"fr"}
-					reduceMotion="system"
-					style={{ marginVertical: Spacings.sm }}
-				/> */}
 			</ScrollView>
 		</SafeAreaView>
 	);

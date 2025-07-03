@@ -1,18 +1,25 @@
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
-import useScannerResults, {
-	type ScannerResult,
-} from "@/stores/scannerResultsStore";
+import useScannerResults from "@/stores/scannerResultsStore";
+import type { ScannerResult } from "@/types";
+import { barcodeTypes, scannerResultTypeToEncryption } from "@/utils/data";
+import {
+	convertMATMSGToMailto,
+	convertSMSTOToSMS,
+} from "@/utils/generateQRCodeData";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
-import type { BarcodeType } from "expo-camera";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
 import {
+	AtSign,
 	Barcode,
 	Copy,
 	CopyCheck,
 	Link,
+	MapPin,
+	MessageSquare,
+	Phone,
 	QrCode,
 	Share2,
 } from "lucide-react-native";
@@ -24,22 +31,6 @@ import { ThemedText } from "./ui/ThemedText";
 type ScannerResultProps = {
 	currentBarcode: ScannerResult | null;
 	bottomSheetModalRef: React.RefObject<BottomSheetModal | null>;
-};
-
-const barcodeTypeLabels: Record<BarcodeType, string> = {
-	aztec: "Aztec",
-	ean13: "EAN-13",
-	ean8: "EAN-8",
-	qr: "Code QR",
-	pdf417: "PDF417",
-	upc_e: "UPC-E",
-	datamatrix: "Datamatrix",
-	code39: "Code 39",
-	code93: "Code 93",
-	itf14: "ITF-14",
-	codabar: "Codabar",
-	code128: "Code 128",
-	upc_a: "UPC-A",
 };
 
 export function ScannerBottomSheetContent({
@@ -66,13 +57,22 @@ export function ScannerBottomSheetContent({
 	};
 
 	const handleOpenEmailPress = async () => {
-		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in email app`);
-		await Linking.openURL(currentBarcode?.extra?.url);
+		console.log(`DEBUG : Opening ${currentBarcode?.raw} in email app`);
+		await Linking.openURL(
+			convertMATMSGToMailto(currentBarcode) || currentBarcode?.extra?.url,
+		);
+	};
+
+	const handleOpenPhonePress = async () => {
+		console.log(`DEBUG : Opening ${currentBarcode?.raw} in phone app`);
+		await Linking.openURL(currentBarcode?.raw || currentBarcode?.data || "");
 	};
 
 	const handleOpenSMSPress = async () => {
-		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in sms app`);
-		await Linking.openURL(currentBarcode?.extra?.url);
+		console.log(`DEBUG : Opening ${currentBarcode?.raw} in sms app`);
+		await Linking.openURL(
+			convertSMSTOToSMS(currentBarcode) || currentBarcode?.extra?.url,
+		);
 	};
 
 	const handleOpenLocationPress = async () => {
@@ -80,7 +80,7 @@ export function ScannerBottomSheetContent({
 		await Linking.openURL(currentBarcode?.extra?.url);
 	};
 
-	const handleSharePress = async () => {
+	const handleShareContentPress = async () => {
 		await Share.share({
 			message: currentBarcode?.data,
 			url: currentBarcode?.extra?.url,
@@ -92,11 +92,14 @@ export function ScannerBottomSheetContent({
 		currentBarcode?.type === "qr"
 			? router.navigate({
 					pathname: "/qr-code",
-					params: { content: currentBarcode?.data },
+					params: { content: currentBarcode?.raw || currentBarcode.data },
 				})
 			: router.navigate({
 					pathname: "/barcode",
-					params: { content: currentBarcode?.data, type: currentBarcode?.type },
+					params: {
+						content: currentBarcode?.raw || currentBarcode?.data,
+						type: currentBarcode?.type,
+					},
 				});
 		bottomSheetModalRef.current?.dismiss();
 	};
@@ -118,8 +121,38 @@ export function ScannerBottomSheetContent({
 					<ThemedText
 						style={{ color: Colors.mutedText, marginBottom: Spacings.sm }}
 					>
-						{barcodeTypeLabels[currentBarcode?.type as BarcodeType]}
+						{/* {barcodeTypeLabels[currentBarcode?.type as BarcodeType]} */}
+						{currentBarcode.type === "qr"
+							? `QR ${t(`app.new_code.qr_code_form.type.options.${currentBarcode?.extra?.type}`)}`
+							: barcodeTypes.find((type) => type.value === currentBarcode.type)
+									?.label}
 					</ThemedText>
+				)}
+				{currentBarcode?.extra?.type === "wifi" && (
+					<View style={{ marginBottom: Spacings.sm }}>
+						<View style={styles.horizontalStack}>
+							<ThemedText>Nom du réseau : </ThemedText>
+							<ThemedText>{currentBarcode?.extra?.ssid}</ThemedText>
+						</View>
+						{currentBarcode?.extra?.password && (
+							<View style={styles.horizontalStack}>
+								<ThemedText>Mot de passe : </ThemedText>
+								<ThemedText>{currentBarcode?.extra?.password}</ThemedText>
+							</View>
+						)}
+						{currentBarcode?.extra?.type && (
+							<View style={styles.horizontalStack}>
+								<ThemedText>Sécurité : </ThemedText>
+								<ThemedText>
+									{
+										scannerResultTypeToEncryption.find(
+											(e) => e.value === currentBarcode?.extra?.type,
+										)?.label
+									}
+								</ThemedText>
+							</View>
+						)}
+					</View>
 				)}
 			</View>
 			<View style={{ paddingHorizontal: 12, marginBottom: Spacings.lg }}>
@@ -147,32 +180,28 @@ export function ScannerBottomSheetContent({
 							styles.buttonContainer,
 						]}
 					>
-						<Link
+						<AtSign
 							size={16}
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>
-							{t("app.scanner_bottom_sheet.open_message")}
-						</ThemedText>
+						<ThemedText>{t("app.scanner_bottom_sheet.send_email")}</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "phone" && (
 					<Pressable
-						onPress={handleOpenSMSPress}
+						onPress={handleOpenPhonePress}
 						style={({ pressed }) => [
 							pressed && { backgroundColor: Colors.darkBackgroundPressed },
 							styles.buttonContainer,
 						]}
 					>
-						<Link
+						<Phone
 							size={16}
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>
-							{t("app.scanner_bottom_sheet.open_message")}
-						</ThemedText>
+						<ThemedText>{t("app.scanner_bottom_sheet.call")}</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "sms" && (
@@ -183,14 +212,12 @@ export function ScannerBottomSheetContent({
 							styles.buttonContainer,
 						]}
 					>
-						<Link
+						<MessageSquare
 							size={16}
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>
-							{t("app.scanner_bottom_sheet.open_message")}
-						</ThemedText>
+						<ThemedText>{t("app.scanner_bottom_sheet.send_sms")}</ThemedText>
 					</Pressable>
 				)}
 				{currentBarcode?.extra && currentBarcode?.extra.type === "geoPoint" && (
@@ -201,14 +228,12 @@ export function ScannerBottomSheetContent({
 							styles.buttonContainer,
 						]}
 					>
-						<Link
+						<MapPin
 							size={16}
 							color={Colors.white}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>
-							{t("app.scanner_bottom_sheet.open_message")}
-						</ThemedText>
+						<ThemedText>{t("app.scanner_bottom_sheet.open_map")}</ThemedText>
 					</Pressable>
 				)}
 				<Pressable
@@ -235,7 +260,7 @@ export function ScannerBottomSheetContent({
 					<ThemedText>{t("app.scanner_bottom_sheet.copy")}</ThemedText>
 				</Pressable>
 				<Pressable
-					onPress={handleSharePress}
+					onPress={handleShareContentPress}
 					style={({ pressed }) => [
 						pressed && { backgroundColor: Colors.darkBackgroundPressed },
 						styles.buttonContainer,
@@ -246,7 +271,7 @@ export function ScannerBottomSheetContent({
 						color={Colors.white}
 						style={{ marginRight: Spacings.md }}
 					/>
-					<ThemedText>{t("app.scanner_bottom_sheet.share")}</ThemedText>
+					<ThemedText>{t("app.scanner_bottom_sheet.share_content")}</ThemedText>
 				</Pressable>
 				<Pressable
 					onPress={handleShowCodePress}
@@ -282,5 +307,9 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		paddingVertical: Spacings.sm,
 		marginBottom: Spacings.sm,
+	},
+	horizontalStack: {
+		flexDirection: "row",
+		alignItems: "center",
 	},
 });

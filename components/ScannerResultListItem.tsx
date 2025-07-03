@@ -1,8 +1,8 @@
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
-import type { ScannerResult } from "@/stores/scannerResultsStore";
 import useScannerResults from "@/stores/scannerResultsStore";
+import type { ScannerResult } from "@/types";
 import { barcodeTypes } from "@/utils/data";
 import {
 	BottomSheetBackdrop,
@@ -48,24 +48,15 @@ export function ScannerResultListItem({
 					{scannerResult.data}
 				</ThemedText>
 				<View style={{ flexDirection: "row", alignItems: "center" }}>
-					<View
-						style={{
-							paddingVertical: Spacings.sm / 2,
-							paddingHorizontal: Spacings.md / 2,
-							backgroundColor: Colors.slate["800"],
-							borderRadius: Spacings.xl,
-							marginRight: Spacings.sm,
-						}}
-					>
-						<ThemedText variant="small" style={{ color: Colors.mutedText }}>
-							{
-								barcodeTypes.find((type) => type.value === scannerResult.type)
-									?.label
-							}
-						</ThemedText>
-					</View>
 					<ThemedText variant="small" style={{ color: Colors.mutedText }}>
 						{`${scannerResult.source === "form" ? t("app.scanner_result.created") : t("app.scanner_result.scanned")} ${t("app.scanner_result.ago", { time: formatDistanceToNow(scannerResult.createdAt, { locale: i18n.language === "fr" ? fr : undefined }) })}`}
+					</ThemedText>
+					<ThemedText variant="small" style={{ color: Colors.mutedText }}>
+						{" · "}
+						{scannerResult.type === "qr"
+							? `QR ${t(`app.new_code.qr_code_form.type.options.${scannerResult?.extra?.type}`)}`
+							: barcodeTypes.find((type) => type.value === scannerResult.type)
+									?.label}
 					</ThemedText>
 				</View>
 			</View>

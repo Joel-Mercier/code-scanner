@@ -1,8 +1,10 @@
+
 export default {
   translation: {
     app: {
       barcode: {
         save: "Save",
+        share: "Share",
       },
       history: {
         title: "History",
@@ -15,6 +17,7 @@ export default {
         title: "New code",
         generate: "Generate",
         save: "Save",
+        share: "Share",
         settings: "Settings",
         tabs: {
           qr: "QR Code",
@@ -31,8 +34,9 @@ export default {
               phone: "Phone",
               sms: "SMS",
               vcard: "vCard",
-              geo_point: "Position",
+              geoPoint: "Position",
               crypto: "Crypto",
+              event: "Event",
             }
           },
           url: {
@@ -154,7 +158,23 @@ export default {
           logo: {
             label: "Logo",
             action: "Choose",
-          }
+          },
+          event_title: {
+            label: "Summary",
+            placeholder: "Title of the event",
+          },
+          event_description: {
+            label: "Description",
+            placeholder: "Description of the event",
+          },
+          event_location: {
+            label: "Location",
+            placeholder: "Location of the event",
+          },
+          event_start_date: {
+            label: "Start date",
+            placeholder: "Start date of the event",
+          },
         },
         barcode_form: {
           type: {
@@ -163,18 +183,54 @@ export default {
           content: {
             label: "Content",
             placeholder: "My content",
+            helpers: {
+              aztec: "Only ASCII characters, at least one character long",
+              codabar: "Between 1 and 22 characters, only digits and these symbols + - : $ / . +",
+              code128: "Between 1 and 48 characters, only ASCII characters, ",
+              code39: "Between 1 and 30 characters, only uppercase letters, digits, space and these values * - $ % . / +",
+              datamatrix: "Between 1 and 2335 characters, only ASCII characters",
+              ean13: "Only digits, must be 12 or 13 digits long",
+              ean8: "Only digits, must be 7 or 8 digits long",
+              itf14: "Only digits, must be 14 digits long",
+              pdf417: "Between 1 and 2335 characters, only ASCII characters",
+              upc_a: "Must be 11 or 12 digits, must contain at least one zero",
+              upc_e: "Must be 7 or 8 digits, must contain at least one zero"
+            }
+          },
+          fg: {
+            label: "Foreground color (text and bars)",
+          },
+          bg: {
+            label: "Background color",
+          },
+          text: {
+            label: "Text position",
+            options: {
+              bottom: "Bottom",
+              top: "Top"
+            }
+          },
+          height: {
+            label: "Height",
+            placeholder: "Barcode height in pixels"
           }
         }
       },
       qr_code: {
         save: "Save",
+        share: "Share",
       },
       scanner_bottom_sheet: {
         see_website: "See website",
         open_message: "Open message",
-        share: "Share",
+        share_content: "Share code content",
+        share_code: "Share code image",
         copy: "Copy code content",
         show_code: "Show code",
+        call: "Call",
+        send_sms: "Send SMS",
+        send_email: "Send email",
+        open_map: "Open map",
       },
       scanner_result: {
         created: "Created",

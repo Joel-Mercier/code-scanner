@@ -2,9 +2,9 @@ import { ScannerBottomSheetContent } from "@/components/ScannerBottomSheetConten
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
-import useScannerResults, {
-	type ScannerResult,
-} from "@/stores/scannerResultsStore";
+import useScannerResults from "@/stores/scannerResultsStore";
+import type { ScannerResult } from "@/types";
+import { getQRCodeSubType } from "@/utils/getQRCodeSubType";
 import {
 	BottomSheetBackdrop,
 	BottomSheetModal,
@@ -22,6 +22,7 @@ import {
 	CameraView,
 	useCameraPermissions,
 } from "expo-camera";
+import { CameraType } from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useNavigation, useRouter } from "expo-router";
 import {
@@ -31,24 +32,39 @@ import {
 	List,
 	PlusCircle,
 	QrCode,
+	RefreshCcw,
 	Scan,
 	Settings,
 	Slash,
+	ZoomIn,
+	ZoomOut,
 } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+	FadeIn,
+	FadeOut,
+	useAnimatedProps,
+	useAnimatedStyle,
+	useDerivedValue,
+	useSharedValue,
+	withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
 export default function HomeScreen() {
 	const [torchEnabled, setTorchEnabled] = useState(false);
 	const [overlayVisible, setOverlayVisible] = useState(false);
+	const [cameraType, setCameraType] = useState(CameraType.back);
 	const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 	const [mediaLibraryPermission, requestMediaLibraryPermission] =
 		MediaLibrary.usePermissions();
 	const insets = useSafeAreaInsets();
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-	const CameraRef = useRef<CameraView>(null);
+	const cameraRef = useRef<CameraView>(null);
 	const { handleSheetPositionChange } =
 		useBottomSheetBackHandler(bottomSheetModalRef);
 	const scannerResults = useScannerResults.use.scannerResults();
@@ -61,19 +77,31 @@ export default function HomeScreen() {
 	const isFocused = navigation.isFocused();
 	const screenWidth = Dimensions.get("window").width;
 	const screenHeight = Dimensions.get("window").height;
+	const sliderOffset = useSharedValue(0.0001);
+	const cameraIconRotation = useSharedValue(0);
+	const MAX_VALUE = screenWidth - Spacings.lg * 4 - 48;
+	const THUMB_RADIUS = 16;
 
 	useEffect(() => {
 		if (!cameraPermission?.granted) {
 			requestCameraPermission();
 		}
+		sliderOffset.value = 0;
 	}, []);
 
 	const handleBarcodeScanned = (scanningResult: BarcodeScanningResult) => {
 		if (!currentScannerResult) {
+			console.log("scanningResult :", scanningResult);
+			const extra = scanningResult.extra;
+			const subType = getQRCodeSubType(scanningResult);
 			const scannerResult: ScannerResult = {
 				...scanningResult,
 				createdAt: new Date(),
 				source: "scanner",
+				extra: {
+					...extra,
+					type: subType || "text",
+				},
 			};
 			addScannerResult(scannerResult);
 			setCurrentScannerResult(scannerResult);
@@ -86,7 +114,7 @@ export default function HomeScreen() {
 			requestMediaLibraryPermission();
 			return;
 		}
-		const picture = await CameraRef.current?.takePictureAsync();
+		const picture = await cameraRef.current?.takePictureAsync();
 		if (picture?.base64) {
 			try {
 				await MediaLibrary.saveToLibraryAsync(picture.uri);
@@ -99,10 +127,54 @@ export default function HomeScreen() {
 		}
 	};
 
+	const handleToggleCamera = () => {
+		cameraIconRotation.value = withSpring(
+			cameraType === CameraType.back ? 0 : 180,
+		);
+		setCameraType(
+			cameraType === CameraType.back ? CameraType.front : CameraType.back,
+		);
+	};
+
+	const sliderPanGesture = Gesture.Pan().onChange((event) => {
+		sliderOffset.value = Math.max(
+			0,
+			Math.min(MAX_VALUE, sliderOffset.value + event.changeX),
+		);
+	});
+
+	const rangeStyle = useAnimatedStyle(() => {
+		return {
+			width: `${(sliderOffset.value / MAX_VALUE) * 100}%`,
+		};
+	});
+
+	const thumbStyle = useAnimatedStyle(() => {
+		return {
+			left: `${((sliderOffset.value - THUMB_RADIUS) / MAX_VALUE) * 100}%`,
+		};
+	});
+
+	const zoom = useDerivedValue(() => {
+		return ((sliderOffset.value / MAX_VALUE) * 100) / 100;
+	}, [sliderOffset, MAX_VALUE]);
+
+	const zoomProps = useAnimatedProps(() => {
+		return {
+			zoom: zoom.value,
+		};
+	});
+
+	const toggleCameraIconStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ rotate: `${cameraIconRotation.value}deg` }],
+		};
+	});
+
 	return (
 		<View style={{ flex: 1 }}>
 			{isFocused && (
-				<CameraView
+				<AnimatedCameraView
 					active={true}
 					animateShutter={false}
 					autofocus="on"
@@ -124,12 +196,12 @@ export default function HomeScreen() {
 						],
 					}}
 					enableTorch={torchEnabled}
-					facing="back"
+					facing={cameraType}
 					mute={true}
 					onBarcodeScanned={handleBarcodeScanned}
 					style={{ flex: 1 }}
-					ref={CameraRef}
-					zoom={0}
+					ref={cameraRef}
+					animatedProps={zoomProps}
 				/>
 			)}
 			{overlayVisible && (
@@ -236,10 +308,25 @@ export default function HomeScreen() {
 								opacity: 0.75,
 							},
 							styles.iconWrapper,
+							{ marginBottom: Spacings.md },
 						]}
 						onPress={handlePicturePress}
 					>
 						<Camera color={Colors.white} size={24} />
+					</Pressable>
+					<Pressable
+						style={({ pressed }) => [
+							pressed && {
+								backgroundColor: Colors.darkBackgroundPressed,
+								opacity: 0.75,
+							},
+							styles.iconWrapper,
+						]}
+						onPress={handleToggleCamera}
+					>
+						<Animated.View style={[toggleCameraIconStyle]}>
+							<RefreshCcw color={Colors.white} size={24} />
+						</Animated.View>
 					</Pressable>
 				</View>
 				<View>
@@ -284,7 +371,79 @@ export default function HomeScreen() {
 						<Settings color={Colors.white} size={24} />
 					</Pressable>
 				</View>
+				<View
+					style={{
+						position: "absolute",
+						left: Spacings.lg,
+						right: Spacings.lg,
+						bottom: Spacings.xl,
+						flexDirection: "row",
+						alignItems: "center",
+						justifyContent: "space-between",
+					}}
+				>
+					<ZoomOut
+						color={Colors.white}
+						size={24}
+						style={{ marginRight: Spacings.lg }}
+					/>
+					<View
+						style={{
+							height: 4,
+							width: MAX_VALUE,
+						}}
+					>
+						<View
+							style={{
+								height: "100%",
+								backgroundColor: "rgba(255,255,255,0.5)",
+							}}
+						>
+							<Animated.View
+								style={[
+									{
+										// width: `${zoom}%`,
+										backgroundColor: Colors.white,
+										height: "100%",
+									},
+									rangeStyle,
+								]}
+							/>
+							<GestureDetector gesture={sliderPanGesture}>
+								<Animated.View
+									style={[
+										{
+											width: 32,
+											height: 32,
+											borderRadius: 16,
+											bottom: 18,
+											// backgroundColor: "red",
+											alignItems: "center",
+											justifyContent: "center",
+										},
+										thumbStyle,
+									]}
+								>
+									<View
+										style={{
+											width: 16,
+											height: 16,
+											borderRadius: 8,
+											backgroundColor: Colors.white,
+										}}
+									/>
+								</Animated.View>
+							</GestureDetector>
+						</View>
+					</View>
+					<ZoomIn
+						color={Colors.white}
+						size={24}
+						style={{ marginLeft: Spacings.lg }}
+					/>
+				</View>
 			</View>
+
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
 				onChange={handleSheetPositionChange}
@@ -345,11 +504,11 @@ const styles = StyleSheet.create({
 		width: 48,
 		height: 48,
 		borderRadius: 24,
-		backgroundColor: Colors.darkBackground,
+		// backgroundColor: Colors.darkBackground,
 		alignItems: "center",
 		justifyContent: "center",
-		borderWidth: StyleSheet.hairlineWidth,
-		borderColor: Colors.white,
+		// borderWidth: StyleSheet.hairlineWidth,
+		// borderColor: Colors.white,
 	},
 	bottomSheetContentContainer: {
 		padding: 0,

@@ -29,6 +29,7 @@ export default function HistoryScreen() {
 					renderItem={({ item }) => (
 						<ScannerResultListItem scannerResult={item} />
 					)}
+					contentContainerStyle={styles.wrapper}
 					keyExtractor={(item) => item.data}
 					estimatedItemSize={50}
 					ListHeaderComponent={
@@ -110,9 +111,11 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		paddingVertical: 24,
-		paddingHorizontal: 24,
 		backgroundColor: Colors.slate["950"],
+	},
+	wrapper: {
+		paddingHorizontal: Spacings.lg,
+		paddingVertical: Spacings.lg,
 	},
 	headerContainer: {
 		flexDirection: "row",

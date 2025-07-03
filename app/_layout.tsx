@@ -27,8 +27,8 @@ import {
 import { getLocales } from "expo-localization";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
@@ -124,7 +124,7 @@ export default function RootLayout() {
 							<Stack.Screen name="+not-found" />
 						</Stack>
 						<PortalHost />
-						<StatusBar style="auto" />
+						<SystemBars style="auto" />
 					</ThemeProvider>
 				</BottomSheetModalProvider>
 			</GestureHandlerRootView>

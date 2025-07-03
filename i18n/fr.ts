@@ -3,6 +3,7 @@ export default {
     app: {
       barcode: {
         save: "Enregistrer",
+        share: "Partager",
       },
       history: {
         title: "Historique",
@@ -15,6 +16,7 @@ export default {
         title: "Nouveau code",
         generate: "Générer",
         save: "Enregistrer",
+        share: "Partager",
         settings: "Paramètres",
         tabs: {
           qr: "Code QR",
@@ -31,8 +33,9 @@ export default {
               phone: "Téléphone",
               sms: "SMS",
               vcard: "vCard",
-              geo_point: "Position",
+              geoPoint: "Position",
               crypto: "Crypto",
+              event: "Événement",
             }
           },
           url: {
@@ -154,7 +157,23 @@ export default {
           logo: {
             label: "Logo",
             action: "Choisir",
-          }
+          },
+          event_title: {
+            label: "Titre",
+            placeholder: "Titre de l'événement",
+          },
+          event_description: {
+            label: "Description",
+            placeholder: "Description de l'événement",
+          },
+          event_location: {
+            label: "Lieu",
+            placeholder: "Lieu de l'événement",
+          },
+          event_start_date: {
+            label: "Date de début",
+            placeholder: "Date de début de l'événement",
+          },
         },
         barcode_form: {
           type: {
@@ -163,18 +182,54 @@ export default {
           content: {
             label: "Contenu",
             placeholder: "Mon contenu",
+            helpers: {
+              aztec: "Uniquement des caractères ASCII, au moins 1 caractère",
+              codabar: "Entre 1 et 22 caractères, uniquement des chiffres et les symboles suivants + - : $ / . +",
+              code128: "Entre 1 et 48 caractères, uniquement des caractères ASCII",
+              code39: "Entre 1 et 30 caractères, uniquement des lettres majuscules, des chiffres, des espaces et les symboles suivants * - $ % . / +",
+              datamatrix: "Entre 1 et 2335 caractères, uniquement des caractères ASCII",
+              ean13: "Uniquement des chiffres, taille de 12 ou 13 chiffres",
+              ean8: "Uniquement des chiffres, taille de 7 ou 8 chiffres",
+              itf14: "Uniquement des chiffres, taille de 14 chiffres",
+              pdf417: "Entre 1 et 2335 caractères, uniquement des caractères ASCII",
+              upc_a: "Taille de 11 ou 12 chiffres, doit contenir au moins un zéro",
+              upc_e: "Taille de 7 ou 8 chiffres, doit contenir au moins un zéro"
+            }
+          },
+          fg: {
+            label: "Couleur de premier plan (texte et barres)",
+          },
+          bg: {
+            label: "Couleur d'arrière plan",
+          },
+          text: {
+            label: "Position du texte",
+            options: {
+              bottom: "Bas",
+              top: "Haut"
+            }
+          },
+          height: {
+            label: "Hauteur",
+            placeholder: "Hauteur du code-barres en pixels"
           }
         }
       },
       qr_code: {
         save: "Enregistrer",
+        share: "Partager",
       },
       scanner_bottom_sheet: {
         see_website: "Voir le site web",
         open_message: "Ouvrir le message",
-        share: "Partager",
+        share_content: "Partager le contenu du code",
+        share_code: "Partager l'image du code",
         copy: "Copier le contenu du code",
         show_code: "Afficher le code",
+        call: "Appeler",
+        send_sms: "Envoyer un SMS",
+        send_email: "Envoyer un email",
+        open_map: "Ouvrir la carte",
       },
       scanner_result: {
         created: "Créé",

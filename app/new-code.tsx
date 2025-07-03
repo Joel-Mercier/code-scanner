@@ -1,13 +1,18 @@
 import { Button } from "@/components/ui/Button";
 import { ThemedText } from "@/components/ui/ThemedText";
-import i18n from "@/config/i18n";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useQRCode } from "@/hooks/useQRCode";
 import { generateBarcode } from "@/services/barcodeapi";
 import useScannerResults from "@/stores/scannerResultsStore";
-import type { CodeType, CryptoType, EncryptionType } from "@/types";
-import { QRCodeTypes, barcodeTypes } from "@/utils/data";
+import type { BarcodeApiOptions, CodeType, CryptoType } from "@/types";
+import {
+	QRCodeTypes,
+	barcodeTypes,
+	encryptions,
+	errorCorrectionLevels,
+	textOptions,
+} from "@/utils/data";
 import {
 	generateCryptoQRCodeData,
 	generateEmailQRCodeData,
@@ -29,6 +34,7 @@ import { useRouter } from "expo-router";
 import {
 	ArrowLeft,
 	AtSign,
+	CalendarPlus,
 	ChevronDown,
 	ChevronUp,
 	Download,
@@ -39,6 +45,7 @@ import {
 	Phone,
 	QrCode,
 	Settings,
+	Share2,
 	Type,
 	Wallet,
 	Wifi,
@@ -53,8 +60,14 @@ import {
 	SafeAreaView,
 	useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import Share from "react-native-share";
 import { SvgXml } from "react-native-svg";
 import ViewShot, { captureRef } from "react-native-view-shot";
+import ColorPicker, {
+	HueSlider,
+	Panel1,
+	PreviewText,
+} from "reanimated-color-picker";
 import z from "zod/v4";
 
 z.config(z.locales.fr());
@@ -88,6 +101,9 @@ type NewQRCodeForm = {
 	amount: number;
 	label?: string;
 	message?: string;
+	description?: string;
+	location?: string;
+	startDate?: string;
 };
 
 type NewBarcodeForm = {
@@ -375,6 +391,18 @@ const newQRCodeFormSchema = z.discriminatedUnion("type", [
 		label: z.string().trim().optional(),
 		message: z.string().trim().optional(),
 	}),
+	z.object({
+		value: z.string().trim(),
+		type: z.literal("event"),
+		errorCorrectionLevel: z.enum(["L", "M", "Q", "H"]).optional(),
+		margin: z.number().positive().optional(),
+		scale: z.number().positive().optional(),
+		width: z.number().positive().optional(),
+		logo: z.string().optional(),
+		description: z.string().trim().optional(),
+		location: z.string().trim().optional(),
+		startDate: z.string().trim().optional(),
+	}),
 ]);
 
 const defaultValues: NewQRCodeForm = {
@@ -406,6 +434,9 @@ const defaultValues: NewQRCodeForm = {
 	amount: 0,
 	label: "",
 	message: "",
+	description: "",
+	location: "",
+	startDate: "",
 };
 
 const barcodeDefaultValues: NewBarcodeForm = {
@@ -413,8 +444,8 @@ const barcodeDefaultValues: NewBarcodeForm = {
 	type: "upc_e",
 	correction: 0,
 	size: 100,
-	fg: undefined,
-	bg: undefined,
+	fg: "#000",
+	bg: "#FFF",
 	text: "bottom",
 	dpi: 300,
 	font: 1,
@@ -438,43 +469,6 @@ for (let i = 0; i < barcodeTypes.length; i += 3) {
 	chunkedBarcodeTypes.push(chunk);
 }
 
-const encryptions: { value: EncryptionType; label: string }[] = [
-	{
-		value: undefined,
-		label: i18n.t("app.new_code.qr_code_form.encryption.options.none"),
-	},
-	{
-		value: "WPA",
-		label: i18n.t("app.new_code.qr_code_form.encryption.options.wpa"),
-	},
-	{
-		value: "WEP",
-		label: i18n.t("app.new_code.qr_code_form.encryption.options.wep"),
-	},
-];
-
-const errorCorrectionLevels: {
-	value: QRCodeErrorCorrectionLevel;
-	label: string;
-}[] = [
-	{
-		value: "L",
-		label: i18n.t("app.new_code.qr_code_form.error_correction_level.options.l"),
-	},
-	{
-		value: "M",
-		label: i18n.t("app.new_code.qr_code_form.error_correction_level.options.m"),
-	},
-	{
-		value: "Q",
-		label: i18n.t("app.new_code.qr_code_form.error_correction_level.options.q"),
-	},
-	{
-		value: "H",
-		label: i18n.t("app.new_code.qr_code_form.error_correction_level.options.h"),
-	},
-];
-
 const renderTypeIcon = (type: CodeType) => {
 	switch (type) {
 		case "url":
@@ -495,6 +489,8 @@ const renderTypeIcon = (type: CodeType) => {
 			return <MapPin size={18} color="white" />;
 		case "crypto":
 			return <Wallet size={18} color="white" />;
+		case "event":
+			return <CalendarPlus size={18} color="white" />;
 		default:
 			return <QrCode size={18} color="white" />;
 	}
@@ -521,11 +517,12 @@ export default function NewCodeScreen() {
 		mutationFn: async ({
 			content,
 			type,
-		}: { content: string; type: BarcodeType }) => {
+			options,
+		}: { content: string; type: BarcodeType; options?: BarcodeApiOptions }) => {
 			if (typeof content !== "string" || typeof type !== "string") {
 				return undefined;
 			}
-			return await generateBarcode(content, type as BarcodeType);
+			return await generateBarcode(content, type as BarcodeType, options);
 		},
 	});
 
@@ -580,6 +577,13 @@ export default function NewCodeScreen() {
 					value.label,
 					value.message,
 				);
+			} else if (value.type === "event") {
+				data = generateEventQRCodeData(
+					value.value,
+					value.description,
+					value.location,
+					value.startDate,
+				);
 			}
 			setData(data);
 			setOptions({
@@ -591,15 +595,13 @@ export default function NewCodeScreen() {
 			addScannerResult({
 				type: "qr",
 				data,
+				raw: data,
 				source: "form",
 				createdAt: new Date(),
-				extra:
-					value.type === "text"
-						? undefined
-						: {
-								type: value.type,
-								url: encodeURI(data),
-							},
+				extra: {
+					type: value.type,
+					url: encodeURI(data),
+				},
 				cornerPoints: [{ x: 0, y: 0 }],
 				bounds: { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } },
 			});
@@ -614,11 +616,12 @@ export default function NewCodeScreen() {
 		},
 		onSubmit: async ({ value }) => {
 			console.log("FORM SUBMIT", value);
-			const { type, content, ...extra } = value;
+			const { type, content, ...options } = value;
 			doGenerateBarcode.mutate(
 				{
 					content,
 					type,
+					options,
 				},
 				{
 					onSuccess: (data) => {
@@ -628,7 +631,7 @@ export default function NewCodeScreen() {
 							data: content,
 							source: "form",
 							createdAt: new Date(),
-							extra,
+							extra: options,
 							cornerPoints: [{ x: 0, y: 0 }],
 							bounds: { origin: { x: 0, y: 0 }, size: { width: 0, height: 0 } },
 						});
@@ -641,6 +644,9 @@ export default function NewCodeScreen() {
 
 	const type = useStore(form.store, (state) => state.values.type);
 	const logo = useStore(form.store, (state) => state.values.logo);
+	const barcodeType = useStore(barcodeForm.store, (state) => state.values.type);
+	const fgValue = useStore(barcodeForm.store, (state) => state.values.fg);
+	const bgValue = useStore(barcodeForm.store, (state) => state.values.bg);
 
 	const handleSavePress = async () => {
 		if (data) {
@@ -649,19 +655,37 @@ export default function NewCodeScreen() {
 			}
 			try {
 				const tmpFileUri = await captureRef(viewShotRef, {
-					fileName: "qr_code_",
+					fileName: `${tab}_code_`,
 					format: "png",
 					quality: 1,
 					result: "tmpfile",
 				});
 				await MediaLibrary.saveToLibraryAsync(tmpFileUri);
-				setSuccessAlert("Code QR sauvegardé dans la galerie d'images");
+				setSuccessAlert("Code sauvegardé dans la galerie d'images");
 			} catch (error) {
 				console.log(
 					"An error occurred while saving the picture to the media library : ",
 				);
 				console.log(error);
 			}
+		}
+	};
+
+	const handleSharePress = async () => {
+		try {
+			const tmpFileUri = await captureRef(viewShotRef, {
+				fileName: `${tab}_code_`,
+				format: "png",
+				quality: 1,
+				result: "tmpfile",
+			});
+			await Share.open({
+				url: tmpFileUri,
+				type: "image/png",
+				failOnCancel: false,
+			});
+		} catch (error) {
+			console.log(error);
 		}
 	};
 
@@ -767,7 +791,11 @@ export default function NewCodeScreen() {
 														]}
 													>
 														{renderTypeIcon(type.value)}
-														<ThemedText>{type.label}</ThemedText>
+														<ThemedText>
+															{t(
+																`app.new_code.qr_code_form.type.options.${type.value}`,
+															)}
+														</ThemedText>
 													</Pressable>
 												))}
 											</View>
@@ -1572,6 +1600,108 @@ export default function NewCodeScreen() {
 									</form.Field>
 								</>
 							)}
+							{type === "event" && (
+								<>
+									<form.Field name="value">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t("app.new_code.qr_code_form.event_title.label")}
+												</ThemedText>
+												<View style={styles.textInputContainer}>
+													<TextInput
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChangeText={field.handleChange}
+														autoFocus
+														placeholder={t(
+															"app.new_code.qr_code_form.event_title.placeholder",
+														)}
+														style={styles.textInput}
+													/>
+												</View>
+												{!field.state.meta.isValid && (
+													<ThemedText
+														style={styles.errorText}
+														variant="small"
+														role="alert"
+													>
+														{field.state.meta.errors
+															.map((error) => error?.message)
+															.join(", ")}
+													</ThemedText>
+												)}
+											</View>
+										)}
+									</form.Field>
+									<form.Field name="description">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t(
+														"app.new_code.qr_code_form.event_description.label",
+													)}
+												</ThemedText>
+												<View style={styles.textInputContainer}>
+													<TextInput
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChangeText={field.handleChange}
+														autoFocus
+														placeholder={t(
+															"app.new_code.qr_code_form.event_description.placeholder",
+														)}
+														style={styles.textInput}
+													/>
+												</View>
+												{!field.state.meta.isValid && (
+													<ThemedText
+														style={styles.errorText}
+														variant="small"
+														role="alert"
+													>
+														{field.state.meta.errors
+															.map((error) => error?.message)
+															.join(", ")}
+													</ThemedText>
+												)}
+											</View>
+										)}
+									</form.Field>
+									<form.Field name="location">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t("app.new_code.qr_code_form.event_location.label")}
+												</ThemedText>
+												<View style={styles.textInputContainer}>
+													<TextInput
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChangeText={field.handleChange}
+														autoFocus
+														placeholder={t(
+															"app.new_code.qr_code_form.event_location.placeholder",
+														)}
+														style={styles.textInput}
+													/>
+												</View>
+												{!field.state.meta.isValid && (
+													<ThemedText
+														style={styles.errorText}
+														variant="small"
+														role="alert"
+													>
+														{field.state.meta.errors
+															.map((error) => error?.message)
+															.join(", ")}
+													</ThemedText>
+												)}
+											</View>
+										)}
+									</form.Field>
+								</>
+							)}
 							{type === "geoPoint" && (
 								<>
 									<form.Field name="value">
@@ -1890,20 +2020,34 @@ export default function NewCodeScreen() {
 										</ViewShot>
 									</Animated.View>
 									<View style={styles.QRCodeActionsContainer}>
-										<Button
-											buttonColor={Colors.slate["500"]}
-											textColor={Colors.white}
+										<Pressable
 											onPress={handleSavePress}
-											title={t("app.new_code.save")}
-											reduceMotion="system"
-											Icon={
-												<Download
-													size={16}
-													color="white"
-													style={{ marginRight: Spacings.sm }}
-												/>
-											}
-										/>
+											style={({ pressed }) => [
+												pressed && { backgroundColor: Colors.slate[800] },
+												styles.buttonContainer,
+											]}
+										>
+											<Download
+												size={16}
+												color={Colors.white}
+												style={{ marginRight: Spacings.md }}
+											/>
+											<ThemedText>{t("app.new_code.save")}</ThemedText>
+										</Pressable>
+										<Pressable
+											onPress={handleSharePress}
+											style={({ pressed }) => [
+												pressed && { backgroundColor: Colors.slate[800] },
+												styles.buttonContainer,
+											]}
+										>
+											<Share2
+												size={16}
+												color={Colors.white}
+												style={{ marginRight: Spacings.md }}
+											/>
+											<ThemedText>{t("app.new_code.share")}</ThemedText>
+										</Pressable>
 									</View>
 								</View>
 							)}
@@ -1972,12 +2116,17 @@ export default function NewCodeScreen() {
 												style={styles.textInput}
 											/>
 										</View>
+										<ThemedText
+											style={styles.helperText}
+											variant="small"
+											role="alert"
+										>
+											{t(
+												`app.new_code.barcode_form.content.helpers.${barcodeType}`,
+											)}
+										</ThemedText>
 										{!field.state.meta.isValid && (
-											<ThemedText
-												style={styles.errorText}
-												variant="small"
-												role="alert"
-											>
+											<ThemedText style={styles.errorText} variant="small">
 												{field.state.meta.errors
 													.map((error) => error?.message)
 													.join(", ")}
@@ -1986,6 +2135,156 @@ export default function NewCodeScreen() {
 									</View>
 								)}
 							</barcodeForm.Field>
+							<CollapsiblePrimitive.Root onOpenChange={setCollapsibleOpen}>
+								<CollapsiblePrimitive.Trigger
+									style={({ pressed }) => [
+										styles.collapsibleTrigger,
+										pressed && { opacity: 0.5 },
+									]}
+								>
+									<View style={{ flexDirection: "row", alignItems: "center" }}>
+										<Settings
+											size={16}
+											color="white"
+											style={{ marginRight: Spacings.sm }}
+										/>
+										<ThemedText style={{ fontFamily: "Inter_700Bold" }}>
+											{t("app.new_code.settings")}
+										</ThemedText>
+									</View>
+									{collapsibleOpen ? (
+										<ChevronUp size={16} color="white" />
+									) : (
+										<ChevronDown size={16} color="white" />
+									)}
+								</CollapsiblePrimitive.Trigger>
+								<CollapsiblePrimitive.Content
+									style={{ marginVertical: Spacings.md }}
+								>
+									<barcodeForm.Field name="fg">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t("app.new_code.barcode_form.fg.label")}
+												</ThemedText>
+												<View style={styles.textInputContainer}>
+													<ColorPicker
+														value={field.value}
+														onCompleteJS={(color) => field.setValue(color.hex)}
+													>
+														<Panel1 />
+														<HueSlider />
+													</ColorPicker>
+												</View>
+											</View>
+										)}
+									</barcodeForm.Field>
+									<barcodeForm.Field name="bg">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t("app.new_code.barcode_form.bg.label")}
+												</ThemedText>
+												<View style={styles.textInputContainer}>
+													<ColorPicker
+														value={field.value}
+														style={{ padding: Spacings.md }}
+														onCompleteJS={(color) => field.setValue(color.hex)}
+													>
+														<Panel1 />
+														<HueSlider />
+														<ThemedText
+															style={[
+																styles.fieldLabel,
+																{ marginTop: Spacings.md },
+															]}
+														>
+															{t("app.new_code.barcode_form.preview.label")}
+														</ThemedText>
+														<View style={{ backgroundColor: bgValue }}>
+															<PreviewText
+																style={{
+																	fontFamily: "Inter_400Regular",
+																	color: fgValue,
+																}}
+																colorFormat="hex"
+															/>
+														</View>
+													</ColorPicker>
+												</View>
+											</View>
+										)}
+									</barcodeForm.Field>
+									<barcodeForm.Field name="text">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t("app.new_code.barcode_form.text.label")}
+												</ThemedText>
+												<View style={styles.typeButtonWrapper}>
+													{textOptions.map((textOption) => (
+														<Pressable
+															key={textOption.value?.toString()}
+															onPress={() => field.setValue(textOption.value)}
+															style={[
+																styles.typeButtonContainer,
+																{
+																	backgroundColor:
+																		field.state.value === textOption.value
+																			? Colors.slate["700"]
+																			: "transparent",
+																},
+															]}
+														>
+															<ThemedText>{textOption.label}</ThemedText>
+														</Pressable>
+													))}
+												</View>
+												{!field.state.meta.isValid && (
+													<ThemedText
+														style={styles.errorText}
+														variant="small"
+														role="alert"
+													>
+														{field.state.meta.errors
+															.map((error) => error?.message)
+															.join(", ")}
+													</ThemedText>
+												)}
+											</View>
+										)}
+									</barcodeForm.Field>
+									<barcodeForm.Field name="height">
+										{(field) => (
+											<View style={styles.fieldContainer}>
+												<ThemedText style={styles.fieldLabel}>
+													{t("app.new_code.barcode_form.height.label")}
+												</ThemedText>
+												<View style={styles.textInputContainer}>
+													<TextInput
+														value={field.state.value?.toString()}
+														onBlur={field.handleBlur}
+														onChangeText={field.handleChange}
+														autoFocus
+														autoCapitalize="none"
+														placeholder={t(
+															"app.new_code.barcode_form.height.placeholder",
+														)}
+														style={styles.textInput}
+													/>
+												</View>
+												{!field.state.meta.isValid && (
+													<ThemedText style={styles.errorText} variant="small">
+														{field.state.meta.errors
+															.map((error) => error?.message)
+															.join(", ")}
+													</ThemedText>
+												)}
+											</View>
+										)}
+									</barcodeForm.Field>
+								</CollapsiblePrimitive.Content>
+							</CollapsiblePrimitive.Root>
 							<Button
 								buttonColor={Colors.primary}
 								textColor={Colors.white}
@@ -2012,20 +2311,34 @@ export default function NewCodeScreen() {
 										</ViewShot>
 									</Animated.View>
 									<View style={styles.QRCodeActionsContainer}>
-										<Button
-											buttonColor={Colors.slate["500"]}
-											textColor={Colors.white}
+										<Pressable
 											onPress={handleSavePress}
-											title={t("app.new_code.save")}
-											reduceMotion="system"
-											Icon={
-												<Download
-													size={16}
-													color="white"
-													style={{ marginRight: Spacings.sm }}
-												/>
-											}
-										/>
+											style={({ pressed }) => [
+												pressed && { backgroundColor: Colors.slate[800] },
+												styles.buttonContainer,
+											]}
+										>
+											<Download
+												size={16}
+												color={Colors.white}
+												style={{ marginRight: Spacings.md }}
+											/>
+											<ThemedText>{t("app.new_code.save")}</ThemedText>
+										</Pressable>
+										<Pressable
+											onPress={handleSharePress}
+											style={({ pressed }) => [
+												pressed && { backgroundColor: Colors.slate[800] },
+												styles.buttonContainer,
+											]}
+										>
+											<Share2
+												size={16}
+												color={Colors.white}
+												style={{ marginRight: Spacings.md }}
+											/>
+											<ThemedText>{t("app.new_code.share")}</ThemedText>
+										</Pressable>
 									</View>
 								</View>
 							)}
@@ -2104,6 +2417,10 @@ const styles = StyleSheet.create({
 		color: Colors.error,
 		marginVertical: Spacings.sm,
 	},
+	helperText: {
+		color: Colors.slate["500"],
+		marginVertical: Spacings.sm,
+	},
 	codeContainer: {
 		alignItems: "center",
 		justifyContent: "center",
@@ -2119,9 +2436,6 @@ const styles = StyleSheet.create({
 		transitionProperty: "opacity",
 	},
 	QRCodeActionsContainer: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
 		marginTop: Spacings.md,
 	},
 	button: {
@@ -2157,5 +2471,12 @@ const styles = StyleSheet.create({
 	tabsTriggerText: {
 		fontFamily: "Inter_700Bold",
 		textAlign: "center",
+	},
+	buttonContainer: {
+		paddingHorizontal: Spacings.lg,
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: Spacings.sm,
+		marginBottom: Spacings.sm,
 	},
 });
