@@ -116,6 +116,19 @@
 						"enforceNavigationBarContrast": false
 					}
 				}
+			],
+			[
+				"expo-contacts",
+				{
+					"contactsPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos contacts."
+				}
+			],
+			"expo-web-browser",
+			[
+				"expo-calendar",
+				{
+					"calendarPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos calendriers."
+				}
 			]
 		],
 		"experiments": {

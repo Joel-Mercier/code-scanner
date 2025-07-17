@@ -51,14 +51,24 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Autoriser $(PRODUCT_NAME) à accéder à vos calendriers.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Autoriser $(PRODUCT_NAME) à accéder à vos calendriers.</string>
     <key>NSCameraUsageDescription</key>
     <string>Autoriser $(PRODUCT_NAME) à accéder à votre caméra.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Autoriser $(PRODUCT_NAME) à accéder à vos contacts.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>Autoriser $(PRODUCT_NAME) à enregistrer des photos.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Autoriser $(PRODUCT_NAME) à accéder à vos photos.</string>
+    <key>NSRemindersFullAccessUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your reminders</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your reminders</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

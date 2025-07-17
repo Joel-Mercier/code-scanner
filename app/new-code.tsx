@@ -442,17 +442,17 @@ const defaultValues: NewQRCodeForm = {
 const barcodeDefaultValues: NewBarcodeForm = {
 	content: "",
 	type: "upc_e",
-	correction: 0,
-	size: 100,
-	fg: "#000",
-	bg: "#FFF",
+	correction: 33,
+	size: 275,
+	fg: "#000000",
+	bg: "#FFFFFF",
 	text: "bottom",
-	dpi: 300,
-	font: 1,
-	height: 100,
-	module: 1,
-	pattern: undefined,
-	qz: 1,
+	dpi: 150,
+	font: 5,
+	height: 22,
+	module: 4,
+	pattern: "_",
+	qz: 4,
 };
 
 const chunkedQRCodeTypes: (typeof QRCodeTypes)[] = [];
@@ -617,6 +617,12 @@ export default function NewCodeScreen() {
 		onSubmit: async ({ value }) => {
 			console.log("FORM SUBMIT", value);
 			const { type, content, ...options } = value;
+			if (options.fg) {
+				options.fg = options.fg.replace("#", "");
+			}
+			if (options.bg) {
+				options.bg = options.bg.replace("#", "");
+			}
 			doGenerateBarcode.mutate(
 				{
 					content,
@@ -2170,6 +2176,7 @@ export default function NewCodeScreen() {
 												<View style={styles.textInputContainer}>
 													<ColorPicker
 														value={field.value}
+														style={{ padding: Spacings.lg }}
 														onCompleteJS={(color) => field.setValue(color.hex)}
 													>
 														<Panel1 />
@@ -2188,7 +2195,7 @@ export default function NewCodeScreen() {
 												<View style={styles.textInputContainer}>
 													<ColorPicker
 														value={field.value}
-														style={{ padding: Spacings.md }}
+														style={{ padding: Spacings.lg }}
 														onCompleteJS={(color) => field.setValue(color.hex)}
 													>
 														<Panel1 />

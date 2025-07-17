@@ -48,10 +48,18 @@ export function ScannerResultListItem({
 					{scannerResult.data}
 				</ThemedText>
 				<View style={{ flexDirection: "row", alignItems: "center" }}>
-					<ThemedText variant="small" style={{ color: Colors.mutedText }}>
+					<ThemedText
+						numberOfLines={1}
+						variant="small"
+						style={{ color: Colors.mutedText }}
+					>
 						{`${scannerResult.source === "form" ? t("app.scanner_result.created") : t("app.scanner_result.scanned")} ${t("app.scanner_result.ago", { time: formatDistanceToNow(scannerResult.createdAt, { locale: i18n.language === "fr" ? fr : undefined }) })}`}
 					</ThemedText>
-					<ThemedText variant="small" style={{ color: Colors.mutedText }}>
+					<ThemedText
+						numberOfLines={1}
+						variant="small"
+						style={{ color: Colors.mutedText }}
+					>
 						{" · "}
 						{scannerResult.type === "qr"
 							? `QR ${t(`app.new_code.qr_code_form.type.options.${scannerResult?.extra?.type}`)}`

@@ -7,13 +7,17 @@ import {
 	convertMATMSGToMailto,
 	convertSMSTOToSMS,
 } from "@/utils/generateQRCodeData";
+import { truncate } from "@/utils/truncate";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import * as Calendar from "expo-calendar";
 import * as Clipboard from "expo-clipboard";
+import * as Contacts from "expo-contacts";
 import { useRouter } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
 import {
 	AtSign,
 	Barcode,
+	CalendarPlus,
 	Copy,
 	CopyCheck,
 	Link,
@@ -22,10 +26,18 @@ import {
 	Phone,
 	QrCode,
 	Share2,
+	UserPlus,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, Pressable, Share, StyleSheet, View } from "react-native";
+import {
+	Linking,
+	Platform,
+	Pressable,
+	Share,
+	StyleSheet,
+	View,
+} from "react-native";
 import { ThemedText } from "./ui/ThemedText";
 
 type ScannerResultProps = {
@@ -76,8 +88,12 @@ export function ScannerBottomSheetContent({
 	};
 
 	const handleOpenLocationPress = async () => {
-		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in maps app`);
-		await Linking.openURL(currentBarcode?.extra?.url);
+		const url = Platform.select({
+			ios: `maps://${currentBarcode?.extra?.lat},${currentBarcode?.extra?.lng}`,
+			android: `geo:${currentBarcode?.extra?.lat},${currentBarcode?.extra?.lng}`,
+		});
+		console.log(`DEBUG : Opening ${url} in maps app`);
+		await Linking.openURL(url);
 	};
 
 	const handleShareContentPress = async () => {
@@ -85,6 +101,67 @@ export function ScannerBottomSheetContent({
 			message: currentBarcode?.data,
 			url: currentBarcode?.extra?.url,
 		});
+	};
+
+	const handleAddToContactsPress = async () => {
+		const { status } = await Contacts.requestPermissionsAsync();
+		if (status === "granted") {
+			try {
+				const contact = {
+					[Contacts.Fields.Name]:
+						`${currentBarcode?.extra?.firstName} ${currentBarcode?.extra?.lastName}`,
+					[Contacts.Fields.ContactType]: Contacts.ContactTypes.Person,
+					[Contacts.Fields.FirstName]: currentBarcode?.extra?.firstName,
+					[Contacts.Fields.LastName]: currentBarcode?.extra?.lastName,
+					[Contacts.Fields.MiddleName]: currentBarcode?.extra?.middleName,
+					[Contacts.Fields.Company]: currentBarcode?.extra?.organization,
+					[Contacts.Fields.Emails]: [
+						{
+							email: currentBarcode?.extra?.email,
+							label: currentBarcode?.extra?.email,
+						},
+					],
+					[Contacts.Fields.PhoneNumbers]: [
+						{
+							label: currentBarcode?.extra?.phone,
+							number: currentBarcode?.extra?.phone,
+						},
+					],
+					[Contacts.Fields.UrlAddresses]: [
+						{
+							label: currentBarcode?.extra?.url,
+							url: currentBarcode?.extra?.url,
+						},
+					],
+					[Contacts.Fields.Addresses]: [
+						{
+							label: currentBarcode?.extra?.address,
+							street: currentBarcode?.extra?.address,
+						},
+					],
+					[Contacts.Fields.JobTitle]: currentBarcode?.extra?.title,
+				};
+				await Contacts.addContactAsync(contact);
+			} catch (error) {
+				console.error(error);
+			}
+		}
+	};
+
+	const handleAddToCalendarPress = async () => {
+		const { status } = await Calendar.requestCalendarPermissionsAsync();
+		if (status === "granted") {
+			try {
+				const eventData = {
+					location: currentBarcode?.extra?.location,
+					title: currentBarcode?.extra?.summary,
+					notes: currentBarcode?.extra?.description,
+				};
+				await Calendar.createEventInCalendarAsync(eventData, {});
+			} catch (error) {
+				console.error(error);
+			}
+		}
 	};
 
 	const handleShowCodePress = () => {
@@ -115,7 +192,7 @@ export function ScannerBottomSheetContent({
 		<View style={{ marginVertical: 24 }}>
 			<View style={{ paddingHorizontal: 36 }}>
 				<ThemedText variant="title" style={{ marginBottom: Spacings.sm }}>
-					{currentBarcode?.data}
+					{truncate(currentBarcode?.data || "", 60)}
 				</ThemedText>
 				{currentBarcode?.type && (
 					<ThemedText
@@ -131,24 +208,228 @@ export function ScannerBottomSheetContent({
 				{currentBarcode?.extra?.type === "wifi" && (
 					<View style={{ marginBottom: Spacings.sm }}>
 						<View style={styles.horizontalStack}>
-							<ThemedText>Nom du réseau : </ThemedText>
-							<ThemedText>{currentBarcode?.extra?.ssid}</ThemedText>
+							<ThemedText numberOfLines={1}>
+								{t("app.scanner_bottom_sheet.ssid")}
+							</ThemedText>
+							<ThemedText numberOfLines={1}>
+								{currentBarcode?.extra?.ssid}
+							</ThemedText>
 						</View>
 						{currentBarcode?.extra?.password && (
 							<View style={styles.horizontalStack}>
-								<ThemedText>Mot de passe : </ThemedText>
-								<ThemedText>{currentBarcode?.extra?.password}</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.password")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.password}
+								</ThemedText>
 							</View>
 						)}
 						{currentBarcode?.extra?.type && (
 							<View style={styles.horizontalStack}>
-								<ThemedText>Sécurité : </ThemedText>
-								<ThemedText>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.encryption")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
 									{
 										scannerResultTypeToEncryption.find(
 											(e) => e.value === currentBarcode?.extra?.type,
 										)?.label
 									}
+								</ThemedText>
+							</View>
+						)}
+					</View>
+				)}
+				{currentBarcode?.extra?.type === "email" && (
+					<View style={{ marginBottom: Spacings.sm }}>
+						<View style={styles.horizontalStack}>
+							<ThemedText numberOfLines={1}>
+								{t("app.scanner_bottom_sheet.email")}
+							</ThemedText>
+							<ThemedText numberOfLines={1}>
+								{currentBarcode?.extra?.address}
+							</ThemedText>
+						</View>
+						{currentBarcode?.extra?.subject && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.subject")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.subject}
+								</ThemedText>
+							</View>
+						)}
+						{currentBarcode?.extra?.body && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.body")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.body}
+								</ThemedText>
+							</View>
+						)}
+					</View>
+				)}
+				{currentBarcode?.extra?.type === "sms" && (
+					<View style={{ marginBottom: Spacings.sm }}>
+						<View style={styles.horizontalStack}>
+							<ThemedText numberOfLines={1}>
+								{t("app.scanner_bottom_sheet.phone_number")}
+							</ThemedText>
+							<ThemedText numberOfLines={1}>
+								{currentBarcode?.extra?.phoneNumber}
+							</ThemedText>
+						</View>
+						{currentBarcode?.extra?.message && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.message")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{truncate(currentBarcode?.extra?.message, 26)}
+								</ThemedText>
+							</View>
+						)}
+					</View>
+				)}
+				{currentBarcode?.extra &&
+					(currentBarcode?.extra.type === "contactInfo" || "vcard") && (
+						<View style={{ marginBottom: Spacings.sm }}>
+							{currentBarcode?.extra?.firstName && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.first_name")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.firstName}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.lastName && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.last_name")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.lastName}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.email && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.email")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.email}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.title && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.title")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.title}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.organization && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.organization")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.organization}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.phone && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.phone")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.phone}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.address && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.address")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.address}
+									</ThemedText>
+								</View>
+							)}
+							{currentBarcode?.extra?.url && (
+								<View style={styles.horizontalStack}>
+									<ThemedText numberOfLines={1}>
+										{t("app.scanner_bottom_sheet.url")}
+									</ThemedText>
+									<ThemedText numberOfLines={1}>
+										{currentBarcode?.extra?.url}
+									</ThemedText>
+								</View>
+							)}
+						</View>
+					)}
+				{(currentBarcode?.extra?.type === "calendarEvent" ||
+					currentBarcode?.extra?.type === "event") && (
+					<View style={{ marginBottom: Spacings.sm }}>
+						{currentBarcode?.extra?.summary && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.summary")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.summary}
+								</ThemedText>
+							</View>
+						)}
+						{currentBarcode?.extra?.location && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.location")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.location}
+								</ThemedText>
+							</View>
+						)}
+						{currentBarcode?.extra?.description && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.description")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.description}
+								</ThemedText>
+							</View>
+						)}
+						{currentBarcode?.extra?.start && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.start_date")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.start}
+								</ThemedText>
+							</View>
+						)}
+						{currentBarcode?.extra?.end && (
+							<View style={styles.horizontalStack}>
+								<ThemedText numberOfLines={1}>
+									{t("app.scanner_bottom_sheet.end_date")}
+								</ThemedText>
+								<ThemedText numberOfLines={1}>
+									{currentBarcode?.extra?.end}
 								</ThemedText>
 							</View>
 						)}
@@ -236,6 +517,46 @@ export function ScannerBottomSheetContent({
 						<ThemedText>{t("app.scanner_bottom_sheet.open_map")}</ThemedText>
 					</Pressable>
 				)}
+				{currentBarcode?.extra &&
+					(currentBarcode?.extra.type === "contactInfo" ||
+						currentBarcode?.extra?.type === "vcard") && (
+						<Pressable
+							onPress={handleAddToContactsPress}
+							style={({ pressed }) => [
+								pressed && { backgroundColor: Colors.darkBackgroundPressed },
+								styles.buttonContainer,
+							]}
+						>
+							<UserPlus
+								size={16}
+								color={Colors.white}
+								style={{ marginRight: Spacings.md }}
+							/>
+							<ThemedText>
+								{t("app.scanner_bottom_sheet.add_to_contacts")}
+							</ThemedText>
+						</Pressable>
+					)}
+				{currentBarcode?.extra &&
+					(currentBarcode?.extra.type === "calendarEvent" ||
+						currentBarcode?.extra?.type === "event") && (
+						<Pressable
+							onPress={handleAddToCalendarPress}
+							style={({ pressed }) => [
+								pressed && { backgroundColor: Colors.darkBackgroundPressed },
+								styles.buttonContainer,
+							]}
+						>
+							<CalendarPlus
+								size={16}
+								color={Colors.white}
+								style={{ marginRight: Spacings.md }}
+							/>
+							<ThemedText>
+								{t("app.scanner_bottom_sheet.add_to_calendar")}
+							</ThemedText>
+						</Pressable>
+					)}
 				<Pressable
 					onPress={handleCopyPress}
 					style={({ pressed }) => [
