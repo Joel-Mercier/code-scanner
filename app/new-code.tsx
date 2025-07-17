@@ -16,6 +16,7 @@ import {
 import {
 	generateCryptoQRCodeData,
 	generateEmailQRCodeData,
+	generateEventQRCodeData,
 	generateLocationQRCodeData,
 	generatePhoneQRCodeData,
 	generateSMSQRCodeData,
@@ -54,7 +55,7 @@ import type { QRCodeErrorCorrectionLevel, QRCodeToStringOptions } from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Pressable, StyleSheet, TextInput, View } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 import {
 	SafeAreaView,
@@ -68,9 +69,7 @@ import ColorPicker, {
 	Panel1,
 	PreviewText,
 } from "reanimated-color-picker";
-import z from "zod/v4";
-
-z.config(z.locales.fr());
+import z from "zod";
 
 type NewQRCodeForm = {
 	value: string;
@@ -616,11 +615,11 @@ export default function NewCodeScreen() {
 		},
 		onSubmit: async ({ value }) => {
 			console.log("FORM SUBMIT", value);
-			const { type, content, ...options } = value;
+			const { type, content, ...options } = newBarcodeFormSchema.parse(value);
 			if (options.fg) {
 				options.fg = options.fg.replace("#", "");
 			}
-			if (options.bg) {
+			if (options?.bg) {
 				options.bg = options.bg.replace("#", "");
 			}
 			doGenerateBarcode.mutate(
@@ -735,7 +734,7 @@ export default function NewCodeScreen() {
 					<ThemedText variant="title">{t("app.new_code.title")}</ThemedText>
 					<View style={{ width: 24, marginLeft: Spacings.lg }} />
 				</View>
-				<ScrollView
+				<KeyboardAwareScrollView
 					showsVerticalScrollIndicator={false}
 					contentContainerStyle={{ paddingBottom: insets.bottom }}
 				>
@@ -797,7 +796,7 @@ export default function NewCodeScreen() {
 														]}
 													>
 														{renderTypeIcon(type.value)}
-														<ThemedText>
+														<ThemedText style={{ textAlign: "center" }}>
 															{t(
 																`app.new_code.qr_code_form.type.options.${type.value}`,
 															)}
@@ -1720,9 +1719,22 @@ export default function NewCodeScreen() {
 													<TextInput
 														value={field.state.value?.toString()}
 														onBlur={field.handleBlur}
-														onChangeText={(text) =>
-															field.handleChange(Number.parseFloat(text))
-														}
+														onChangeText={(text) => {
+															if (
+																!Number.isNaN(
+																	Number.parseFloat(text.replace(/,/, ".")),
+																)
+															) {
+																field.handleChange(
+																	text.length > 0 &&
+																		[".", ","].includes(text.slice(-1))
+																		? text
+																		: Number.parseFloat(text.replace(/,/, ".")),
+																);
+															} else {
+																field.handleChange(undefined);
+															}
+														}}
 														autoFocus
 														placeholder={t(
 															"app.new_code.qr_code_form.latitude.placeholder",
@@ -1755,9 +1767,22 @@ export default function NewCodeScreen() {
 													<TextInput
 														value={field.state.value?.toString()}
 														onBlur={field.handleBlur}
-														onChangeText={(text) =>
-															field.handleChange(Number.parseFloat(text))
-														}
+														onChangeText={(text) => {
+															if (
+																!Number.isNaN(
+																	Number.parseFloat(text.replace(/,/, ".")),
+																)
+															) {
+																field.handleChange(
+																	text.length > 0 &&
+																		[".", ","].includes(text.slice(-1))
+																		? text
+																		: Number.parseFloat(text.replace(/,/, ".")),
+																);
+															} else {
+																field.handleChange(undefined);
+															}
+														}}
 														placeholder={t(
 															"app.new_code.qr_code_form.longitude.placeholder",
 														)}
@@ -1789,12 +1814,17 @@ export default function NewCodeScreen() {
 													<TextInput
 														value={field.state.value?.toString()}
 														onBlur={field.handleBlur}
-														onChangeText={(text) =>
-															field.handleChange(Number.parseInt(text, 10))
-														}
+														onChangeText={(text) => {
+															if (!Number.isNaN(Number.parseInt(text, 10))) {
+																field.handleChange(Number.parseInt(text, 10));
+															} else {
+																field.handleChange(undefined);
+															}
+														}}
 														placeholder={t(
 															"app.new_code.qr_code_form.altitude.placeholder",
 														)}
+														keyboardType="number-pad"
 														style={styles.textInput}
 													/>
 												</View>
@@ -1896,14 +1926,18 @@ export default function NewCodeScreen() {
 													<TextInput
 														value={field.state.value?.toString()}
 														onBlur={field.handleBlur}
-														onChangeText={(text) =>
-															field.handleChange(Number.parseInt(text, 10))
-														}
+														onChangeText={(text) => {
+															if (!Number.isNaN(Number.parseInt(text, 10))) {
+																field.handleChange(Number.parseInt(text, 10));
+															} else {
+																field.handleChange("");
+															}
+														}}
 														placeholder={t(
 															"app.new_code.qr_code_form.margin.placeholder",
 														)}
 														style={styles.textInput}
-														keyboardType="decimal-pad"
+														keyboardType="number-pad"
 													/>
 												</View>
 												{!field.state.meta.isValid && (
@@ -1930,16 +1964,18 @@ export default function NewCodeScreen() {
 													<TextInput
 														value={field.state.value?.toString() || "0"}
 														onBlur={field.handleBlur}
-														onChangeText={(text) =>
-															field.handleChange(
-																text ? Number.parseInt(text, 10) : 0,
-															)
-														}
+														onChangeText={(text) => {
+															if (!Number.isNaN(Number.parseInt(text, 10))) {
+																field.handleChange(Number.parseInt(text, 10));
+															} else {
+																field.handleChange("");
+															}
+														}}
 														placeholder={t(
 															"app.new_code.qr_code_form.scale.placeholder",
 														)}
 														style={styles.textInput}
-														keyboardType="decimal-pad"
+														keyboardType="number-pad"
 													/>
 												</View>
 												{!field.state.meta.isValid && (
@@ -2271,13 +2307,19 @@ export default function NewCodeScreen() {
 													<TextInput
 														value={field.state.value?.toString()}
 														onBlur={field.handleBlur}
-														onChangeText={field.handleChange}
-														autoFocus
+														onChangeText={(text) => {
+															if (!Number.isNaN(Number.parseInt(text, 10))) {
+																field.handleChange(Number.parseInt(text, 10));
+															} else {
+																field.handleChange("");
+															}
+														}}
 														autoCapitalize="none"
 														placeholder={t(
 															"app.new_code.barcode_form.height.placeholder",
 														)}
 														style={styles.textInput}
+														keyboardType="number-pad"
 													/>
 												</View>
 												{!field.state.meta.isValid && (
@@ -2351,7 +2393,7 @@ export default function NewCodeScreen() {
 							)}
 						</TabsPrimitive.Content>
 					</TabsPrimitive.Root>
-				</ScrollView>
+				</KeyboardAwareScrollView>
 			</SafeAreaView>
 			<AlertDialogPrimitive.Portal>
 				<AlertDialogPrimitive.Overlay

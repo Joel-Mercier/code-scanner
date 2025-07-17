@@ -30,7 +30,9 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import "react-native-reanimated";
+import z from "zod";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -65,6 +67,7 @@ export default function RootLayout() {
 	useEffect(() => {
 		if (locale) {
 			i18n.changeLanguage(locale);
+			z.config(z.locales[locale]());
 		} else {
 			const userLocales = getLocales();
 			if (
@@ -81,9 +84,11 @@ export default function RootLayout() {
 				)[0].languageCode as TSupportedLanguages;
 				setLocale(firstMatchingLocale);
 				i18n.changeLanguage(firstMatchingLocale);
+				z.config(z.locales[firstMatchingLocale]());
 			} else {
 				setLocale("en");
 				i18n.changeLanguage("en");
+				z.config(z.locales.en());
 			}
 		}
 	}, []);
@@ -96,37 +101,45 @@ export default function RootLayout() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<GestureHandlerRootView style={{ flex: 1 }}>
-				<BottomSheetModalProvider>
-					<ThemeProvider
-						value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-					>
-						<Stack>
-							<Stack.Screen name="index" options={{ headerShown: false }} />
-							<Stack.Screen name="history" options={{ headerShown: false }} />
-							<Stack.Screen
-								name="qr-code"
-								options={{
-									headerShown: false,
-									presentation: "transparentModal",
-									animation: "fade_from_bottom",
-								}}
-							/>
-							<Stack.Screen
-								name="barcode"
-								options={{
-									headerShown: false,
-									presentation: "transparentModal",
-									animation: "fade_from_bottom",
-								}}
-							/>
-							<Stack.Screen name="new-code" options={{ headerShown: false }} />
-							<Stack.Screen name="settings" options={{ headerShown: false }} />
-							<Stack.Screen name="+not-found" />
-						</Stack>
-						<PortalHost />
-						<SystemBars style="auto" />
-					</ThemeProvider>
-				</BottomSheetModalProvider>
+				<KeyboardProvider>
+					<BottomSheetModalProvider>
+						<ThemeProvider
+							value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+						>
+							<Stack>
+								<Stack.Screen name="index" options={{ headerShown: false }} />
+								<Stack.Screen name="history" options={{ headerShown: false }} />
+								<Stack.Screen
+									name="qr-code"
+									options={{
+										headerShown: false,
+										presentation: "transparentModal",
+										animation: "fade_from_bottom",
+									}}
+								/>
+								<Stack.Screen
+									name="barcode"
+									options={{
+										headerShown: false,
+										presentation: "transparentModal",
+										animation: "fade_from_bottom",
+									}}
+								/>
+								<Stack.Screen
+									name="new-code"
+									options={{ headerShown: false }}
+								/>
+								<Stack.Screen
+									name="settings"
+									options={{ headerShown: false }}
+								/>
+								<Stack.Screen name="+not-found" />
+							</Stack>
+							<PortalHost />
+							<SystemBars style="auto" />
+						</ThemeProvider>
+					</BottomSheetModalProvider>
+				</KeyboardProvider>
 			</GestureHandlerRootView>
 		</QueryClientProvider>
 	);
