@@ -1,7 +1,9 @@
 import { ScannerBottomSheetContent } from "@/components/ScannerBottomSheetContent";
+import { ZoomSlider } from "@/components/ZoomSlider";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
+import useApp from "@/stores/appStore";
 import useScannerResults from "@/stores/scannerResultsStore";
 import type { ScannerResult } from "@/types";
 import { getQRCodeSubType } from "@/utils/getQRCodeSubType";
@@ -25,6 +27,7 @@ import {
 import { CameraType } from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 import { useNavigation, useRouter } from "expo-router";
+import { Orientation } from "expo-screen-orientation";
 import {
 	Camera,
 	Flashlight,
@@ -36,12 +39,9 @@ import {
 	Scan,
 	Settings,
 	Slash,
-	ZoomIn,
-	ZoomOut,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, {
 	FadeIn,
 	FadeOut,
@@ -75,12 +75,16 @@ export default function HomeScreen() {
 	const router = useRouter();
 	const navigation = useNavigation();
 	const isFocused = navigation.isFocused();
-	const screenWidth = Dimensions.get("window").width;
-	const screenHeight = Dimensions.get("window").height;
+	const { height, width } = useWindowDimensions();
 	const sliderOffset = useSharedValue(0.0001);
 	const cameraIconRotation = useSharedValue(0);
-	const MAX_VALUE = screenWidth - Spacings.lg * 4 - 48;
-	const THUMB_RADIUS = 16;
+	const MAX_VALUE = width - Spacings.lg * 4 - 48;
+	const isPortraitOrientation = useApp(
+		(state) =>
+			state.orientation ===
+			(Orientation.PORTRAIT_UP ||
+				state.orientation === Orientation.PORTRAIT_DOWN),
+	);
 
 	useEffect(() => {
 		if (!cameraPermission?.granted) {
@@ -135,25 +139,6 @@ export default function HomeScreen() {
 			cameraType === CameraType.back ? CameraType.front : CameraType.back,
 		);
 	};
-
-	const sliderPanGesture = Gesture.Pan().onChange((event) => {
-		sliderOffset.value = Math.max(
-			0,
-			Math.min(MAX_VALUE, sliderOffset.value + event.changeX),
-		);
-	});
-
-	const rangeStyle = useAnimatedStyle(() => {
-		return {
-			width: `${(sliderOffset.value / MAX_VALUE) * 100}%`,
-		};
-	});
-
-	const thumbStyle = useAnimatedStyle(() => {
-		return {
-			left: `${((sliderOffset.value - THUMB_RADIUS) / MAX_VALUE) * 100}%`,
-		};
-	});
 
 	const zoom = useDerivedValue(() => {
 		return ((sliderOffset.value / MAX_VALUE) * 100) / 100;
@@ -218,15 +203,21 @@ export default function HomeScreen() {
 									<Rect
 										x={0}
 										y={0}
-										width={screenWidth}
-										height={screenHeight}
+										width={width}
+										height={height}
 										color="white"
 									/>
 									<RoundedRect
-										x={screenWidth / 2 - screenWidth / 2 / 2}
-										y={screenHeight / 2 - screenWidth / 2 / 2}
-										width={screenWidth / 2}
-										height={screenWidth / 2}
+										x={
+											width / 2 -
+											width / 2 / 2 / (isPortraitOrientation ? 1 : 2)
+										}
+										y={
+											height / 2 -
+											width / 2 / 2 / (isPortraitOrientation ? 1 : 2)
+										}
+										width={(isPortraitOrientation ? width : height) / 2}
+										height={(isPortraitOrientation ? width : height) / 2}
 										r={24}
 										color="black"
 									/>
@@ -236,8 +227,8 @@ export default function HomeScreen() {
 							<Rect
 								x={0}
 								y={0}
-								width={screenWidth}
-								height={screenHeight}
+								width={width}
+								height={height}
 								color="black"
 								opacity={0.85}
 							/>
@@ -371,79 +362,8 @@ export default function HomeScreen() {
 						<Settings color={Colors.white} size={24} />
 					</Pressable>
 				</View>
-				<View
-					style={{
-						position: "absolute",
-						left: Spacings.lg,
-						right: Spacings.lg,
-						bottom: Spacings.xl,
-						flexDirection: "row",
-						alignItems: "center",
-						justifyContent: "space-between",
-					}}
-				>
-					<ZoomOut
-						color={Colors.white}
-						size={24}
-						style={{ marginRight: Spacings.lg }}
-					/>
-					<View
-						style={{
-							height: 4,
-							width: MAX_VALUE,
-						}}
-					>
-						<View
-							style={{
-								height: "100%",
-								backgroundColor: "rgba(255,255,255,0.5)",
-							}}
-						>
-							<Animated.View
-								style={[
-									{
-										// width: `${zoom}%`,
-										backgroundColor: Colors.white,
-										height: "100%",
-									},
-									rangeStyle,
-								]}
-							/>
-							<GestureDetector gesture={sliderPanGesture}>
-								<Animated.View
-									style={[
-										{
-											width: 32,
-											height: 32,
-											borderRadius: 16,
-											bottom: 18,
-											// backgroundColor: "red",
-											alignItems: "center",
-											justifyContent: "center",
-										},
-										thumbStyle,
-									]}
-								>
-									<View
-										style={{
-											width: 16,
-											height: 16,
-											borderRadius: 8,
-											backgroundColor: Colors.white,
-										}}
-									/>
-								</Animated.View>
-							</GestureDetector>
-						</View>
-					</View>
-					<ZoomIn
-						color={Colors.white}
-						size={24}
-						style={{ marginLeft: Spacings.lg }}
-					/>
-				</View>
+				<ZoomSlider offset={sliderOffset} />
 			</View>
-
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
 				onChange={handleSheetPositionChange}
@@ -489,7 +409,6 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		bottom: 0,
-		// backgroundColor: "rgba(0,0,0,0.65)",
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -504,11 +423,8 @@ const styles = StyleSheet.create({
 		width: 48,
 		height: 48,
 		borderRadius: 24,
-		// backgroundColor: Colors.darkBackground,
 		alignItems: "center",
 		justifyContent: "center",
-		// borderWidth: StyleSheet.hairlineWidth,
-		// borderColor: Colors.white,
 	},
 	bottomSheetContentContainer: {
 		padding: 0,

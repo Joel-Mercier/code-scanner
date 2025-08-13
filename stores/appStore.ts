@@ -1,13 +1,15 @@
 import i18n, { type TSupportedLanguages } from "@/config/i18n";
 import { zustandStorage } from "@/config/storage";
 import createSelectors from "@/utils/createSelectors";
+import { Orientation } from "expo-screen-orientation";
 import z from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-
 interface AppStore {
   locale: TSupportedLanguages | null;
   setLocale: (locale: TSupportedLanguages) => void;
+  orientation: Orientation;
+  setOrientation: (orientation: Orientation) => void;
 }
 
 export const useAppBase = create<AppStore>()(
@@ -19,10 +21,20 @@ export const useAppBase = create<AppStore>()(
         z.config(z.locales[locale]());
         set({ locale });
       },
+      orientation: Orientation.UNKNOWN,
+      setOrientation: (orientation: Orientation) => {
+        set({ orientation });
+      },
     }),
     {
       name: "app",
       storage: createJSONStorage(() => zustandStorage),
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(
+            ([key]) => !["orientation"].includes(key),
+          ),
+        ),
     },
   ),
 );

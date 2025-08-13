@@ -3,7 +3,7 @@
 		"name": "Code Scanner",
 		"slug": "code-scanner",
 		"version": "1.0.0",
-		"orientation": "portrait",
+		"orientation": "default",
 		"icon": "./assets/images/icon.png",
 		"scheme": "codescanner",
 		"userInterfaceStyle": "automatic",
@@ -128,6 +128,12 @@
 				"expo-calendar",
 				{
 					"calendarPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos calendriers."
+				}
+			],
+			[
+				"expo-screen-orientation",
+				{
+					"initialOrientation": "DEFAULT"
 				}
 			]
 		],

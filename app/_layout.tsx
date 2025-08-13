@@ -26,6 +26,7 @@ import {
 } from "@tanstack/react-query";
 import { getLocales } from "expo-localization";
 import { Stack } from "expo-router";
+import * as ScreenOrientation from "expo-screen-orientation";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { SystemBars } from "react-native-edge-to-edge";
@@ -57,6 +58,8 @@ export default function RootLayout() {
 	});
 	const locale = useApp.use.locale();
 	const setLocale = useApp.use.setLocale();
+	const setOrientation = useApp.use.setOrientation();
+	const orientation = useApp.use.orientation();
 
 	useEffect(() => {
 		if (fontsLoaded) {
@@ -91,6 +94,18 @@ export default function RootLayout() {
 				z.config(z.locales.en());
 			}
 		}
+		ScreenOrientation.getOrientationAsync().then((orientation) => {
+			setOrientation(orientation);
+		});
+		const screenOrientationSubscription =
+			ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
+				setOrientation(orientationInfo.orientation);
+			});
+		return () => {
+			ScreenOrientation.removeOrientationChangeListener(
+				screenOrientationSubscription,
+			);
+		};
 	}, []);
 
 	if (!fontsLoaded) {
