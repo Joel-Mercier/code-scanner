@@ -31,7 +31,6 @@ export default function HistoryScreen() {
 					)}
 					contentContainerStyle={styles.wrapper}
 					keyExtractor={(item) => item.data}
-					estimatedItemSize={50}
 					ListHeaderComponent={
 						<View style={styles.headerContainer}>
 							<Pressable

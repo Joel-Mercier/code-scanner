@@ -65,14 +65,18 @@ export function ScannerBottomSheetContent({
 
 	const handleOpenUrlPress = async () => {
 		console.log(`DEBUG : Opening ${currentBarcode?.extra?.url} in browser`);
-		await openBrowserAsync(currentBarcode?.extra?.url);
+		if (currentBarcode?.extra?.url) {
+			await openBrowserAsync(currentBarcode?.extra?.url);
+		}
 	};
 
 	const handleOpenEmailPress = async () => {
 		console.log(`DEBUG : Opening ${currentBarcode?.raw} in email app`);
-		await Linking.openURL(
-			convertMATMSGToMailto(currentBarcode) || currentBarcode?.extra?.url,
-		);
+		const mailto =
+			convertMATMSGToMailto(currentBarcode) || currentBarcode?.extra?.url;
+		if (mailto) {
+			await Linking.openURL(mailto);
+		}
 	};
 
 	const handleOpenPhonePress = async () => {
@@ -82,9 +86,11 @@ export function ScannerBottomSheetContent({
 
 	const handleOpenSMSPress = async () => {
 		console.log(`DEBUG : Opening ${currentBarcode?.raw} in sms app`);
-		await Linking.openURL(
-			convertSMSTOToSMS(currentBarcode) || currentBarcode?.extra?.url,
-		);
+		const smsTo =
+			convertSMSTOToSMS(currentBarcode) || currentBarcode?.extra?.url;
+		if (smsTo) {
+			await Linking.openURL(smsTo);
+		}
 	};
 
 	const handleOpenLocationPress = async () => {
@@ -93,14 +99,18 @@ export function ScannerBottomSheetContent({
 			android: `geo:${currentBarcode?.extra?.lat},${currentBarcode?.extra?.lng}`,
 		});
 		console.log(`DEBUG : Opening ${url} in maps app`);
-		await Linking.openURL(url);
+		if (url) {
+			await Linking.openURL(url);
+		}
 	};
 
 	const handleShareContentPress = async () => {
-		await Share.share({
-			message: currentBarcode?.data,
-			url: currentBarcode?.extra?.url,
-		});
+		if (currentBarcode?.data && currentBarcode?.extra?.url) {
+			await Share.share({
+				message: currentBarcode?.data,
+				url: currentBarcode?.extra?.url,
+			});
+		}
 	};
 
 	const handleAddToContactsPress = async () => {
@@ -118,24 +128,24 @@ export function ScannerBottomSheetContent({
 					[Contacts.Fields.Emails]: [
 						{
 							email: currentBarcode?.extra?.email,
-							label: currentBarcode?.extra?.email,
+							label: currentBarcode?.extra?.email || "",
 						},
 					],
 					[Contacts.Fields.PhoneNumbers]: [
 						{
-							label: currentBarcode?.extra?.phone,
+							label: currentBarcode?.extra?.phone || "",
 							number: currentBarcode?.extra?.phone,
 						},
 					],
 					[Contacts.Fields.UrlAddresses]: [
 						{
-							label: currentBarcode?.extra?.url,
+							label: currentBarcode?.extra?.url || "",
 							url: currentBarcode?.extra?.url,
 						},
 					],
 					[Contacts.Fields.Addresses]: [
 						{
-							label: currentBarcode?.extra?.address,
+							label: currentBarcode?.extra?.address || "",
 							street: currentBarcode?.extra?.address,
 						},
 					],
