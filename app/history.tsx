@@ -26,9 +26,12 @@ export default function HistoryScreen() {
 			<AlertDialogPrimitive.Root style={{ flex: 1 }}>
 				<FlashList
 					data={scannerResults}
-					renderItem={({ item }) => (
-						<ScannerResultListItem scannerResult={item} />
-					)}
+					renderItem={({ item, index }) => {
+						const isLast = scannerResults.length === index + 1;
+						return (
+							<ScannerResultListItem scannerResult={item} isLast={isLast} />
+						);
+					}}
 					contentContainerStyle={styles.wrapper}
 					keyExtractor={(item) => item.data}
 					ListHeaderComponent={
