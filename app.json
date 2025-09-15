@@ -2,7 +2,7 @@
 	"expo": {
 		"name": "Code Scanner",
 		"slug": "code-scanner",
-		"version": "1.0.1",
+		"version": "1.0.2",
 		"orientation": "default",
 		"icon": "./assets/images/icon.png",
 		"scheme": "codescanner",

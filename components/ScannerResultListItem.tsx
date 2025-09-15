@@ -1,3 +1,5 @@
+import { ScannerBottomSheetContent } from "@/components/ScannerBottomSheetContent";
+import { ThemedText } from "@/components/ui/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
@@ -11,19 +13,19 @@ import {
 } from "@gorhom/bottom-sheet";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Barcode, EllipsisVertical, QrCode } from "lucide-react-native";
+import { Barcode, QrCode } from "lucide-react-native";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
-import { ScannerBottomSheetContent } from "./ScannerBottomSheetContent";
-import { ThemedText } from "./ui/ThemedText";
 
 type ScannerResultListItemProps = {
 	scannerResult: ScannerResult;
+	isLast: boolean;
 };
 
 export function ScannerResultListItem({
 	scannerResult,
+	isLast,
 }: ScannerResultListItemProps) {
 	const { t, i18n } = useTranslation();
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -37,7 +39,14 @@ export function ScannerResultListItem({
 	};
 
 	return (
-		<View style={styles.container}>
+		<Pressable
+			onPress={handleShowBottomSheetPress}
+			style={({ pressed }) => [
+				styles.container,
+				isLast && { borderBottomWidth: 0 },
+				pressed && { opacity: 0.65 },
+			]}
+		>
 			{scannerResult.type === "qr" ? (
 				<QrCode size={24} color="white" style={{ marginRight: Spacings.md }} />
 			) : (
@@ -68,9 +77,9 @@ export function ScannerResultListItem({
 					</ThemedText>
 				</View>
 			</View>
-			<Pressable onPress={handleShowBottomSheetPress}>
-				<EllipsisVertical size={24} color="white" />
-			</Pressable>
+			{/* <Pressable onPress={handleShowBottomSheetPress}>
+          <EllipsisVertical size={24} color="white" />
+        </Pressable> */}
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
 				onChange={handleSheetPositionChange}
@@ -94,7 +103,7 @@ export function ScannerResultListItem({
 					/>
 				</BottomSheetView>
 			</BottomSheetModal>
-		</View>
+		</Pressable>
 	);
 }
 
@@ -105,6 +114,8 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "space-between",
 		paddingVertical: Spacings.md,
+		borderBottomWidth: 1,
+		borderBottomColor: Colors.slate["800"],
 	},
 	bottomSheetContentContainer: {
 		padding: 0,

@@ -531,7 +531,6 @@ export default function NewCodeScreen() {
 			onChange: newQRCodeFormSchema,
 		},
 		onSubmit: async ({ value }) => {
-			console.log("FORM SUBMIT", value);
 			let data = value.value;
 			if (value.type === "email") {
 				data = generateEmailQRCodeData(
@@ -614,7 +613,6 @@ export default function NewCodeScreen() {
 			onChange: newBarcodeFormSchema,
 		},
 		onSubmit: async ({ value }) => {
-			console.log("FORM SUBMIT", value);
 			const { type, content, ...options } = newBarcodeFormSchema.parse(value);
 			if (options.fg) {
 				options.fg = options.fg.replace("#", "");
