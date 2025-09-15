@@ -6,37 +6,37 @@ import z from "zod";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 interface AppStore {
-  locale: TSupportedLanguages | null;
-  setLocale: (locale: TSupportedLanguages) => void;
-  orientation: Orientation;
-  setOrientation: (orientation: Orientation) => void;
+	locale: TSupportedLanguages | null;
+	setLocale: (locale: TSupportedLanguages) => void;
+	orientation: Orientation;
+	setOrientation: (orientation: Orientation) => void;
 }
 
 export const useAppBase = create<AppStore>()(
-  persist(
-    (set) => ({
-      locale: null,
-      setLocale: (locale: TSupportedLanguages) => {
-        i18n.changeLanguage(locale);
-        z.config(z.locales[locale]());
-        set({ locale });
-      },
-      orientation: Orientation.UNKNOWN,
-      setOrientation: (orientation: Orientation) => {
-        set({ orientation });
-      },
-    }),
-    {
-      name: "app",
-      storage: createJSONStorage(() => zustandStorage),
-      partialize: (state) =>
-        Object.fromEntries(
-          Object.entries(state).filter(
-            ([key]) => !["orientation"].includes(key),
-          ),
-        ),
-    },
-  ),
+	persist(
+		(set) => ({
+			locale: null,
+			setLocale: (locale: TSupportedLanguages) => {
+				i18n.changeLanguage(locale);
+				z.config(z.locales[locale]());
+				set({ locale });
+			},
+			orientation: Orientation.UNKNOWN,
+			setOrientation: (orientation: Orientation) => {
+				set({ orientation });
+			},
+		}),
+		{
+			name: "app",
+			storage: createJSONStorage(() => zustandStorage),
+			partialize: (state) =>
+				Object.fromEntries(
+					Object.entries(state).filter(
+						([key]) => !["orientation"].includes(key),
+					),
+				),
+		},
+	),
 );
 
 const useApp = createSelectors(useAppBase);

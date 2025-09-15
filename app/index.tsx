@@ -93,7 +93,9 @@ export default function HomeScreen() {
 		sliderOffset.value = 0;
 	}, []);
 
-	const handleBarcodeScanned = (scanningResult: BarcodeScanningResult) => {
+	const handleBarcodeScanned = (
+		scanningResult: BarcodeScanningResult & { extra?: Record<string, string> },
+	) => {
 		if (!currentScannerResult) {
 			console.log("scanningResult :", scanningResult);
 			const extra = scanningResult.extra;
