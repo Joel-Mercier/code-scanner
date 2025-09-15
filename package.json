@@ -12,7 +12,7 @@
 		"lint:fix": "biome check . --write"
 	},
 	"dependencies": {
-		"@expo-google-fonts/inter": "^0.4.1",
+		"@expo-google-fonts/inter": "^0.4.2",
 		"@gorhom/bottom-sheet": "^5.1.8",
 		"@react-native-community/netinfo": "11.4.1",
 		"@react-navigation/bottom-tabs": "^7.4.6",
