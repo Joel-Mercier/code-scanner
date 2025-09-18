@@ -207,7 +207,7 @@ PODS:
     - ExpoModulesCore
   - ExpoCalendar (15.0.7):
     - ExpoModulesCore
-  - ExpoCamera (17.0.7):
+  - ExpoCamera (17.0.8):
     - ExpoModulesCore
     - ZXingObjC/OneD
     - ZXingObjC/PDF417
@@ -219,7 +219,7 @@ PODS:
     - ExpoModulesCore
   - ExpoFont (14.0.8):
     - ExpoModulesCore
-  - ExpoHead (6.0.4):
+  - ExpoHead (6.0.6):
     - ExpoModulesCore
     - RNScreens
   - ExpoImagePicker (17.0.8):
@@ -230,7 +230,7 @@ PODS:
     - ExpoModulesCore
   - ExpoLocalization (17.0.7):
     - ExpoModulesCore
-  - ExpoMediaLibrary (18.1.1):
+  - ExpoMediaLibrary (18.2.0):
     - ExpoModulesCore
     - React-Core
   - ExpoModulesCore (3.0.16):
@@ -2760,17 +2760,17 @@ SPEC CHECKSUMS:
   expo-dev-menu-interface: 600df12ea01efecdd822daaf13cc0ac091775533
   ExpoAsset: 84810d6fed8179f04d4a7a4a6b37028bbd726e26
   ExpoCalendar: 34fe3956dab6278057a8ad04c648fe43bd642ef5
-  ExpoCamera: ae1d6691b05b753261a845536d2b19a9788a8750
+  ExpoCamera: e75f6807a2c047f3338bbadd101af4c71a1d13a5
   ExpoClipboard: af650d14765f19c60ce2a1eaf9dfe6445eff7365
   ExpoContacts: f39087ad6b85f388184a52f9858393b2800b0d2e
   ExpoFileSystem: 4fb06865906e781329eb67166bd64fc4749c3019
   ExpoFont: 86ceec09ffed1c99cfee36ceb79ba149074901b5
-  ExpoHead: 2aad68c730f967d2533599dabb64d1d2cd9f765a
+  ExpoHead: 78f14a8573ae5b882123b272c0af20a80bfa58f6
   ExpoImagePicker: d251aab45a1b1857e4156fed88511b278b4eee1c
   ExpoKeepAwake: 1a2e820692e933c94a565ec3fbbe38ac31658ffe
   ExpoLinking: f051f28e50ea9269ff539317c166adec81d9342d
   ExpoLocalization: b852a5d8ec14c5349c1593eca87896b5b3ebfcca
-  ExpoMediaLibrary: a8108501b40045b096d0a46bef6b5179aec93345
+  ExpoMediaLibrary: 641a6952299b395159ccd459bd8f5f6764bf55fe
   ExpoModulesCore: a28d1b4a5a9fbdacc41ca8d0c777a2d73496b022
   ExpoScreenOrientation: ef9ab3fb85c8a8ff57d52aa169b750aca03f0f4c
   ExpoSplashScreen: cbb839de72110dea1851dd3e85080b7923af2540
