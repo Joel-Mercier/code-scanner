@@ -78,7 +78,7 @@
 		"eslint": "^9.36.0",
 		"eslint-config-expo": "~10.0.0",
 		"expo-atlas": "^0.4.3",
-		"typescript": "~5.9.2"
+		"typescript": "~5.9.3"
 	},
 	"private": true
 }
