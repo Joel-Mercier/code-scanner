@@ -16,7 +16,7 @@
 		"@gorhom/bottom-sheet": "^5.2.6",
 		"@react-native-community/netinfo": "11.4.1",
 		"@react-navigation/bottom-tabs": "^7.4.7",
-		"@react-navigation/elements": "^2.6.4",
+		"@react-navigation/elements": "^2.6.5",
 		"@react-navigation/native": "^7.1.17",
 		"@rn-primitives/alert-dialog": "^1.2.0",
 		"@rn-primitives/collapsible": "^1.2.0",
