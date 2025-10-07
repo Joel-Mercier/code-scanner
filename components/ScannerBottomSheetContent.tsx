@@ -105,7 +105,7 @@ export function ScannerBottomSheetContent({
 	};
 
 	const handleShareContentPress = async () => {
-		if (currentBarcode?.data && currentBarcode?.extra?.url) {
+		if (currentBarcode?.data) {
 			await Share.share({
 				message: currentBarcode?.data,
 				url: currentBarcode?.extra?.url,
