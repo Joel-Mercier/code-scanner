@@ -76,10 +76,12 @@ export default function CodeScreen() {
 					>
 						<Download
 							size={16}
-							color={Colors.white}
+							color={Colors.primary}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>{t("app.qr_code.save")}</ThemedText>
+						<ThemedText style={styles.buttonText}>
+							{t("app.qr_code.save")}
+						</ThemedText>
 					</Pressable>
 					<Pressable
 						onPress={handleSharePress}
@@ -90,10 +92,12 @@ export default function CodeScreen() {
 					>
 						<Share2
 							size={16}
-							color={Colors.white}
+							color={Colors.primary}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>{t("app.qr_code.share")}</ThemedText>
+						<ThemedText style={styles.buttonText}>
+							{t("app.qr_code.share")}
+						</ThemedText>
 					</Pressable>
 				</View>
 			</View>
@@ -115,13 +119,21 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 	},
 	actionsContainer: {
+		flexDirection: "column",
+		justifyContent: "space-between",
+		alignItems: "center",
 		marginTop: Spacings.md,
 	},
 	buttonContainer: {
-		paddingHorizontal: Spacings.lg,
+		paddingHorizontal: Spacings.xl,
 		flexDirection: "row",
 		alignItems: "center",
-		paddingVertical: Spacings.sm,
+		paddingVertical: Spacings.md,
 		marginBottom: Spacings.sm,
+		backgroundColor: `${Colors.primary}33`,
+		borderRadius: Spacings.sm,
+	},
+	buttonText: {
+		color: Colors.primary,
 	},
 });

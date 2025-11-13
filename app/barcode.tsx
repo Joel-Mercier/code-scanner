@@ -104,10 +104,12 @@ export default function BarcodeScreen() {
 					>
 						<Download
 							size={16}
-							color={Colors.white}
+							color={Colors.primary}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>{t("app.barcode.save")}</ThemedText>
+						<ThemedText style={styles.buttonText}>
+							{t("app.barcode.save")}
+						</ThemedText>
 					</Pressable>
 					<Pressable
 						onPress={handleSharePress}
@@ -118,10 +120,12 @@ export default function BarcodeScreen() {
 					>
 						<Share2
 							size={16}
-							color={Colors.white}
+							color={Colors.primary}
 							style={{ marginRight: Spacings.md }}
 						/>
-						<ThemedText>{t("app.barcode.share")}</ThemedText>
+						<ThemedText style={styles.buttonText}>
+							{t("app.barcode.share")}
+						</ThemedText>
 					</Pressable>
 				</View>
 			</View>
@@ -143,13 +147,21 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 	},
 	actionsContainer: {
+		flexDirection: "column",
+		justifyContent: "space-between",
+		alignItems: "center",
 		marginTop: Spacings.md,
 	},
 	buttonContainer: {
-		paddingHorizontal: Spacings.lg,
+		paddingHorizontal: Spacings.xl,
 		flexDirection: "row",
 		alignItems: "center",
-		paddingVertical: Spacings.sm,
+		paddingVertical: Spacings.md,
 		marginBottom: Spacings.sm,
+		backgroundColor: `${Colors.primary}33`,
+		borderRadius: Spacings.sm,
+	},
+	buttonText: {
+		color: Colors.primary,
 	},
 });

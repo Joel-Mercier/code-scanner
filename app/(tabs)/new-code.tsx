@@ -743,10 +743,6 @@ export default function NewCodeScreen() {
 								style={[
 									styles.tabsTrigger,
 									tab === "qr" && styles.tabsTriggerSelected,
-									tab === "qr" && {
-										borderTopLeftRadius: 24,
-										borderBottomLeftRadius: 24,
-									},
 								]}
 							>
 								<ThemedText style={styles.tabsTriggerText}>
@@ -788,8 +784,8 @@ export default function NewCodeScreen() {
 															{
 																backgroundColor:
 																	field.state.value === type.value
-																		? Colors.slate["700"]
-																		: "transparent",
+																		? Colors.primary
+																		: Colors.background,
 															},
 														]}
 													>
@@ -835,7 +831,6 @@ export default function NewCodeScreen() {
 														"app.new_code.qr_code_form.url.placeholder",
 													)}
 													style={styles.textInput}
-													keyboardType="url"
 													textContentType="URL"
 												/>
 											</View>
@@ -970,8 +965,8 @@ export default function NewCodeScreen() {
 																{
 																	backgroundColor:
 																		field.state.value === encryption.value
-																			? Colors.slate["700"]
-																			: "transparent",
+																			? Colors.primary
+																			: Colors.background,
 																},
 															]}
 														>
@@ -1007,8 +1002,8 @@ export default function NewCodeScreen() {
 															{
 																backgroundColor:
 																	field.state.value === true
-																		? Colors.slate["700"]
-																		: "transparent",
+																		? Colors.primary
+																		: Colors.background,
 															},
 														]}
 													>
@@ -1889,8 +1884,8 @@ export default function NewCodeScreen() {
 																	backgroundColor:
 																		field.state.value ===
 																		errorCorrectionLevel.value
-																			? Colors.slate["700"]
-																			: "transparent",
+																			? Colors.primary
+																			: Colors.background,
 																},
 															]}
 														>
@@ -2113,8 +2108,8 @@ export default function NewCodeScreen() {
 															{
 																backgroundColor:
 																	field.state.value === type.value
-																		? Colors.slate["700"]
-																		: "transparent",
+																		? Colors.primary
+																		: Colors.background,
 															},
 														]}
 													>
@@ -2272,8 +2267,8 @@ export default function NewCodeScreen() {
 																{
 																	backgroundColor:
 																		field.state.value === textOption.value
-																			? Colors.slate["700"]
-																			: "transparent",
+																			? Colors.primary
+																			: Colors.background,
 																},
 															]}
 														>
@@ -2338,7 +2333,9 @@ export default function NewCodeScreen() {
 								onPress={() => barcodeForm.handleSubmit()}
 								title={t("app.new_code.generate")}
 								reduceMotion="system"
-								style={{ marginVertical: Spacings.md }}
+								style={{
+									marginVertical: Spacings.md,
+								}}
 							/>
 							{barcodeData && (
 								<View>
@@ -2420,9 +2417,9 @@ export default function NewCodeScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		paddingVertical: 24,
-		paddingHorizontal: 24,
-		backgroundColor: Colors.slate["950"],
+		paddingVertical: Spacings.md,
+		paddingHorizontal: Spacings.md,
+		backgroundColor: Colors.darkBackground,
 	},
 	headerContainer: {
 		flexDirection: "row",
@@ -2450,13 +2447,17 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		padding: Spacings.sm,
 		gap: Spacings.sm,
+		backgroundColor: Colors.background,
 	},
 	textInputContainer: {},
 	textInput: {
 		borderWidth: 1,
-		borderColor: Colors.slate["700"],
+		borderColor: Colors.background,
+		backgroundColor: Colors.background,
 		padding: Spacings.sm,
+		paddingHorizontal: Spacings.md,
 		color: Colors.white,
+		borderRadius: Spacings.md,
 		fontSize: 16,
 		fontFamily: "Inter_400Regular",
 	},
@@ -2465,7 +2466,7 @@ const styles = StyleSheet.create({
 		marginVertical: Spacings.sm,
 	},
 	helperText: {
-		color: Colors.slate["500"],
+		color: Colors.mutedText,
 		marginVertical: Spacings.sm,
 	},
 	codeContainer: {
@@ -2477,7 +2478,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "space-between",
 		borderBottomWidth: 1,
-		borderBottomColor: Colors.slate["700"],
+		borderBottomColor: Colors.backgroundSeparator,
 		paddingVertical: Spacings.sm,
 		transitionDuration: "200",
 		transitionProperty: "opacity",
@@ -2500,8 +2501,8 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-around",
-		backgroundColor: Colors.slate["800"],
-		borderRadius: 24,
+		backgroundColor: Colors.background,
+		borderRadius: Spacings.sm,
 		borderWidth: 4,
 		borderColor: Colors.slate["800"],
 	},
@@ -2513,10 +2514,11 @@ const styles = StyleSheet.create({
 		// backgroundColor: "red",
 	},
 	tabsTriggerSelected: {
-		backgroundColor: Colors.slate["700"],
+		backgroundColor: Colors.backgroundAccentLight,
+		borderRadius: Spacings.sm,
 	},
 	tabsTriggerText: {
-		fontFamily: "Inter_700Bold",
+		fontFamily: "Inter_400Regular",
 		textAlign: "center",
 	},
 	buttonContainer: {

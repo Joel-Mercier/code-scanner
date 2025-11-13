@@ -133,10 +133,10 @@ export const Button = ({
 const styles = StyleSheet.create({
 	container: {
 		alignItems: "center",
-		borderRadius: 24,
+		borderRadius: Spacings.sm,
 		flexDirection: "row",
 		gap: 8,
-		height: 42,
+		height: 52,
 		justifyContent: "center",
 		paddingVertical: Spacings.sm,
 		paddingHorizontal: Spacings.md,

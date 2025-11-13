@@ -121,13 +121,16 @@ export default function RootLayout() {
 						<ThemeProvider
 							value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
 						>
-							<Stack>
-								<Stack.Screen name="index" options={{ headerShown: false }} />
-								<Stack.Screen name="history" options={{ headerShown: false }} />
+							<Stack
+								screenOptions={{
+									headerShown: false,
+								}}
+							>
+								<Stack.Screen name="(tabs)" />
+								<Stack.Screen name="languages" />
 								<Stack.Screen
 									name="qr-code"
 									options={{
-										headerShown: false,
 										presentation: "transparentModal",
 										animation: "fade_from_bottom",
 									}}
@@ -135,19 +138,13 @@ export default function RootLayout() {
 								<Stack.Screen
 									name="barcode"
 									options={{
-										headerShown: false,
 										presentation: "transparentModal",
 										animation: "fade_from_bottom",
 									}}
 								/>
-								<Stack.Screen
-									name="new-code"
-									options={{ headerShown: false }}
-								/>
-								<Stack.Screen
-									name="settings"
-									options={{ headerShown: false }}
-								/>
+								<Stack.Screen name="document-scanner" />
+								<Stack.Screen name="help-faq" />
+								<Stack.Screen name="privacy-policy" />
 								<Stack.Screen name="+not-found" />
 							</Stack>
 							<PortalHost />

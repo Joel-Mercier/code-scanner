@@ -113,11 +113,11 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: Colors.slate["950"],
+		backgroundColor: Colors.darkBackground,
 	},
 	wrapper: {
-		paddingHorizontal: Spacings.lg,
-		paddingVertical: Spacings.lg,
+		paddingHorizontal: Spacings.md,
+		paddingVertical: Spacings.md,
 	},
 	headerContainer: {
 		flexDirection: "row",

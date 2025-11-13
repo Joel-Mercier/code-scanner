@@ -13,7 +13,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Barcode, QrCode } from "lucide-react-native";
+import { Barcode, ChevronRight, QrCode } from "lucide-react-native";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -47,11 +47,13 @@ export function ScannerResultListItem({
 				pressed && { opacity: 0.65 },
 			]}
 		>
-			{scannerResult.type === "qr" ? (
-				<QrCode size={24} color="white" style={{ marginRight: Spacings.md }} />
-			) : (
-				<Barcode size={24} color="white" style={{ marginRight: Spacings.md }} />
-			)}
+			<View style={styles.iconWrapper}>
+				{scannerResult.type === "qr" ? (
+					<QrCode size={24} color={Colors.primary} />
+				) : (
+					<Barcode size={24} color={Colors.primary} />
+				)}
+			</View>
 			<View style={{ flex: 1 }}>
 				<ThemedText numberOfLines={1} style={{ flex: 1 }}>
 					{scannerResult.data}
@@ -77,13 +79,14 @@ export function ScannerResultListItem({
 					</ThemedText>
 				</View>
 			</View>
+			<ChevronRight size={24} color={Colors.mutedText} />
 			{/* <Pressable onPress={handleShowBottomSheetPress}>
           <EllipsisVertical size={24} color="white" />
         </Pressable> */}
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
 				onChange={handleSheetPositionChange}
-				backgroundStyle={{ backgroundColor: Colors.darkBackground }}
+				backgroundStyle={{ backgroundColor: Colors.background }}
 				handleIndicatorStyle={{
 					backgroundColor: "#b3b3b3",
 				}}
@@ -113,11 +116,21 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
-		paddingVertical: Spacings.md,
+		padding: Spacings.md,
 		borderBottomWidth: 1,
 		borderBottomColor: Colors.slate["800"],
+		backgroundColor: Colors.background,
+		borderRadius: Spacings.md,
 	},
 	bottomSheetContentContainer: {
 		padding: 0,
+	},
+	iconWrapper: {
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: Colors.backgroundAccent,
+		borderRadius: Spacings.sm,
+		padding: Spacings.sm,
+		marginRight: Spacings.md,
 	},
 });

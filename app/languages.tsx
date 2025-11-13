@@ -12,7 +12,7 @@ import {
 	useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-export default function SettingsScreen() {
+export default function LanguagesScreen() {
 	const { t } = useTranslation();
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
@@ -27,7 +27,7 @@ export default function SettingsScreen() {
 				>
 					<ArrowLeft size={24} color="white" />
 				</Pressable>
-				<ThemedText variant="title">{t("app.settings.title")}</ThemedText>
+				<ThemedText variant="title">{t("app.languages.title")}</ThemedText>
 				<View style={{ width: 24, marginLeft: Spacings.lg }} />
 			</View>
 			<ScrollView
@@ -35,9 +35,6 @@ export default function SettingsScreen() {
 				contentContainerStyle={{ paddingBottom: insets.bottom }}
 			>
 				<View style={styles.fieldContainer}>
-					<ThemedText style={styles.fieldLabel}>
-						{t("app.settings.form.language.label")}
-					</ThemedText>
 					<View style={styles.typeButtonWrapper}>
 						{SupportedLanguages.map((language) => (
 							<Pressable
@@ -46,16 +43,36 @@ export default function SettingsScreen() {
 								style={[
 									styles.typeButtonContainer,
 									{
+										borderColor:
+											locale === language
+												? Colors.primary
+												: Colors.backgroundAccentLight,
 										backgroundColor:
-											locale === language ? Colors.slate["700"] : "transparent",
+											locale === language
+												? `${Colors.primary}33`
+												: "transparent",
 									},
 								]}
 							>
 								<ThemedText>
-									{t(`app.settings.form.language.options.${language}`, {
+									{t(`app.languages.${language}`, {
 										lng: language,
 									})}
 								</ThemedText>
+								<View
+									style={[
+										styles.indicator,
+										{
+											borderWidth: locale === language ? 4 : 2,
+											borderColor:
+												locale === language
+													? Colors.primary
+													: Colors.backgroundAccentLight,
+											backgroundColor:
+												locale === language ? Colors.white : "transparent",
+										},
+									]}
+								/>
 							</Pressable>
 						))}
 					</View>
@@ -68,9 +85,9 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		paddingVertical: 24,
-		paddingHorizontal: 24,
-		backgroundColor: Colors.slate["950"],
+		paddingVertical: Spacings.md,
+		paddingHorizontal: Spacings.md,
+		backgroundColor: Colors.darkBackground,
 	},
 	headerContainer: {
 		flexDirection: "row",
@@ -87,16 +104,23 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 	},
 	typeButtonWrapper: {
-		flexDirection: "row",
-		flexWrap: "wrap",
 		gap: Spacings.md,
 	},
 	typeButtonContainer: {
-		flex: 0.333,
+		flexDirection: "row",
 		alignItems: "center",
-		justifyContent: "center",
-		borderRadius: 24,
-		padding: Spacings.sm,
+		justifyContent: "space-between",
+		borderRadius: Spacings.sm,
+		padding: Spacings.md,
 		gap: Spacings.sm,
+		borderWidth: 1,
+		borderColor: Colors.backgroundAccentLight,
+	},
+	indicator: {
+		width: Spacings.md,
+		height: Spacings.md,
+		borderRadius: Spacings.md,
+		borderWidth: 2,
+		borderColor: Colors.backgroundAccentLight,
 	},
 });

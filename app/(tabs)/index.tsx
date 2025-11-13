@@ -1,5 +1,6 @@
 import { ScannerBottomSheetContent } from "@/components/ScannerBottomSheetContent";
 import { ZoomSlider } from "@/components/ZoomSlider";
+import { ThemedText } from "@/components/ui/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
 import { useBottomSheetBackHandler } from "@/hooks/useBottomSheetBackHandler";
@@ -25,22 +26,19 @@ import {
 	useCameraPermissions,
 } from "expo-camera";
 import { CameraType } from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
-import { useNavigation, useRouter } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import { Orientation } from "expo-screen-orientation";
 import {
-	Camera,
 	Flashlight,
 	FlashlightOff,
-	List,
-	PlusCircle,
-	QrCode,
 	RefreshCcw,
 	Scan,
-	Settings,
 	Slash,
 } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, {
 	FadeIn,
@@ -56,6 +54,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
 export default function HomeScreen() {
+	const { t } = useTranslation();
 	const [torchEnabled, setTorchEnabled] = useState(false);
 	const [overlayVisible, setOverlayVisible] = useState(false);
 	const [cameraType, setCameraType] = useState(CameraType.back);
@@ -245,55 +244,12 @@ export default function HomeScreen() {
 						top: insets.top,
 						left: insets.left,
 						right: insets.right,
-						bottom: insets.bottom,
 					},
 				]}
 			>
-				<View>
-					<Pressable
-						style={({ pressed }) => [
-							pressed && {
-								backgroundColor: Colors.darkBackgroundPressed,
-								opacity: 0.75,
-							},
-							styles.iconWrapper,
-							{ marginBottom: Spacings.md },
-						]}
-						onPress={() => setTorchEnabled(!torchEnabled)}
-					>
-						{torchEnabled ? (
-							<FlashlightOff color={Colors.white} size={24} />
-						) : (
-							<Flashlight color={Colors.white} size={24} />
-						)}
-					</Pressable>
-					<Pressable
-						style={({ pressed }) => [
-							pressed && {
-								backgroundColor: Colors.darkBackgroundPressed,
-								opacity: 0.75,
-							},
-							styles.iconWrapper,
-							{ marginBottom: Spacings.md },
-						]}
-						onPress={() => setOverlayVisible(!overlayVisible)}
-					>
-						{overlayVisible ? (
-							<>
-								<Scan color={Colors.white} size={24} />
-								<Slash
-									size={24}
-									color={Colors.white}
-									style={{
-										position: "absolute",
-										transform: [{ rotate: "90deg" }],
-									}}
-								/>
-							</>
-						) : (
-							<Scan color={Colors.white} size={24} />
-						)}
-					</Pressable>
+				{/* <View>
+					
+
 					<Pressable
 						style={({ pressed }) => [
 							pressed && {
@@ -307,20 +263,7 @@ export default function HomeScreen() {
 					>
 						<Camera color={Colors.white} size={24} />
 					</Pressable>
-					<Pressable
-						style={({ pressed }) => [
-							pressed && {
-								backgroundColor: Colors.darkBackgroundPressed,
-								opacity: 0.75,
-							},
-							styles.iconWrapper,
-						]}
-						onPress={handleToggleCamera}
-					>
-						<Animated.View style={[toggleCameraIconStyle]}>
-							<RefreshCcw color={Colors.white} size={24} />
-						</Animated.View>
-					</Pressable>
+					
 				</View>
 				<View>
 					{scannerResults.length > 0 && (
@@ -363,8 +306,98 @@ export default function HomeScreen() {
 					>
 						<Settings color={Colors.white} size={24} />
 					</Pressable>
+					<Pressable
+						onPress={() => router.navigate("/document-scanner")}
+						style={({ pressed }) => [
+							pressed && { backgroundColor: Colors.darkBackgroundPressed },
+							styles.iconWrapper,
+						]}
+					>
+						<File color={Colors.white} size={24} />
+					</Pressable>
+				</View> */}
+				<View style={styles.headerWrapper}>
+					<Pressable
+						style={({ pressed }) => [
+							pressed && {
+								backgroundColor: Colors.darkBackgroundPressed,
+								opacity: 0.75,
+							},
+							styles.iconWrapper,
+						]}
+						onPress={() => setTorchEnabled(!torchEnabled)}
+					>
+						{torchEnabled ? (
+							<FlashlightOff color={Colors.white} size={24} />
+						) : (
+							<Flashlight color={Colors.white} size={24} />
+						)}
+					</Pressable>
+					<View style={styles.tabsList}>
+						<View style={[styles.tabsTrigger, styles.tabsTriggerSelected]}>
+							<ThemedText
+								variant="default"
+								style={[styles.tabsTriggerText, styles.tabsTriggerSelectedText]}
+							>
+								{t("app.home.scan_code")}
+							</ThemedText>
+						</View>
+						<View style={[styles.tabsTrigger]}>
+							<Link href={"/document-scanner"} asChild>
+								<ThemedText variant="default" style={styles.tabsTriggerText}>
+									{t("app.home.scan_document")}
+								</ThemedText>
+							</Link>
+						</View>
+					</View>
+					<Pressable
+						style={({ pressed }) => [
+							pressed && {
+								backgroundColor: Colors.darkBackgroundPressed,
+								opacity: 0.75,
+							},
+							styles.iconWrapper,
+						]}
+						onPress={handleToggleCamera}
+					>
+						<Animated.View style={[toggleCameraIconStyle]}>
+							<RefreshCcw color={Colors.white} size={24} />
+						</Animated.View>
+					</Pressable>
 				</View>
-				<ZoomSlider offset={sliderOffset} />
+				<LinearGradient
+					colors={["transparent", Colors.darkBackground, Colors.darkBackground]}
+					locations={[0, 0.9, 1]}
+					style={styles.zoomSliderWrapper}
+				>
+					<ZoomSlider offset={sliderOffset} />
+					<Pressable
+						style={({ pressed }) => [
+							pressed && {
+								backgroundColor: Colors.darkBackgroundPressed,
+								opacity: 0.75,
+							},
+							styles.iconWrapper,
+						]}
+						onPress={() => setOverlayVisible(!overlayVisible)}
+					>
+						{overlayVisible ? (
+							<>
+								<Scan color={Colors.white} size={24} />
+								<Slash
+									size={24}
+									color={Colors.white}
+									style={{
+										position: "absolute",
+										transform: [{ rotate: "90deg" }],
+									}}
+								/>
+							</>
+						) : (
+							<Scan color={Colors.white} size={24} />
+						)}
+					</Pressable>
+				</LinearGradient>
 			</View>
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
@@ -401,8 +434,7 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		bottom: 0,
-		padding: 24,
-		flexDirection: "row",
+		flexDirection: "column",
 		justifyContent: "space-between",
 	},
 	overlay: {
@@ -427,8 +459,52 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		alignItems: "center",
 		justifyContent: "center",
+		backgroundColor: "rgba(0,0,0,0.5)",
 	},
 	bottomSheetContentContainer: {
 		padding: 0,
+	},
+	zoomSliderWrapper: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		paddingHorizontal: Spacings.md,
+		paddingTop: Spacings.md,
+	},
+	headerWrapper: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		columnGap: Spacings.xs,
+		width: "100%",
+		paddingHorizontal: Spacings.md,
+	},
+	tabsList: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-around",
+		backgroundColor: "rgba(0,0,0,0.5)",
+		borderRadius: 24,
+		padding: Spacings.xs,
+		flex: 1,
+		// borderWidth: 4,
+		// borderColor: Colors.slate["800"],
+	},
+	tabsTrigger: {
+		textAlign: "center",
+		paddingHorizontal: Spacings.md,
+		paddingVertical: Spacings.sm,
+		// backgroundColor: "red",
+	},
+	tabsTriggerSelected: {
+		borderRadius: 24,
+		backgroundColor: Colors.white,
+	},
+	tabsTriggerText: {
+		textAlign: "center",
+		fontSize: 14,
+	},
+	tabsTriggerSelectedText: {
+		color: Colors.black,
 	},
 });

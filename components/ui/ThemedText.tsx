@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		fontFamily: "Inter_700Bold",
-		fontSize: 24,
+		fontSize: 20,
 		fontWeight: "bold",
 		lineHeight: 28,
 		color: Colors.white,

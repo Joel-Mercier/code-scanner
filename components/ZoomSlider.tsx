@@ -50,10 +50,10 @@ export function ZoomSlider({ offset }: ZoomSliderProps) {
 	return (
 		<View
 			style={{
-				position: "absolute",
-				left: Spacings.lg + Spacings.md,
-				right: Spacings.lg + Spacings.md,
-				bottom: Spacings.xl,
+				// position: "absolute",
+				// left: Spacings.lg + Spacings.md,
+				// right: Spacings.lg + Spacings.md,
+				// bottom: Spacings.xl,
 				flexDirection: "row",
 				alignItems: "center",
 				justifyContent: "space-between",
@@ -61,9 +61,9 @@ export function ZoomSlider({ offset }: ZoomSliderProps) {
 		>
 			<ZoomOut
 				color={Colors.white}
-				size={Spacings.lg}
+				size={Spacings.md}
 				style={{
-					marginRight: Spacings.lg,
+					marginRight: Spacings.md,
 				}}
 			/>
 			<View
@@ -76,13 +76,14 @@ export function ZoomSlider({ offset }: ZoomSliderProps) {
 					style={{
 						height: "100%",
 						backgroundColor: "rgba(255,255,255,0.5)",
+						borderRadius: 8,
 					}}
 				>
 					<Animated.View
 						style={[
 							{
 								// width: `${zoom}%`,
-								backgroundColor: Colors.white,
+								backgroundColor: Colors.primary,
 								height: "100%",
 							},
 							rangeStyle,
@@ -108,6 +109,8 @@ export function ZoomSlider({ offset }: ZoomSliderProps) {
 									width: 16,
 									height: 16,
 									borderRadius: 8,
+									borderColor: Colors.primary,
+									borderWidth: 2,
 									backgroundColor: Colors.white,
 								}}
 							/>
@@ -117,9 +120,9 @@ export function ZoomSlider({ offset }: ZoomSliderProps) {
 			</View>
 			<ZoomIn
 				color={Colors.white}
-				size={Spacings.lg}
+				size={Spacings.md}
 				style={{
-					marginLeft: Spacings.lg,
+					marginLeft: Spacings.md,
 				}}
 			/>
 		</View>
