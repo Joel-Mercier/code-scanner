@@ -15,7 +15,7 @@
 		"@expo-google-fonts/inter": "^0.4.2",
 		"@gorhom/bottom-sheet": "^5.2.6",
 		"@infinitered/react-native-mlkit-core": "^3.1.0",
-		"@infinitered/react-native-mlkit-document-scanner": "^3.1.0",
+		"@infinitered/react-native-mlkit-document-scanner": "^4.0.0",
 		"@react-native-community/netinfo": "11.4.1",
 		"@react-navigation/bottom-tabs": "^7.8.4",
 		"@react-navigation/elements": "^2.8.1",
