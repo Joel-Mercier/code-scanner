@@ -127,6 +127,7 @@ export default function RootLayout() {
 								}}
 							>
 								<Stack.Screen name="(tabs)" />
+								<Stack.Screen name="document-scanner" />
 								<Stack.Screen name="languages" />
 								<Stack.Screen
 									name="qr-code"
@@ -142,7 +143,13 @@ export default function RootLayout() {
 										animation: "fade_from_bottom",
 									}}
 								/>
-								<Stack.Screen name="document-scanner" />
+								<Stack.Screen
+									name="document"
+									options={{
+										presentation: "transparentModal",
+										animation: "fade_from_bottom",
+									}}
+								/>
 								<Stack.Screen name="help-faq" />
 								<Stack.Screen name="privacy-policy" />
 								<Stack.Screen name="+not-found" />

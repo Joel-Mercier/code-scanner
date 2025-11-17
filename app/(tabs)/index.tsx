@@ -241,7 +241,7 @@ export default function HomeScreen() {
 				style={[
 					styles.cameraOverlay,
 					{
-						top: insets.top,
+						top: insets.top + Spacings.md,
 						left: insets.left,
 						right: insets.right,
 					},

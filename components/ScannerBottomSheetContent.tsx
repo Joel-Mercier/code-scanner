@@ -7,7 +7,6 @@ import {
 	convertMATMSGToMailto,
 	convertSMSTOToSMS,
 } from "@/utils/generateQRCodeData";
-import { truncate } from "@/utils/truncate";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import * as Calendar from "expo-calendar";
 import * as Clipboard from "expo-clipboard";
@@ -200,9 +199,13 @@ export function ScannerBottomSheetContent({
 
 	return (
 		<View style={{ marginVertical: 24 }}>
-			<View style={{ paddingHorizontal: 36 }}>
-				<ThemedText variant="title" style={{ marginBottom: Spacings.sm }}>
-					{truncate(currentBarcode?.data || "", 60)}
+			<View style={{ paddingHorizontal: Spacings.md }}>
+				<ThemedText
+					variant="title"
+					style={{ marginBottom: Spacings.sm }}
+					numberOfLines={2}
+				>
+					{currentBarcode?.data}
 				</ThemedText>
 				{currentBarcode?.type && (
 					<ThemedText
@@ -299,7 +302,7 @@ export function ScannerBottomSheetContent({
 									{t("app.scanner_bottom_sheet.message")}
 								</ThemedText>
 								<ThemedText numberOfLines={1}>
-									{truncate(currentBarcode?.extra?.message, 26)}
+									{currentBarcode?.extra?.message}
 								</ThemedText>
 							</View>
 						)}
@@ -633,7 +636,7 @@ export function ScannerBottomSheetContent({
 
 const styles = StyleSheet.create({
 	buttonContainer: {
-		paddingHorizontal: 24,
+		paddingHorizontal: Spacings.md,
 		flexDirection: "row",
 		alignItems: "center",
 		paddingVertical: Spacings.sm,

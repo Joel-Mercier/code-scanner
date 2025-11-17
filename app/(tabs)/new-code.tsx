@@ -54,7 +54,14 @@ import {
 import type { QRCodeErrorCorrectionLevel, QRCodeToStringOptions } from "qrcode";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image, Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+	Image,
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	TextInput,
+	View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 import {
@@ -454,20 +461,6 @@ const barcodeDefaultValues: NewBarcodeForm = {
 	qz: 4,
 };
 
-const chunkedQRCodeTypes: (typeof QRCodeTypes)[] = [];
-
-for (let i = 0; i < QRCodeTypes.length; i += 3) {
-	const chunk = QRCodeTypes.slice(i, i + 3);
-	chunkedQRCodeTypes.push(chunk);
-}
-
-const chunkedBarcodeTypes: (typeof barcodeTypes)[] = [];
-
-for (let i = 0; i < barcodeTypes.length; i += 3) {
-	const chunk = barcodeTypes.slice(i, i + 3);
-	chunkedBarcodeTypes.push(chunk);
-}
-
 const renderTypeIcon = (type: CodeType) => {
 	switch (type) {
 		case "url":
@@ -770,35 +763,33 @@ export default function NewCodeScreen() {
 								{(field) => (
 									<View style={styles.fieldContainer}>
 										<ThemedText style={styles.fieldLabel}>Type</ThemedText>
-										{chunkedQRCodeTypes.map((chunk, index) => (
-											<View
-												style={styles.typeButtonWrapper}
-												key={`types-wrapper-${chunk[0].value}`}
-											>
-												{chunk.map((type) => (
-													<Pressable
-														key={type.value}
-														onPress={() => field.setValue(type.value)}
-														style={[
-															styles.typeButtonContainer,
-															{
-																backgroundColor:
-																	field.state.value === type.value
-																		? Colors.primary
-																		: Colors.background,
-															},
-														]}
-													>
-														{renderTypeIcon(type.value)}
-														<ThemedText style={{ textAlign: "center" }}>
-															{t(
-																`app.new_code.qr_code_form.type.options.${type.value}`,
-															)}
-														</ThemedText>
-													</Pressable>
-												))}
-											</View>
-										))}
+										<ScrollView
+											horizontal={true}
+											showsHorizontalScrollIndicator={false}
+										>
+											{QRCodeTypes.map((type) => (
+												<Pressable
+													key={type.value}
+													onPress={() => field.setValue(type.value)}
+													style={[
+														styles.typeButtonContainer,
+														{
+															backgroundColor:
+																field.state.value === type.value
+																	? Colors.primary
+																	: Colors.background,
+														},
+													]}
+												>
+													{renderTypeIcon(type.value)}
+													<ThemedText style={{ textAlign: "center" }}>
+														{t(
+															`app.new_code.qr_code_form.type.options.${type.value}`,
+														)}
+													</ThemedText>
+												</Pressable>
+											))}
+										</ScrollView>
 										{!field.state.meta.isValid && (
 											<ThemedText
 												style={styles.errorText}
@@ -2094,30 +2085,28 @@ export default function NewCodeScreen() {
 										<ThemedText style={styles.fieldLabel}>
 											{t("app.new_code.barcode_form.type.label")}
 										</ThemedText>
-										{chunkedBarcodeTypes.map((chunk, index) => (
-											<View
-												style={styles.typeButtonWrapper}
-												key={`types-wrapper-${chunk[0].value}`}
-											>
-												{chunk.map((type) => (
-													<Pressable
-														key={type.value}
-														onPress={() => field.setValue(type.value)}
-														style={[
-															styles.typeButtonContainer,
-															{
-																backgroundColor:
-																	field.state.value === type.value
-																		? Colors.primary
-																		: Colors.background,
-															},
-														]}
-													>
-														<ThemedText>{type.label}</ThemedText>
-													</Pressable>
-												))}
-											</View>
-										))}
+										<ScrollView
+											horizontal
+											showsHorizontalScrollIndicator={false}
+										>
+											{barcodeTypes.map((type) => (
+												<Pressable
+													key={type.value}
+													onPress={() => field.setValue(type.value)}
+													style={[
+														styles.typeButtonContainer,
+														{
+															backgroundColor:
+																field.state.value === type.value
+																	? Colors.primary
+																	: Colors.background,
+														},
+													]}
+												>
+													<ThemedText>{type.label}</ThemedText>
+												</Pressable>
+											))}
+										</ScrollView>
 										{!field.state.meta.isValid && (
 											<ThemedText
 												style={styles.errorText}

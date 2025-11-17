@@ -5,52 +5,61 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 interface ScannerResultsStore {
-	scannerResults: ScannerResult[];
-	currentScannerResult: ScannerResult | null;
-	setCurrentScannerResult: (scannerResult: ScannerResult | null) => void;
-	addScannerResult: (scannerResult: ScannerResult) => void;
-	clearScannerResults: () => void;
+  scannerResults: ScannerResult[];
+  currentScannerResult: ScannerResult | null;
+  setCurrentScannerResult: (scannerResult: ScannerResult | null) => void;
+  addScannerResult: (scannerResult: ScannerResult) => void;
+  removeScannerResult: (scannerResult: ScannerResult) => void;
+  clearScannerResults: () => void;
 }
 
 export const useScannerResultsBase = create<ScannerResultsStore>()(
-	persist(
-		(set) => ({
-			scannerResults: [],
-			currentScannerResult: null,
-			setCurrentScannerResult: (scannerResult: ScannerResult | null) => {
-				set({ currentScannerResult: scannerResult });
-			},
-			addScannerResult: (scannerResult: ScannerResult) => {
-				set((state) => {
-					if (
-						!state.scannerResults
-							.map((result) => result.data)
-							.includes(scannerResult.data)
-					) {
-						const newScannerResults = [scannerResult, ...state.scannerResults];
-						if (newScannerResults.length > 100) {
-							newScannerResults.length = 100;
-						}
-						return { scannerResults: newScannerResults };
-					}
-					return { scannerResults: state.scannerResults };
-				});
-			},
-			clearScannerResults: () => {
-				set({ scannerResults: [] });
-			},
-		}),
-		{
-			name: "scannerResults",
-			storage: createJSONStorage(() => zustandStorage),
-			partialize: (state) =>
-				Object.fromEntries(
-					Object.entries(state).filter(
-						([key]) => !["currentScannerResult"].includes(key),
-					),
-				),
-		},
-	),
+  persist(
+    (set) => ({
+      scannerResults: [],
+      currentScannerResult: null,
+      setCurrentScannerResult: (scannerResult: ScannerResult | null) => {
+        set({ currentScannerResult: scannerResult });
+      },
+      addScannerResult: (scannerResult: ScannerResult) => {
+        set((state) => {
+          if (
+            !state.scannerResults
+              .map((result) => result.data)
+              .includes(scannerResult.data)
+          ) {
+            const newScannerResults = [scannerResult, ...state.scannerResults];
+            if (newScannerResults.length > 100) {
+              newScannerResults.length = 100;
+            }
+            return { scannerResults: newScannerResults };
+          }
+          return { scannerResults: state.scannerResults };
+        });
+      },
+      removeScannerResult: (scannerResult: ScannerResult) => {
+        set((state) => {
+          const newScannerResults = state.scannerResults.filter(
+            (result) => result.data !== scannerResult.data,
+          );
+          return { scannerResults: newScannerResults };
+        });
+      },
+      clearScannerResults: () => {
+        set({ scannerResults: [] });
+      },
+    }),
+    {
+      name: "scannerResults",
+      storage: createJSONStorage(() => zustandStorage),
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(
+            ([key]) => !["currentScannerResult"].includes(key),
+          ),
+        ),
+    },
+  ),
 );
 
 const useScannerResults = createSelectors(useScannerResultsBase);

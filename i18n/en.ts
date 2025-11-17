@@ -6,6 +6,9 @@ export default {
         scan_code: "Scan code",
         scan_document: "Scan document",
       },
+      document_scanner: {
+        recent_documents: "Recent scans",
+      },
       barcode: {
         save: "Save",
         share: "Share",
@@ -384,6 +387,7 @@ export default {
         no: "No",
         cancel: "Cancel",
         success: "Success",
+        timeAgo: "{{time}} ago",
         tabs: {
           home: "Scanner",
           history: "History",
