@@ -35,7 +35,7 @@ export default function DocumentResultListItem({
 
 	const handleDocumentPress = () => {
 		setCurrentDocument(document);
-		router.navigate("/document-two");
+		router.navigate("/document");
 	};
 
 	const handleDocumentLongPress = () => {

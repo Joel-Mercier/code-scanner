@@ -247,75 +247,6 @@ export default function HomeScreen() {
 					},
 				]}
 			>
-				{/* <View>
-					
-
-					<Pressable
-						style={({ pressed }) => [
-							pressed && {
-								backgroundColor: Colors.darkBackgroundPressed,
-								opacity: 0.75,
-							},
-							styles.iconWrapper,
-							{ marginBottom: Spacings.md },
-						]}
-						onPress={handlePicturePress}
-					>
-						<Camera color={Colors.white} size={24} />
-					</Pressable>
-					
-				</View>
-				<View>
-					{scannerResults.length > 0 && (
-						<Pressable
-							style={({ pressed }) => [
-								pressed && {
-									backgroundColor: Colors.darkBackgroundPressed,
-									opacity: 0.75,
-								},
-								styles.iconWrapper,
-								{ marginBottom: Spacings.md },
-							]}
-							onPress={() => router.navigate("/history")}
-						>
-							<List color={Colors.white} size={24} />
-						</Pressable>
-					)}
-					<Pressable
-						onPress={() => router.navigate("/new-code")}
-						style={({ pressed }) => [
-							pressed && { backgroundColor: Colors.darkBackgroundPressed },
-							styles.iconWrapper,
-							{ marginBottom: Spacings.md },
-						]}
-					>
-						<QrCode color={Colors.white} size={24} />
-						<PlusCircle
-							size={16}
-							color={Colors.white}
-							style={{ position: "absolute", bottom: 8, right: 8 }}
-							fill={Colors.darkBackground}
-						/>
-					</Pressable>
-					<Pressable
-						onPress={() => router.navigate("/settings")}
-						style={({ pressed }) => [
-							pressed && { backgroundColor: Colors.darkBackgroundPressed },
-							styles.iconWrapper,
-						]}
-					>
-						<Settings color={Colors.white} size={24} />
-					</Pressable>
-					<Pressable
-						onPress={() => router.navigate("/document-scanner")}
-						style={({ pressed }) => [
-							pressed && { backgroundColor: Colors.darkBackgroundPressed },
-							styles.iconWrapper,
-						]}
-					>
-						<File color={Colors.white} size={24} />
-					</Pressable>
-				</View> */}
 				<View style={styles.headerWrapper}>
 					<Pressable
 						style={({ pressed }) => [
@@ -338,13 +269,18 @@ export default function HomeScreen() {
 							<ThemedText
 								variant="default"
 								style={[styles.tabsTriggerText, styles.tabsTriggerSelectedText]}
+								numberOfLines={1}
 							>
 								{t("app.home.scan_code")}
 							</ThemedText>
 						</View>
 						<View style={[styles.tabsTrigger]}>
 							<Link href={"/document-scanner"} asChild>
-								<ThemedText variant="default" style={styles.tabsTriggerText}>
+								<ThemedText
+									variant="default"
+									style={styles.tabsTriggerText}
+									numberOfLines={1}
+								>
 									{t("app.home.scan_document")}
 								</ThemedText>
 							</Link>
@@ -367,7 +303,7 @@ export default function HomeScreen() {
 				</View>
 				<LinearGradient
 					colors={["transparent", Colors.darkBackground, Colors.darkBackground]}
-					locations={[0, 0.9, 1]}
+					locations={[0, 0.6, 1]}
 					style={styles.zoomSliderWrapper}
 				>
 					<ZoomSlider offset={sliderOffset} />
@@ -469,7 +405,7 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 		alignItems: "center",
 		paddingHorizontal: Spacings.md,
-		paddingTop: Spacings.md,
+		paddingTop: Spacings.xl,
 	},
 	headerWrapper: {
 		flexDirection: "row",

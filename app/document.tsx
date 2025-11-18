@@ -1,5 +1,4 @@
 import { DocumentBottomSheetContent } from "@/components/DocumentBottomSheetContent";
-import DocumentSlideItem from "@/components/DocumentSlideItem";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
@@ -10,18 +9,114 @@ import {
 	BottomSheetModal,
 	BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { ArrowLeft, EllipsisVertical } from "lucide-react-native";
-import { useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import React, { useRef } from "react";
+import { Dimensions, Image, Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+	Extrapolation,
+	interpolate,
+	useAnimatedScrollHandler,
+	useAnimatedStyle,
+	useDerivedValue,
+	useSharedValue,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const height = Dimensions.get("window").height;
+const { width, height } = Dimensions.get("window");
+const ITEM_WIDTH = width * 0.8;
+const SPACER = (width - ITEM_WIDTH) / 2;
 
-export default function DocumentScreen() {
-	const { t } = useTranslation();
+const Dot = ({ index, animatedIndex }) => {
+	const style = useAnimatedStyle(() => {
+		const opacity = interpolate(
+			animatedIndex.value,
+			[index - 1, index, index + 1],
+			[0.3, 1, 0.3],
+			Extrapolation.CLAMP,
+		);
+		const scale = interpolate(
+			animatedIndex.value,
+			[index - 1, index, index + 1],
+			[1, 1.4, 1],
+			Extrapolation.CLAMP,
+		);
+		return { opacity, transform: [{ scale }] };
+	});
+
+	return (
+		<Animated.View
+			style={[
+				{
+					width: 10,
+					height: 10,
+					borderRadius: 5,
+					marginHorizontal: 6,
+					backgroundColor: Colors.white,
+				},
+				style,
+			]}
+		/>
+	);
+};
+
+const RenderItem = ({ item, index, animatedIndex, totalCount }) => {
+	const animatedStyle = useAnimatedStyle(() => {
+		const scale = interpolate(
+			animatedIndex.value,
+			[index - 1, index, index + 1],
+			[0.9, 1, 0.9],
+			Extrapolation.CLAMP,
+		);
+		const translateY = interpolate(
+			animatedIndex.value,
+			[index - 1, index, index + 1],
+			[10, 0, 10],
+			Extrapolation.CLAMP,
+		);
+		return { transform: [{ scale }, { translateY }] };
+	});
+
+	return (
+		<View
+			style={{
+				width: ITEM_WIDTH,
+				alignItems: "center",
+				justifyContent: "center",
+			}}
+		>
+			<Animated.View
+				style={[
+					{
+						width: ITEM_WIDTH,
+						height: height * 0.72,
+						borderRadius: Spacings.md,
+						overflow: "hidden",
+						backgroundColor: Colors.white,
+					},
+					animatedStyle,
+				]}
+			>
+				<Image
+					source={{ uri: item }}
+					style={{ width: "100%", height: "100%" }}
+					resizeMode="contain"
+				/>
+			</Animated.View>
+			<ThemedText
+				style={{
+					marginTop: Spacings.md,
+					textAlign: "center",
+				}}
+				numberOfLines={1}
+			>
+				Page {index + 1} / {totalCount}
+			</ThemedText>
+		</View>
+	);
+};
+
+export default function Carousel() {
 	const insets = useSafeAreaInsets();
 	const router = useRouter();
 	const currentDocument = useDocuments.use.currentDocument();
@@ -30,7 +125,16 @@ export default function DocumentScreen() {
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 	const { handleSheetPositionChange } =
 		useBottomSheetBackHandler(bottomSheetModalRef);
-	console.log("pages", pages);
+
+	const scrollX = useSharedValue(0);
+	const animatedIndex = useDerivedValue(() => scrollX.value / ITEM_WIDTH);
+
+	const scrollHandler = useAnimatedScrollHandler({
+		onScroll: (event) => {
+			scrollX.value = event.contentOffset.x;
+		},
+	});
+
 	return (
 		<View
 			style={[
@@ -59,49 +163,41 @@ export default function DocumentScreen() {
 					<EllipsisVertical size={24} color="white" />
 				</Pressable>
 			</View>
-			{/* <ScrollView
-				style={{ flex: 1 }}
-				contentContainerStyle={{
-					alignItems: "center",
-					justifyContent: "center",
-					backgroundColor: "red",
-					height: "100%",
-				}}
-				horizontal
-			>
-				<DocumentSlideItem item={pages[0]} index={0} />
-				<DocumentSlideItem item={pages[0]} index={0} />
-			</ScrollView> */}
-			<FlashList
-				data={pages}
-				renderItem={({ item, index }) => (
-					<DocumentSlideItem item={item} index={index} />
-				)}
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				pagingEnabled
-				keyExtractor={(item) => item}
-				contentContainerStyle={{
-					backgroundColor: "red",
-					height,
-					flexGrow: 1,
-					flex: 1,
-				}}
-				CellRendererComponent={({ style, index, ...props }) => {
-					return (
-						<View
-							style={{
-								...style,
-								flexGrow: 1,
-								flex: 1,
-								backgroundColor: "red",
-								height: "100%",
-							}}
-							{...props}
+			<View style={{ flex: 1, justifyContent: "center" }}>
+				<Animated.FlatList
+					data={pages}
+					horizontal
+					showsHorizontalScrollIndicator={false}
+					snapToInterval={ITEM_WIDTH}
+					decelerationRate="fast"
+					snapToAlignment="start"
+					contentContainerStyle={{ paddingHorizontal: SPACER }}
+					scrollEventThrottle={16}
+					onScroll={scrollHandler}
+					keyExtractor={(item) => item}
+					renderItem={({ item, index }) => (
+						<RenderItem
+							item={item}
+							index={index}
+							animatedIndex={animatedIndex}
+							totalCount={pages.length}
 						/>
-					);
-				}}
-			/>
+					)}
+				/>
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "center",
+						marginTop: Spacings.md,
+						marginBottom: Spacings.md,
+						paddingBottom: insets.bottom,
+					}}
+				>
+					{pages.map((_, i) => (
+						<Dot index={i} animatedIndex={animatedIndex} key={i} />
+					))}
+				</View>
+			</View>
 			<BottomSheetModal
 				ref={bottomSheetModalRef}
 				onChange={handleSheetPositionChange}
@@ -143,15 +239,5 @@ const styles = StyleSheet.create({
 	},
 	bottomSheetContentContainer: {
 		padding: 0,
-	},
-	slideContainer: {
-		alignItems: "center",
-		height: "100%",
-		width: "100%",
-	},
-	slideImage: {
-		width: "100%",
-		height: "100%",
-		backgroundColor: Colors.white,
 	},
 });
