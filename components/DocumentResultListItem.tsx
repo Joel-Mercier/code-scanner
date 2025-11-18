@@ -19,10 +19,12 @@ import { ThemedText } from "./ui/ThemedText";
 
 interface DocumentResultListItemProps {
 	document: Document;
+	index: number;
 }
 
 export default function DocumentResultListItem({
 	document,
+	index,
 }: DocumentResultListItemProps) {
 	const { t } = useTranslation();
 	const router = useRouter();
@@ -33,7 +35,7 @@ export default function DocumentResultListItem({
 
 	const handleDocumentPress = () => {
 		setCurrentDocument(document);
-		router.navigate("/document");
+		router.navigate("/document-two");
 	};
 
 	const handleDocumentLongPress = () => {
@@ -42,7 +44,7 @@ export default function DocumentResultListItem({
 
 	return (
 		<Pressable
-			style={styles.container}
+			style={[styles.container]}
 			onPress={handleDocumentPress}
 			onLongPress={handleDocumentLongPress}
 		>

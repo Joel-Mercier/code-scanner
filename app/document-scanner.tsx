@@ -19,6 +19,9 @@ import {
 	useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+const GAP = Spacings.md;
+const COLS = 3;
+
 export default function DocumentScannerScreen() {
 	const router = useRouter();
 	const { t } = useTranslation();
@@ -29,13 +32,11 @@ export default function DocumentScannerScreen() {
 
 	const handleScanDocumentPress = async () => {
 		try {
-			console.log("launchDocumentScannerAsync");
 			const result = await launchDocumentScannerAsync({
 				scannerMode: ScannerModeOptions.FULL,
 				galleryImportAllowed: true,
 				resultFormats: ResultFormatOptions.ALL,
 			});
-			console.log("RESULT", result);
 			if (result.canceled) {
 				return;
 			}
@@ -58,7 +59,6 @@ export default function DocumentScannerScreen() {
 		}
 	};
 
-	console.log("DOCUMENTS", documents);
 	return (
 		<SafeAreaView style={styles.container}>
 			<View style={styles.headerContainer}>
@@ -86,14 +86,31 @@ export default function DocumentScannerScreen() {
 				data={documents}
 				keyExtractor={(item: Document) => item.id}
 				renderItem={({ item, index }) => {
-					return <DocumentResultListItem document={item} />;
+					return <DocumentResultListItem document={item} index={index} />;
 				}}
-				numColumns={3}
+				numColumns={COLS}
 				ListHeaderComponent={() => (
 					<ThemedText variant="title" style={styles.listTitle}>
 						{t("app.document_scanner.recent_documents")}
 					</ThemedText>
 				)}
+				ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
+				CellRendererComponent={({ style, index, ...props }) => {
+					const itemGap = (GAP * (COLS - 1)) / COLS;
+					const paddingLeft = ((index % COLS) / (COLS - 1)) * itemGap;
+					const paddingRight = itemGap - paddingLeft;
+					return (
+						<View
+							style={{
+								...style,
+								flexGrow: 1,
+								paddingLeft,
+								paddingRight,
+							}}
+							{...props}
+						/>
+					);
+				}}
 			/>
 			<Pressable
 				onPress={handleScanDocumentPress}
