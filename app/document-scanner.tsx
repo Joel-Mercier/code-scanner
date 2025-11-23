@@ -1,8 +1,9 @@
 import DocumentResultListItem from "@/components/DocumentResultListItem";
+import FolderListItem from "@/components/FolderListItem";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { Colors } from "@/constants/Colors";
 import { Spacings } from "@/constants/Spacings";
-import useDocuments, { type Document } from "@/stores/documents";
+import useDocuments, { type Document, type Folder } from "@/stores/documents";
 import {
 	ResultFormatOptions,
 	ScannerModeOptions,
@@ -11,16 +12,18 @@ import {
 import { FlashList } from "@shopify/flash-list";
 import { File } from "expo-file-system";
 import { Link, useRouter } from "expo-router";
-import { FileText, Scan } from "lucide-react-native";
+import { FileText, FolderPlus, Scan } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import {
 	SafeAreaView,
 	useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 const GAP = Spacings.md;
-const COLS = 3;
+const DOCUMENT_COLS = 3;
+const FOLDER_COLS = 2;
 
 export default function DocumentScannerScreen() {
 	const router = useRouter();
@@ -28,7 +31,8 @@ export default function DocumentScannerScreen() {
 	const insets = useSafeAreaInsets();
 	const documents = useDocuments.use.documents();
 	const setCurrentDocument = useDocuments.use.setCurrentDocument();
-	const addDocument = useDocuments.use.addDocument();
+	const createDocument = useDocuments.use.createDocument();
+	const folders = useDocuments.use.folders();
 
 	const handleScanDocumentPress = async () => {
 		try {
@@ -50,8 +54,9 @@ export default function DocumentScannerScreen() {
 					pdf,
 					pages: pages,
 					size: pdfFile.info().size,
+					parentId: null,
 				};
-				addDocument(newDocument);
+				createDocument(newDocument);
 				setCurrentDocument(newDocument);
 			}
 		} catch (error) {
@@ -82,36 +87,94 @@ export default function DocumentScannerScreen() {
 				</View>
 				<View style={{ width: 24, marginLeft: Spacings.lg }} />
 			</View>
-			<FlashList
-				data={documents}
-				keyExtractor={(item: Document) => item.id}
-				renderItem={({ item, index }) => {
-					return <DocumentResultListItem document={item} index={index} />;
-				}}
-				numColumns={COLS}
-				ListHeaderComponent={() => (
-					<ThemedText variant="title" style={styles.listTitle}>
-						{t("app.document_scanner.recent_documents")}
-					</ThemedText>
-				)}
-				ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
-				CellRendererComponent={({ style, index, ...props }) => {
-					const itemGap = (GAP * (COLS - 1)) / COLS;
-					const paddingLeft = ((index % COLS) / (COLS - 1)) * itemGap;
-					const paddingRight = itemGap - paddingLeft;
-					return (
+			<ScrollView>
+				<FlashList
+					data={folders.slice(0, 4)}
+					keyExtractor={(item: Folder) => item.id}
+					renderItem={({ item, index }) => {
+						return <FolderListItem folder={item} index={index} />;
+					}}
+					numColumns={FOLDER_COLS}
+					ListHeaderComponent={() => (
 						<View
 							style={{
-								...style,
-								flexGrow: 1,
-								paddingLeft,
-								paddingRight,
+								flexDirection: "row",
+								alignItems: "center",
+								justifyContent: "space-between",
+								marginBottom: Spacings.md,
 							}}
-							{...props}
-						/>
-					);
-				}}
-			/>
+						>
+							<ThemedText
+								variant="title"
+								style={[styles.listTitle, { marginBottom: 0 }]}
+							>
+								{t("app.document_scanner.folders")}
+							</ThemedText>
+							<Link href={"/folders/add"} asChild>
+								<Pressable style={styles.addButton}>
+									<FolderPlus size={18} color={Colors.primary} />
+									<ThemedText
+										numberOfLines={1}
+										variant="default"
+										style={{ color: Colors.primary, fontSize: 14 }}
+									>
+										{t("app.document_scanner.add_folder")}
+									</ThemedText>
+								</Pressable>
+							</Link>
+						</View>
+					)}
+					ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
+					CellRendererComponent={({ style, index, ...props }) => {
+						const itemGap = (GAP * (FOLDER_COLS - 1)) / FOLDER_COLS;
+						const paddingLeft =
+							((index % FOLDER_COLS) / (FOLDER_COLS - 1)) * itemGap;
+						const paddingRight = itemGap - paddingLeft;
+						return (
+							<View
+								style={{
+									...style,
+									flexGrow: 1,
+									paddingLeft,
+									paddingRight,
+								}}
+								{...props}
+							/>
+						);
+					}}
+				/>
+				<FlashList
+					data={documents.slice(0, 9)}
+					keyExtractor={(item: Document) => item.id}
+					renderItem={({ item, index }) => {
+						return <DocumentResultListItem document={item} index={index} />;
+					}}
+					numColumns={DOCUMENT_COLS}
+					ListHeaderComponent={() => (
+						<ThemedText variant="title" style={styles.listTitle}>
+							{t("app.document_scanner.recent_documents")}
+						</ThemedText>
+					)}
+					ItemSeparatorComponent={() => <View style={{ height: GAP }} />}
+					CellRendererComponent={({ style, index, ...props }) => {
+						const itemGap = (GAP * (DOCUMENT_COLS - 1)) / DOCUMENT_COLS;
+						const paddingLeft =
+							((index % DOCUMENT_COLS) / (DOCUMENT_COLS - 1)) * itemGap;
+						const paddingRight = itemGap - paddingLeft;
+						return (
+							<View
+								style={{
+									...style,
+									flexGrow: 1,
+									paddingLeft,
+									paddingRight,
+								}}
+								{...props}
+							/>
+						);
+					}}
+				/>
+			</ScrollView>
 			<Pressable
 				onPress={handleScanDocumentPress}
 				style={({ pressed }) => [
@@ -192,5 +255,14 @@ const styles = StyleSheet.create({
 	},
 	listTitle: {
 		marginBottom: Spacings.md,
+	},
+	addButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: Spacings.sm,
+		borderRadius: Spacings.sm,
+		paddingHorizontal: Spacings.md,
+		paddingVertical: Spacings.xs,
+		backgroundColor: `${Colors.primary}33`,
 	},
 });

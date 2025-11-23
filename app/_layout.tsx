@@ -128,6 +128,8 @@ export default function RootLayout() {
 							>
 								<Stack.Screen name="(tabs)" />
 								<Stack.Screen name="document-scanner" />
+								<Stack.Screen name="folders/add" />
+								<Stack.Screen name="folders/:id" />
 								<Stack.Screen name="languages" />
 								<Stack.Screen
 									name="qr-code"

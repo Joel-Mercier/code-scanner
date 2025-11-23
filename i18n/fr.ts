@@ -7,6 +7,14 @@ export default {
       },
       document_scanner: {
         recent_documents: "Scans récents",
+        folders: "Dossiers",
+        add_folder: "Nouveau",
+      },
+      document: {
+        scannedAt: "Scanné :",
+        share: "Partager",
+        save: "Enregistrer",
+        delete: "Supprimer",
       },
       barcode: {
         save: "Enregistrer",

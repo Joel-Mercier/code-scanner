@@ -16,6 +16,7 @@ import { Dimensions, Image, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
 	Extrapolation,
 	interpolate,
+	type SharedValue,
 	useAnimatedScrollHandler,
 	useAnimatedStyle,
 	useDerivedValue,
@@ -27,7 +28,10 @@ const { width, height } = Dimensions.get("window");
 const ITEM_WIDTH = width * 0.8;
 const SPACER = (width - ITEM_WIDTH) / 2;
 
-const Dot = ({ index, animatedIndex }) => {
+const Dot = ({
+	index,
+	animatedIndex,
+}: { index: number; animatedIndex: SharedValue<number> }) => {
 	const style = useAnimatedStyle(() => {
 		const opacity = interpolate(
 			animatedIndex.value,
@@ -60,7 +64,17 @@ const Dot = ({ index, animatedIndex }) => {
 	);
 };
 
-const RenderItem = ({ item, index, animatedIndex, totalCount }) => {
+const RenderItem = ({
+	item,
+	index,
+	animatedIndex,
+	totalCount,
+}: {
+	item: string;
+	index: number;
+	animatedIndex: SharedValue<number>;
+	totalCount: number;
+}) => {
 	const animatedStyle = useAnimatedStyle(() => {
 		const scale = interpolate(
 			animatedIndex.value,
@@ -215,7 +229,6 @@ export default function Carousel() {
 			>
 				<BottomSheetView style={styles.bottomSheetContentContainer}>
 					<DocumentBottomSheetContent
-						currentDocument={currentDocument}
 						bottomSheetModalRef={bottomSheetModalRef}
 					/>
 				</BottomSheetView>

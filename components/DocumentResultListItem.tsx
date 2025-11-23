@@ -39,6 +39,7 @@ export default function DocumentResultListItem({
 	};
 
 	const handleDocumentLongPress = () => {
+		setCurrentDocument(document);
 		bottomSheetModalRef.current?.present();
 	};
 
@@ -86,7 +87,6 @@ export default function DocumentResultListItem({
 			>
 				<BottomSheetView style={styles.bottomSheetContentContainer}>
 					<DocumentBottomSheetContent
-						currentDocument={document}
 						bottomSheetModalRef={bottomSheetModalRef}
 					/>
 				</BottomSheetView>

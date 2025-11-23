@@ -43,7 +43,7 @@ export function ScannerResultListItem({
 			onPress={handleShowBottomSheetPress}
 			style={({ pressed }) => [
 				styles.container,
-				isLast && { borderBottomWidth: 0 },
+				isLast && { borderBottomWidth: 0, marginBottom: 0 },
 				pressed && { opacity: 0.65 },
 			]}
 		>
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
 		borderBottomColor: Colors.slate["800"],
 		backgroundColor: Colors.background,
 		borderRadius: Spacings.md,
+		marginBottom: Spacings.md,
 	},
 	bottomSheetContentContainer: {
 		padding: 0,

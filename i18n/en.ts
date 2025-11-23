@@ -8,6 +8,14 @@ export default {
       },
       document_scanner: {
         recent_documents: "Recent scans",
+        folders: "Folders",
+        add_folder: "New",
+      },
+      document: {
+        scannedAt: "Scanned:",
+        share: "Share",
+        save: "Save",
+        delete: "Delete",
       },
       barcode: {
         save: "Save",
