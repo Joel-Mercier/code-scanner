@@ -2,12 +2,11 @@
 	"expo": {
 		"name": "Code Scanner",
 		"slug": "code-scanner",
-		"version": "1.0.2",
+		"version": "1.0.0",
 		"orientation": "default",
 		"icon": "./assets/images/icon.png",
 		"scheme": "codescanner",
 		"userInterfaceStyle": "automatic",
-		"newArchEnabled": true,
 		"ios": {
 			"supportsTablet": true,
 			"bundleIdentifier": "com.jmercier.codescanner"
@@ -15,9 +14,9 @@
 		"android": {
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/adaptive-icon.png",
-				"backgroundColor": "#1d293d"
+				"monochromeImage": "./assets/images/adaptive-icon-monochrome.png",
+				"backgroundColor": "#FFFFFF"
 			},
-			"edgeToEdgeEnabled": true,
 			"intentFilters": [
 				{
 					"action": "VIEW",
@@ -65,10 +64,7 @@
 					]
 				}
 			],
-			"permissions": [
-				"android.permission.CAMERA",
-				"android.permission.RECORD_AUDIO"
-			],
+			"permissions": ["android.permission.CAMERA"],
 			"package": "com.jmercier.codescanner"
 		},
 		"web": {
@@ -82,15 +78,21 @@
 				"expo-splash-screen",
 				{
 					"image": "./assets/images/splash-icon.png",
-					"imageWidth": 200,
+					"imageWidth": 220,
 					"resizeMode": "contain",
-					"backgroundColor": "#1d293d"
+					"backgroundColor": "#F6F6F4",
+					"dark": {
+						"image": "./assets/images/splash-icon-dark.png",
+						"backgroundColor": "#1C1D1F"
+					}
 				}
 			],
 			[
 				"expo-camera",
 				{
-					"cameraPermission": "Autoriser $(PRODUCT_NAME) à accéder à votre caméra."
+					"cameraPermission": "Autoriser $(PRODUCT_NAME) à accéder à votre caméra.",
+					"recordAudioAndroid": false,
+					"barcodeScannerEnabled": true
 				}
 			],
 			[
@@ -98,23 +100,21 @@
 				{
 					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos.",
 					"savePhotosPermission": "Autoriser $(PRODUCT_NAME) à enregistrer des photos.",
-					"isAccessMediaLocationEnabled": true
+					"granularPermissions": ["photo"]
 				}
 			],
 			[
 				"expo-image-picker",
 				{
-					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos."
+					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos.",
+					"microphonePermission": false
 				}
 			],
 			"expo-localization",
 			[
-				"react-native-edge-to-edge",
+				"expo-navigation-bar",
 				{
-					"android": {
-						"parentTheme": "Default",
-						"enforceNavigationBarContrast": false
-					}
+					"enforceContrast": false
 				}
 			],
 			[
@@ -130,16 +130,24 @@
 					"calendarPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos calendriers."
 				}
 			],
+			"expo-font",
+			"expo-status-bar",
 			[
-				"expo-screen-orientation",
+				"expo-build-properties",
 				{
-					"initialOrientation": "DEFAULT"
+					"android": {
+						"enableMinifyInReleaseBuilds": true,
+						"enableShrinkResourcesInReleaseBuilds": true
+					}
 				}
-			]
+			],
+			"./plugins/withGradleTuning",
+			"expo-image",
+			"@react-native-community/datetimepicker"
 		],
 		"experiments": {
 			"typedRoutes": true,
-			"reactCompiler": false
+			"reactCompiler": true
 		},
 		"extra": {
 			"router": {},

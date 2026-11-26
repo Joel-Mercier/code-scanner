@@ -1,213 +1,126 @@
 # Code Scanner
 
-A powerful and feature-rich QR code and barcode scanner mobile application for Android built with React Native and Expo. Scan, generate, and manage various types of codes with an intuitive interface and comprehensive functionality.
+A fully offline QR code, barcode and document scanner for Android and iOS, built with React Native, Expo and Skia. Scan, create and collect codes and documents in a calm, object-like interface where every capture lands in your collection.
 
 ## 📱 Features
 
-### 🔍 **Scanning Capabilities**
-- **Multi-format Support**: Scan QR codes and 12+ barcode types including EAN13, EAN8, UPC-A, UPC-E, Code128, Code39, DataMatrix, PDF417, Aztec, Codabar, and ITF14
-- **Real-time Camera**: Live camera feed with instant code detection
-- **Torch Control**: Built-in flashlight for low-light scanning
-- **Camera Controls**: Switch between front and back cameras
-- **Zoom Functionality**: Adjustable zoom slider for better scanning precision
-- **Scanning Overlay**: Optional visual overlay to guide scanning
+### 🔍 Scanning (home screen)
 
-### 🎯 **Code Generation**
-- **QR Code Types**:
-  - **URLs**: Generate QR codes for web links
-  - **Text**: Create QR codes for plain text
-  - **WiFi**: Generate WiFi connection QR codes with SSID, password, and encryption settings
-  - **Email**: Create email QR codes with subject, body, CC, and BCC
-  - **Phone**: Generate phone number QR codes
-  - **SMS**: Create SMS QR codes with pre-filled messages
-  - **vCard**: Generate contact information QR codes
-  - **Location**: Create GPS location QR codes
-  - **Cryptocurrency**: Generate Bitcoin, Ethereum, and Litecoin payment QR codes
-  - **Events**: Create calendar event QR codes
+- **Codes ⇄ Docs switch** at the top of the scanner
+- **Live code scanning** of QR, Aztec, Codabar, Code 39/93/128, Data Matrix, EAN-8/13, ITF-14, PDF417 and UPC-A/E. The Skia reticle snaps onto the detected code, then the capture spins into view as a 3D object
+- **Scan from a photo** in the gallery
+- **Document scanning** with the system scanner (VisionKit on iOS, ML Kit on Android): edge detection, cropping, multi-page, and a PDF plus page images saved permanently in the app
+- **Smart results**: open links, write emails, call, send SMS, copy Wi-Fi passwords, add contacts or calendar events, open locations in maps, search the web for product barcodes. Payloads are parsed by the app itself, so the same actions work on iOS and Android
+- Pinch-to-zoom and torch
 
-- **Barcode Types**: Support for all major barcode formats with customizable styling
-- **Customization Options**: 
-  - Error correction levels
-  - Margins and scaling
-  - Custom colors and styling
-  - Logo embedding for QR codes
-  - Text positioning for barcodes
+### 🗂 Collection
 
-### 📚 **History & Management**
-- **Scan History**: Automatically save all scanned codes
-- **Result Management**: View, share, and manage scanned results
-- **Smart Actions**: Context-aware actions based on code type (open URLs, call numbers, send emails, etc.)
-- **Bulk Operations**: Clear entire history with confirmation
+- Codes and documents in **one place**, each with a catalogue number, grouped by month
+- **Nested folders** with a colour and an icon
+- A strip of the 11 kinds of objects, showing which ones you have found
+- Search across folder names, item names and code content, filter All / Codes / Documents / Folders
+- Move, rename, share and delete via long press or the ⋮ menu
 
-### 🎨 **User Experience**
-- **Modern UI**: Clean, dark-themed interface with smooth animations
-- **Internationalization**: Multi-language support (English, French)
-- **Responsive Design**: Optimized for various screen sizes and orientations
-- **Accessibility**: Built with accessibility best practices
-- **Smooth Animations**: Fluid transitions and micro-interactions
+### ✨ Create
 
-### 🔧 **Technical Features**
-- **Offline Capability**: Core functionality works without internet
-- **Data Persistence**: Local storage using MMKV for fast access
-- **Image Capture**: Take photos and save to device gallery
-- **Sharing**: Share codes via native sharing mechanisms
-- **Export Options**: Save generated codes as images
+- **QR codes**: link, text, Wi-Fi, email, phone, SMS, contact (vCard), event (iCalendar) and location
+- **Barcodes**: every type listed above, generated **offline** with [bwip-js](https://github.com/metafloor/bwip-js) (no external API)
+- Live Skia preview, ink and background colours, square / rounded / dot modules and a centre logo
+- Save to the collection, share, or export a high-resolution PNG to the gallery
+
+### 🎨 Feel
+
+- A quiet, neutral design system (Geist and Geist Mono, one blue accent) in `components/ui` and `theme/`
+- Light and dark (anthracite) themes: follows the system by default, or forced from Settings
+- Captures and codes shown as thick 3D tiles that spin and tilt, with entrance animations mirrored from the design's keyframes (`theme/motion.ts`)
+- Haptic feedback and 3D code animations (both can be turned off), and respect for the system "reduce motion" setting
+- English and French
 
 ## 🛠 Technical Stack
 
-### **Core Framework**
-- **React Native** `0.81.4` - Cross-platform mobile development
-- **Expo** `54.0.9` - Development platform and tools
-- **TypeScript** `5.9.2` - Type-safe JavaScript
-
-### **Key Dependencies**
-- **Navigation**: `@react-navigation/native` - App navigation
-- **Camera**: `expo-camera` - Camera functionality
-- **State Management**: `zustand` - Lightweight state management
-- **Forms**: `@tanstack/react-form` - Form handling with validation
-- **Data Fetching**: `@tanstack/react-query` - Server state management
-- **Storage**: `react-native-mmkv` - Fast key-value storage
-- **Animations**: `react-native-reanimated` - Smooth animations
-- **UI Components**: `@gorhom/bottom-sheet` - Bottom sheet modals
-- **QR Code Generation**: `qrcode` - QR code creation
-- **Barcode API**: Custom service using `barcodeapi.org`
-- **Internationalization**: `react-i18next` - Multi-language support
-
-### **Development Tools**
-- **Linting**: `@biomejs/biome` - Fast linter and formatter
-- **Type Checking**: TypeScript with strict configuration
-- **Build System**: EAS Build for app compilation
-
-### **Platform Support**
-- **Android**: Full support with APK builds
-- **iOS**: Configured for iOS (requires device for testing)
-- **Web**: Metro bundler for web deployment
+- **Expo SDK 58**, React Native 0.88, React 19.3, React Compiler, TypeScript 6
+- **Navigation**: expo-router (native stack)
+- **Lists & sheets**: `@legendapp/list`, `@gorhom/bottom-sheet`
+- **Graphics & motion**: `@shopify/react-native-skia`, `react-native-reanimated` 4, `react-native-gesture-handler` 3, `expo-haptics`
+- **Camera & scanning**: `expo-camera` (live scanning, image scanning, document scanner)
+- **Code generation**: `@paulmillr/qr` (QR matrix), `bwip-js` (barcodes), both rendered as Skia paths
+- **State**: zustand persisted to `react-native-mmkv`; files in `expo-file-system`
+- **Validation**: zod (localised messages)
+- **i18n**: i18next / react-i18next
+- **Tooling**: Bun, Biome, EAS Build
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-- Expo CLI
+
+- Node.js `26.12.0` or higher (see `.nvmrc`)
+- [Bun](https://bun.sh) `1.4.3` (see `.bun-version`)
 - Android Studio (for Android development)
 - Xcode (for iOS development, macOS only)
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd code-scanner
-   ```
+```bash
+git clone <repository-url>
+cd code-scanner
+bun install
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### Run
 
-3. **Start the development server**
-   ```bash
-   npm start
-   ```
+```bash
+bun run android   # build & run on Android
+bun run ios       # build & run on iOS
+bun run start     # start Metro for an installed dev build
+```
 
-4. **Run on device/simulator**
-   ```bash
-   # Android
-   npm run android
-   
-   # iOS
-   npm run ios
-   
-   # Web
-   npm run web
-   ```
+### Checks
+
+```bash
+bun run typecheck
+bun run lint
+```
 
 ### Building for Production
 
-```bash
-# Build APK for Android
-eas build --platform android --profile production
+Local EAS builds, written to the gitignored `tmp/` folder:
 
-# Build for iOS
-eas build --platform ios --profile production
+```bash
+bun run build:android:preview         # tmp/code-scanner-preview-<version>.apk
+bun run build:android:production      # tmp/code-scanner-<version>.aab (Play Store)
+bun run build:android:production-apk  # tmp/code-scanner-<version>-arm64-v8a.apk
+bun run build:android:development     # tmp/code-scanner-dev-<version>.apk (dev client)
 ```
+
+`<version>` comes from `package.json`, so keep it in sync with `app.json`. Preview and development builds get their own app id (`com.jmercier.codescanner.preview` / `.dev`, see `app.config.js`), so they install alongside the production app.
+
+The `android/` and `ios/` folders are not committed: they are generated by `expo prebuild` (Continuous Native Generation) from `app.json`, so all native configuration belongs there. Run `bun run prebuild` (or `prebuild:development` / `prebuild:preview` / `prebuild:production` for a given app variant) after changing `app.json` or upgrading native dependencies, before a local `bun run android` / `bun run ios`.
 
 ## 📁 Project Structure
 
 ```
-code-scanner/
-├── app/                    # App screens (Expo Router)
-│   ├── index.tsx          # Main scanner screen
-│   ├── barcode.tsx        # Barcode display screen
-│   ├── qr-code.tsx        # QR code display screen
-│   ├── history.tsx        # Scan history screen
-│   ├── new-code.tsx       # Code generation screen
-│   └── settings.tsx       # Settings screen
-├── components/            # Reusable UI components
-├── config/               # App configuration
-├── constants/            # App constants (colors, spacing)
-├── hooks/               # Custom React hooks
-├── i18n/                # Internationalization files
-├── services/            # External API services
-├── stores/              # State management (Zustand)
-├── utils/               # Utility functions
-└── types.ts             # TypeScript type definitions
+app/                      Routes (expo-router)
+├── index.tsx             Scanner home (codes / documents)
+├── capture/[id].tsx      A fresh capture, spinning in
+├── library/              Collection root and nested folders
+├── code/[id].tsx         Code details
+├── document/[id].tsx     Document viewer
+├── create.tsx            Code workshop
+└── settings/             Settings, help, privacy
+components/
+├── ui/                   Design system: text, icons, buttons, lists, sheets, 3D turntable…
+└── codes/                Skia QR / barcode renderer and PNG export
+features/                 Screen-level building blocks (scan, library, codes, create)
+stores/                   zustand stores (library, app settings)
+theme/                    Tokens (light/dark palettes), shared styles, layout insets, useTheme/makeStyles, motion
+utils/                    Payload parsing/building, geometry, files, haptics
+i18n/                     Translations
 ```
 
-## 🎯 Key Features Implementation
+## 🔒 Privacy
 
-### **Scanner Engine**
-- Uses `expo-camera` with real-time barcode detection
-- Supports 12+ barcode formats with optimized scanning algorithms
-- Custom overlay system using `@shopify/react-native-skia` for visual guidance
-
-### **Code Generation**
-- QR codes generated using `qrcode` library with SVG output
-- Barcodes generated via `barcodeapi.org` API service
-- Custom data formatters for different QR code types (WiFi, vCard, etc.)
-
-### **State Management**
-- Zustand for lightweight, performant state management
-- Separate stores for scanner results and app settings
-- Persistent storage using MMKV for offline capability
-
-### **Form Handling**
-- `@tanstack/react-form` for complex form validation
-- Zod schemas for type-safe validation
-- Dynamic form fields based on selected code type
-
-## 🌍 Internationalization
-
-The app supports multiple languages with easy extensibility:
-- English (default)
-- French
-- Extensible architecture for additional languages
-
-## 🔧 Configuration
-
-### **App Configuration** (`app.json`)
-- Bundle identifier: `com.jmercier.codescanner`
-- Version: `1.0.2`
-- New Architecture enabled
-- Edge-to-edge design for Android
-
-### **Build Configuration** (`eas.json`)
-- Development, preview, and production build profiles
-- Android APK builds configured
-- Auto-increment versioning for production
-
-## 🚧 Roadmap
-
-- [ ] Test on real iOS device
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Everything runs on the device: no account, no analytics and no network calls. See the in-app privacy page.
 
 ---
 
-**Built with ❤️ using React Native and Expo**
+**Built with React Native, Expo and Skia**

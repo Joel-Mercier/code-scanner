@@ -1,161 +1,102 @@
 import "@/config/i18n";
+import {
+	Geist_400Regular,
+	Geist_500Medium,
+	Geist_600SemiBold,
+} from "@expo-google-fonts/geist";
+import {
+	GeistMono_400Regular,
+	GeistMono_500Medium,
+} from "@expo-google-fonts/geist-mono";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { useFonts } from "expo-font";
+import { getLocales } from "expo-localization";
+import { NavigationBar } from "expo-navigation-bar";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { ToastHost } from "@/components/ui/Toast";
 import i18n, {
+	applyZodLocale,
 	SupportedLanguages,
 	type TSupportedLanguages,
 } from "@/config/i18n";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import useApp from "@/stores/appStore";
-import {
-	Inter_300Light,
-	Inter_400Regular,
-	Inter_700Bold,
-	useFonts,
-} from "@expo-google-fonts/inter";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import NetInfo from "@react-native-community/netinfo";
-import {
-	DarkTheme,
-	DefaultTheme,
-	ThemeProvider,
-} from "@react-navigation/native";
-import { PortalHost } from "@rn-primitives/portal";
-import {
-	QueryClient,
-	QueryClientProvider,
-	onlineManager,
-} from "@tanstack/react-query";
-import { getLocales } from "expo-localization";
-import { Stack } from "expo-router";
-import * as ScreenOrientation from "expo-screen-orientation";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import { SystemBars } from "react-native-edge-to-edge";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardProvider } from "react-native-keyboard-controller";
-import "react-native-reanimated";
-import z from "zod";
+import { useTheme } from "@/theme";
+
+export { ErrorScreen as ErrorBoundary } from "@/components/ui/ErrorScreen";
 
 SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({ fade: true });
 
-SplashScreen.setOptions({
-	fade: true,
-});
-
-const queryClient = new QueryClient();
-
-onlineManager.setEventListener((setOnline) => {
-	return NetInfo.addEventListener((state) => {
-		setOnline(!!state.isConnected);
-	});
-});
+const detectLocale = (): TSupportedLanguages => {
+	const match = getLocales().find(
+		(locale) =>
+			locale.languageCode &&
+			(SupportedLanguages as string[]).includes(locale.languageCode),
+	);
+	return (match?.languageCode as TSupportedLanguages | undefined) ?? "en";
+};
 
 export default function RootLayout() {
-	const colorScheme = useColorScheme();
+	const { colors, scheme } = useTheme();
 	const [fontsLoaded] = useFonts({
-		Inter_300Light,
-		Inter_400Regular,
-		Inter_700Bold,
+		Geist_400Regular,
+		Geist_500Medium,
+		Geist_600SemiBold,
+		GeistMono_400Regular,
+		GeistMono_500Medium,
 	});
-	const locale = useApp.use.locale();
-	const setLocale = useApp.use.setLocale();
-	const setOrientation = useApp.use.setOrientation();
-	const orientation = useApp.use.orientation();
+	const locale = useApp((state) => state.locale);
+	const setLocale = useApp((state) => state.setLocale);
 
 	useEffect(() => {
-		if (fontsLoaded) {
-			SplashScreen.hideAsync();
-		}
+		if (fontsLoaded) SplashScreen.hideAsync();
 	}, [fontsLoaded]);
+
+	// The window behind every screen (seen during transitions and keyboard).
+	useEffect(() => {
+		SystemUI.setBackgroundColorAsync(colors.canvas);
+	}, [colors.canvas]);
 
 	useEffect(() => {
 		if (locale) {
 			i18n.changeLanguage(locale);
-			z.config(z.locales[locale]());
+			applyZodLocale(locale);
 		} else {
-			const userLocales = getLocales();
-			if (
-				userLocales.some(
-					(userLocale) =>
-						userLocale.languageCode &&
-						(SupportedLanguages as string[]).includes(userLocale.languageCode),
-				)
-			) {
-				const firstMatchingLocale = userLocales.filter(
-					(userLocale) =>
-						userLocale.languageCode &&
-						(SupportedLanguages as string[]).includes(userLocale.languageCode),
-				)[0].languageCode as TSupportedLanguages;
-				setLocale(firstMatchingLocale);
-				i18n.changeLanguage(firstMatchingLocale);
-				z.config(z.locales[firstMatchingLocale]());
-			} else {
-				setLocale("en");
-				i18n.changeLanguage("en");
-				z.config(z.locales.en());
-			}
+			setLocale(detectLocale());
 		}
-		ScreenOrientation.getOrientationAsync().then((orientation) => {
-			setOrientation(orientation);
-		});
-		const screenOrientationSubscription =
-			ScreenOrientation.addOrientationChangeListener(({ orientationInfo }) => {
-				setOrientation(orientationInfo.orientation);
-			});
-		return () => {
-			ScreenOrientation.removeOrientationChangeListener(
-				screenOrientationSubscription,
-			);
-		};
-	}, []);
+	}, [locale, setLocale]);
 
-	if (!fontsLoaded) {
-		// Async font loading only occurs in development.
-		return null;
-	}
+	if (!fontsLoaded) return null;
 
 	return (
-		<QueryClientProvider client={queryClient}>
-			<GestureHandlerRootView style={{ flex: 1 }}>
-				<KeyboardProvider>
-					<BottomSheetModalProvider>
-						<ThemeProvider
-							value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-						>
-							<Stack>
-								<Stack.Screen name="index" options={{ headerShown: false }} />
-								<Stack.Screen name="history" options={{ headerShown: false }} />
-								<Stack.Screen
-									name="qr-code"
-									options={{
-										headerShown: false,
-										presentation: "transparentModal",
-										animation: "fade_from_bottom",
-									}}
-								/>
-								<Stack.Screen
-									name="barcode"
-									options={{
-										headerShown: false,
-										presentation: "transparentModal",
-										animation: "fade_from_bottom",
-									}}
-								/>
-								<Stack.Screen
-									name="new-code"
-									options={{ headerShown: false }}
-								/>
-								<Stack.Screen
-									name="settings"
-									options={{ headerShown: false }}
-								/>
-								<Stack.Screen name="+not-found" />
-							</Stack>
-							<PortalHost />
-							<SystemBars style="auto" />
-						</ThemeProvider>
-					</BottomSheetModalProvider>
-				</KeyboardProvider>
-			</GestureHandlerRootView>
-		</QueryClientProvider>
+		<GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.canvas }}>
+			{/* Android's gesture bar / buttons: dark on the light theme, light on
+			    the dark one. It follows the app's theme, not the system's. */}
+			<NavigationBar style={scheme === "dark" ? "light" : "dark"} />
+			<KeyboardProvider>
+				<BottomSheetModalProvider>
+					<Stack
+						screenOptions={{
+							headerShown: false,
+							contentStyle: { backgroundColor: colors.canvas },
+						}}
+					>
+						<Stack.Screen
+							name="capture/[id]"
+							options={{
+								presentation: "fullScreenModal",
+								animation: "slide_from_bottom",
+							}}
+						/>
+					</Stack>
+					<ToastHost />
+				</BottomSheetModalProvider>
+			</KeyboardProvider>
+		</GestureHandlerRootView>
 	);
 }

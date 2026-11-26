@@ -1,147 +1,126 @@
-import { Spacings } from "@/constants/Spacings";
-import type { ReactElement } from "react";
 import {
-	ActivityIndicator,
-	Pressable,
+	type GestureResponderEvent,
 	type StyleProp,
-	StyleSheet,
+	View,
 	type ViewStyle,
 } from "react-native";
-import Animated, {
-	interpolate,
-	ReduceMotion,
-	useAnimatedStyle,
-	useSharedValue,
-	withTiming,
-} from "react-native-reanimated";
-import { ThemedText } from "./ThemedText";
+import { makeStyles, radii, useTheme } from "@/theme";
+import { Icon, type IconName } from "./Icon";
+import { Pressable } from "./Pressable";
+import { Text } from "./Text";
 
-export type ButtonProps = {
-	accessibilityHint?: string;
-	accessibilityLabel?: string;
-	Icon?: ReactElement;
-	isDisabled?: boolean;
-	isLoading?: boolean;
-	onPress: () => void;
-	buttonColor: string;
-	textColor: string;
-	scale?: number;
-	title: string;
-	reduceMotion?: "never" | "always" | "system";
+type Variant = "primary" | "secondary" | "danger" | "dashed";
+
+type ButtonProps = {
+	label: string;
+	icon?: IconName;
+	variant?: Variant;
+	onPress?: (event: GestureResponderEvent) => void;
+	/** Looks disabled; still pressable when `inert` is false (to reveal errors). */
+	disabled?: boolean;
+	inert?: boolean;
 	style?: StyleProp<ViewStyle>;
+	accessibilityLabel?: string;
 };
 
-const DURATION = 100;
-
-export const Button = ({
-	accessibilityHint,
-	accessibilityLabel,
-	Icon,
-	isDisabled = false,
-	isLoading = false,
+export function Button({
+	label,
+	icon,
+	variant = "primary",
 	onPress,
-	buttonColor,
-	textColor,
-	scale = 0.95,
-	title,
-	reduceMotion = "system",
+	disabled = false,
+	inert = disabled,
 	style,
-}: ButtonProps) => {
-	const transition = useSharedValue(0);
-	const isActive = useSharedValue(false);
-
-	const motion =
-		reduceMotion === "never"
-			? ReduceMotion.Never
-			: reduceMotion === "always"
-				? ReduceMotion.Always
-				: ReduceMotion.System;
-
-	const animatedStyle = useAnimatedStyle(() => ({
-		transform: [
-			{
-				scale: interpolate(transition.value, [0, 1], [1, scale]),
-			},
-		],
-	}));
+	accessibilityLabel,
+}: ButtonProps) {
+	const { colors } = useTheme();
+	const styles = useStyles();
+	const primary = variant === "primary";
+	const looksDisabled = disabled && primary;
+	const textColor = looksDisabled
+		? colors.muted
+		: primary
+			? colors.onAccent
+			: variant === "danger"
+				? colors.danger
+				: colors.ink;
+	const large = primary || variant === "danger" || variant === "dashed";
 
 	return (
 		<Pressable
-			accessibilityHint={accessibilityHint}
-			accessibilityLabel={accessibilityLabel}
 			accessibilityRole="button"
-			accessibilityState={{
-				busy: isLoading,
-				disabled: isDisabled || isLoading,
-			}}
-			disabled={isDisabled || isLoading}
+			accessibilityLabel={accessibilityLabel ?? label}
+			accessibilityState={{ disabled }}
+			disabled={inert}
 			onPress={onPress}
-			onPressIn={() => {
-				isActive.value = true;
-				transition.value = withTiming(
-					1,
-					{ duration: DURATION, reduceMotion: motion },
-					() => {
-						if (!isActive.value) {
-							transition.value = withTiming(0, {
-								duration: DURATION,
-								reduceMotion: motion,
-							});
-						}
-					},
-				);
-			}}
-			onPressOut={() => {
-				if (transition.value === 1) {
-					transition.value = withTiming(0, {
-						duration: DURATION,
-						reduceMotion: motion,
-					});
-				}
-				isActive.value = false;
-			}}
+			haptic={!disabled}
+			style={[
+				styles.base,
+				large ? styles.large : styles.small,
+				styles[variant],
+				looksDisabled && styles.disabled,
+				style,
+			]}
 		>
-			<Animated.View
-				style={[
-					styles.container,
-					style,
-					animatedStyle,
-					{
-						opacity: isDisabled ? 0.5 : 1,
-						backgroundColor: buttonColor,
-					},
-				]}
+			{icon && (
+				<Icon
+					name={icon}
+					size={large ? 20 : 18}
+					color={textColor}
+					strokeWidth={primary ? 2 : 1.75}
+				/>
+			)}
+			<Text
+				size={primary ? 17 : variant === "danger" ? 16 : 15}
+				weight={primary ? "semibold" : "medium"}
+				color={textColor}
+				numberOfLines={1}
+				style={styles.label}
 			>
-				{isLoading ? (
-					<ActivityIndicator color={textColor} size={18} />
-				) : (
-					<>
-						{Icon}
-						<ThemedText
-							numberOfLines={1}
-							style={[styles.title, { color: textColor }]}
-						>
-							{title}
-						</ThemedText>
-					</>
-				)}
-			</Animated.View>
+				{label}
+			</Text>
 		</Pressable>
 	);
-};
+}
 
-const styles = StyleSheet.create({
-	container: {
-		alignItems: "center",
-		borderRadius: 24,
+/** Two secondary buttons per row, like the design's action grids. */
+export function ButtonGrid({ children }: { children: React.ReactNode }) {
+	const styles = useStyles();
+	return <View style={styles.grid}>{children}</View>;
+}
+
+export const gridCell: ViewStyle = { flexBasis: "47%", flexGrow: 1 };
+
+const useStyles = makeStyles(({ colors }) => ({
+	base: {
 		flexDirection: "row",
-		gap: 8,
-		height: 42,
+		alignItems: "center",
 		justifyContent: "center",
-		paddingVertical: Spacings.sm,
-		paddingHorizontal: Spacings.md,
+		gap: 10,
+		paddingHorizontal: 14,
 	},
-	title: {
-		fontFamily: "Inter_700Bold",
+	large: { height: 56 },
+	small: { height: 52, gap: 8 },
+	label: { flexShrink: 1 },
+	primary: { backgroundColor: colors.accent, borderRadius: radii.md },
+	secondary: {
+		backgroundColor: colors.surface,
+		borderRadius: radii.md,
+		borderWidth: 1,
+		borderColor: colors.border,
 	},
-});
+	danger: {
+		backgroundColor: colors.surface,
+		borderRadius: radii.lg,
+		borderWidth: 1,
+		borderColor: colors.borderSoft,
+	},
+	dashed: {
+		borderRadius: radii.md,
+		borderWidth: 1.5,
+		borderStyle: "dashed",
+		borderColor: colors.dashed,
+	},
+	disabled: { backgroundColor: colors.border },
+	grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+}));

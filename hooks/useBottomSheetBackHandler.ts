@@ -2,19 +2,24 @@ import type {
 	BottomSheetModal,
 	BottomSheetModalProps,
 } from "@gorhom/bottom-sheet";
-import { useCallback, useRef } from "react";
-import { BackHandler, type NativeEventSubscription } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
+import { BackHandler, type EventSubscription } from "react-native";
 
 /**
  * hook that dismisses the bottom sheet on the hardware back button press if it is visible
  * @param bottomSheetRef ref to the bottom sheet which is going to be closed/dismissed on the back press
+ * @param onBack when set, the back press calls it instead (a nested page going back to its parent)
  */
 export const useBottomSheetBackHandler = (
 	bottomSheetRef: React.RefObject<BottomSheetModal | null>,
+	onBack?: () => void,
 ) => {
-	const backHandlerSubscriptionRef = useRef<NativeEventSubscription | null>(
-		null,
-	);
+	const backHandlerSubscriptionRef = useRef<EventSubscription | null>(null);
+	// Read at press time: the listener outlives the page it was added on.
+	const onBackRef = useRef(onBack);
+	useEffect(() => {
+		onBackRef.current = onBack;
+	}, [onBack]);
 	const handleSheetPositionChange = useCallback<
 		NonNullable<BottomSheetModalProps["onChange"]>
 	>(
@@ -25,7 +30,8 @@ export const useBottomSheetBackHandler = (
 				backHandlerSubscriptionRef.current = BackHandler.addEventListener(
 					"hardwareBackPress",
 					() => {
-						bottomSheetRef.current?.dismiss();
+						if (onBackRef.current) onBackRef.current();
+						else bottomSheetRef.current?.dismiss();
 						return true;
 					},
 				);
