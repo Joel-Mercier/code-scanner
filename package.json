@@ -30,7 +30,7 @@
 		"@gorhom/bottom-sheet": "^5.2.14",
 		"@legendapp/list": "^3.9.1",
 		"@paulmillr/qr": "^0.3.0",
-		"@react-native-community/datetimepicker": "9.2.1",
+		"@react-native-community/datetimepicker": "9.3.0",
 		"@shopify/react-native-skia": "2.14.0",
 		"bwip-js": "^4.11.4",
 		"date-fns": "^4.4.0",
