@@ -14,6 +14,7 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check . --write",
 		"typecheck": "bun check",
+		"test": "bunx jest",
 		"prebuild": "bunx expo prebuild --clean",
 		"prebuild:development": "APP_VARIANT=development bun run prebuild",
 		"prebuild:preview": "APP_VARIANT=preview bun run prebuild",
@@ -23,6 +24,15 @@
 		"build:android:production": "mkdir -p tmp && eas build -p android --profile production --local --output $PWD/tmp/code-scanner-$npm_package_version.aab",
 		"build:android:production-apk": "mkdir -p tmp && eas build -p android --profile production-apk --local --output $PWD/tmp/code-scanner-$npm_package_version-arm64-v8a.apk",
 		"submit:android:production": "eas submit -p android --profile production"
+	},
+	"jest": {
+		"preset": "jest-expo",
+		"passWithNoTests": true,
+		"transformIgnorePatterns": [
+			"/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@shopify|@gorhom|@legendapp))",
+			"/node_modules/react-native-reanimated/plugin/",
+			"/node_modules/@react-native/babel-preset/"
+		]
 	},
 	"dependencies": {
 		"@expo-google-fonts/geist": "^0.4.2",
@@ -80,11 +90,15 @@
 	"devDependencies": {
 		"@babel/core": "^7.29.7",
 		"@biomejs/biome": "2.6.6",
+		"@react-native/jest-preset": "0.88.1",
+		"@types/jest": "30.0.0",
 		"@types/react": "~19.3.0",
 		"eas-cli": "^27.5.0",
 		"eslint": "^9.25.0",
 		"eslint-config-expo": "~58.0.4",
 		"expo-atlas": "^0.4.3",
+		"jest": "~30.5.2",
+		"jest-expo": "~58.0.14",
 		"typescript": "~6.0.3"
 	},
 	"private": true,
