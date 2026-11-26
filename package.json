@@ -29,10 +29,27 @@
 		"preset": "jest-expo",
 		"passWithNoTests": true,
 		"transformIgnorePatterns": [
-			"/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@shopify|@gorhom|@legendapp))",
+			"/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@shopify|@gorhom|@legendapp|bwip-js|zod))",
 			"/node_modules/react-native-reanimated/plugin/",
 			"/node_modules/@react-native/babel-preset/"
-		]
+		],
+		"setupFiles": [
+			"<rootDir>/jest.setup.ts"
+		],
+		"moduleNameMapper": {
+			"^@/(.*)$": "<rootDir>/src/$1",
+			"^bwip-js/generic$": "<rootDir>/node_modules/bwip-js/dist/bwip-js-gen.mjs"
+		},
+		"transform": {
+			"\\.mjs$": [
+				"babel-jest",
+				{
+					"presets": [
+						"babel-preset-expo"
+					]
+				}
+			]
+		}
 	},
 	"dependencies": {
 		"@expo-google-fonts/geist": "^0.4.2",
@@ -94,8 +111,6 @@
 		"@types/jest": "30.0.0",
 		"@types/react": "~19.3.0",
 		"eas-cli": "^27.5.0",
-		"eslint": "^9.25.0",
-		"eslint-config-expo": "~58.0.4",
 		"expo-atlas": "^0.4.3",
 		"jest": "~30.5.2",
 		"jest-expo": "~58.0.14",
