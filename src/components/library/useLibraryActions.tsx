@@ -12,7 +12,12 @@ import { Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
 import { toast } from "@/components/ui/Toast";
 import { canRender } from "@/domain/codes/formats";
-import { countInFolder, itemCaption, itemTitle } from "@/domain/library/items";
+import {
+	countInFolder,
+	isPinned,
+	itemCaption,
+	itemTitle,
+} from "@/domain/library/items";
 import type { Folder, LibraryItem } from "@/domain/library/types";
 import { haptics } from "@/lib/haptics";
 import { shareItem } from "@/services/share";
@@ -56,6 +61,7 @@ export function useLibraryActions({
 	const renameItem = useLibrary((state) => state.renameItem);
 	const moveItem = useLibrary((state) => state.moveItem);
 	const deleteItem = useLibrary((state) => state.deleteItem);
+	const setPinned = useLibrary((state) => state.setPinned);
 	const updateFolder = useLibrary((state) => state.updateFolder);
 	const moveFolder = useLibrary((state) => state.moveFolder);
 	const deleteFolder = useLibrary((state) => state.deleteFolder);
@@ -305,12 +311,28 @@ export function useLibraryActions({
 					},
 				});
 			}
-			rows.push({
-				key: "move",
-				icon: "folderInput",
-				label: t("app.library.move_to_folder"),
-				run: () => setStep("move"),
-			});
+			const pinned = isPinned(item);
+			rows.push(
+				{
+					key: "pin",
+					icon: pinned ? "pinOff" : "pin",
+					label: t(pinned ? "app.library.unpin" : "app.library.pin"),
+					run: () => {
+						haptics.pop();
+						setPinned([item.id], !pinned);
+						toast(
+							t(pinned ? "app.library.unpinned" : "app.library.pinned_toast"),
+						);
+						close();
+					},
+				},
+				{
+					key: "move",
+					icon: "folderInput",
+					label: t("app.library.move_to_folder"),
+					run: () => setStep("move"),
+				},
+			);
 			return menu(rows, t("app.library.delete_from_collection"));
 		}
 		return menu(

@@ -94,7 +94,11 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 	});
 
 	const clearSelection = () => setSelection(emptySelection);
-	const bulk = useBulkActions({ onDone: clearSelection });
+	const bulk = useBulkActions({
+		onDone: clearSelection,
+		onMerged: (id) =>
+			router.push({ pathname: "/document/[id]", params: { id } }),
+	});
 
 	const openSearch = () => {
 		setSearching(true);
@@ -185,7 +189,11 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 	const headingHeight =
 		HEADING.above + HEADING.size * HEADING.leading * fontScale + HEADING.below;
 	const itemRowHeight = fullTileHeight(tile, fontScale) + ROW_GAP;
-	const rows = toRows(visibleItems, t("app.library.this_month"));
+	const rows = toRows(
+		visibleItems,
+		t("app.library.this_month"),
+		t("app.library.pinned"),
+	);
 
 	// Only what's on screen counts as picked (items deleted meanwhile drop out).
 	const picked = selectedIn(visibleItems, selection);
@@ -457,6 +465,12 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 							label: t("app.common.delete"),
 							tone: "danger",
 							onPress: () => bulk.remove(picked),
+						},
+						{
+							key: "more",
+							icon: "more",
+							label: t("app.library.more"),
+							onPress: () => bulk.more(picked),
 						},
 					]}
 				/>

@@ -1,6 +1,7 @@
 import { CameraView } from "expo-camera";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { prepareDocument } from "@/components/documents/actions";
 import { toast } from "@/components/ui/Toast";
 import { attempt } from "@/lib/attempt";
 import { format } from "@/lib/date";
@@ -10,9 +11,14 @@ import useLibrary from "@/stores/library";
 
 /**
  * Runs the system document scanner and saves the pages as a new document,
- * then hands it to `onCaptured`. `scanning` is true while the scanner is up.
+ * then hands it to `onCaptured` and starts reading its pages. `scanning` is
+ * true while the scanner is up. Without a scanner on the device, it says so
+ * and calls `onUnavailable` (to offer importing photos instead).
  */
-export function useDocumentScanner(onCaptured: (id: string) => void) {
+export function useDocumentScanner(
+	onCaptured: (id: string) => void,
+	onUnavailable: () => void,
+) {
 	const { t } = useTranslation();
 	const addDocument = useLibrary((state) => state.addDocument);
 	const [scanning, setScanning] = useState(false);
@@ -20,6 +26,7 @@ export function useDocumentScanner(onCaptured: (id: string) => void) {
 	const scan = async () => {
 		if (!CameraView.isDocumentScannerAvailable) {
 			toast(t("app.scan.doc_scanner_unavailable"), "warning");
+			onUnavailable();
 			return;
 		}
 		setScanning(true);
@@ -40,6 +47,7 @@ export function useDocumentScanner(onCaptured: (id: string) => void) {
 		});
 		haptics.success();
 		onCaptured(id);
+		prepareDocument(id);
 	};
 
 	return { scanning, scan };

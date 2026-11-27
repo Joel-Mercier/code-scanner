@@ -20,6 +20,7 @@
 - **Live code scanning** of QR, Aztec, Codabar, Code 39/93/128, Data Matrix, EAN-8/13, ITF-14, PDF417 and UPC-A/E. The Skia reticle snaps onto the detected code, then the capture spins into view as a 3D object
 - **Scan from a photo** in the gallery
 - **Document scanning** with the system scanner (VisionKit on iOS, ML Kit on Android): edge detection, cropping, multi-page, and a PDF plus page images saved permanently in the app
+- **Import** photos or a PDF file as a document, from the Docs mode or by sharing them to the app from any other app
 - **Smart results**: open links, write emails, call, send SMS, copy Wi-Fi passwords, add contacts or calendar events, open locations in maps, search the web for product barcodes. Payloads are parsed by the app itself, so the same actions work on iOS and Android
 - Pinch-to-zoom and torch
 
@@ -28,8 +29,21 @@
 - Codes and documents in **one place**, each with a catalogue number, grouped by month
 - **Nested folders** with a colour and an icon
 - A strip of the 11 kinds of objects, showing which ones you have found
-- Search across folder names, item names and code content, filter All / Codes / Documents / Folders
-- Move, rename, share and delete via long press or the ⋮ menu
+- Search across folder names, item names, code content and the text of documents, filter All / Codes / Documents / Folders
+- Move, rename, share, pin and delete via long press or the ⋮ menu; multi-select to move, delete, share, pin or merge documents in bulk
+- **Pinned** items stay at the top of the collection and on the home screen
+
+### Documents
+
+- Full-screen reader with pinch and double-tap zoom
+- **Edit pages**: reorder, rotate, remove, or add pages by scanning or from photos; the PDF is rebuilt on the device
+- **Text recognition on the device**: search the collection by what's written on the pages, copy a document's text
+- **Codes found on pages** (a QR code on an invoice, a ticket's barcode) listed on the document, one tap to open them
+- Type (receipt, invoice, ID…) and notes; share, save to files, print, or save the pages to photos
+
+### Backup
+
+- Back up the whole collection (codes, documents, folders, logos) to a single .zip, and restore it on any phone: restoring adds what's missing without replacing anything
 
 ### Create
 

@@ -1,3 +1,4 @@
+import { LIBRARY_VERSION } from "@/domain/library/migrations";
 import { storage } from "@/lib/storage";
 import { deleteDocumentFiles } from "@/services/documents";
 import { makeFolder } from "@/test/fixtures";
@@ -14,7 +15,7 @@ const doc = (id: string, folderId: string | null = null) =>
 	library().addDocument({
 		id,
 		name: id,
-		pages: [`file:///${id}.jpg`],
+		pages: [`${id}.jpg`],
 		size: 1,
 		folderId,
 	});
@@ -146,6 +147,97 @@ describe("items", () => {
 	});
 });
 
+describe("documents", () => {
+	const reading = { text: "Hello", codes: [] };
+
+	it("updates details, dropping readings of pages that left", () => {
+		doc("d");
+		library().setReading("d", "d.jpg", reading);
+		library().updateDocument("d", {
+			docType: "receipt",
+			notes: "Lunch",
+			pages: ["new.jpg"],
+			pdf: "document.pdf",
+			size: 9,
+		});
+		expect(library().items.d).toMatchObject({
+			docType: "receipt",
+			notes: "Lunch",
+			pages: ["new.jpg"],
+			pdf: "document.pdf",
+			size: 9,
+			readings: {},
+		});
+	});
+
+	it("clears the type and empty notes", () => {
+		doc("d");
+		library().updateDocument("d", { docType: "receipt", notes: "x" });
+		library().updateDocument("d", { docType: undefined, notes: "  " });
+		expect(library().items.d).not.toHaveProperty("docType");
+		expect(library().items.d).not.toHaveProperty("notes");
+	});
+
+	it("keeps readings only for pages still there", () => {
+		doc("d");
+		library().setReading("d", "d.jpg", reading);
+		library().setReading("d", "gone.jpg", reading);
+		expect(library().items.d).toMatchObject({ readings: { "d.jpg": reading } });
+	});
+
+	it("ignores codes and unknown ids", () => {
+		const code = scan("x");
+		library().updateDocument(code.id, { notes: "nope" });
+		library().updateDocument("missing", { notes: "nope" });
+		library().setReading(code.id, "p", reading);
+		expect(library().items[code.id]).not.toHaveProperty("notes");
+		expect(library().items.missing).toBeUndefined();
+	});
+});
+
+describe("pins", () => {
+	it("pins in the picked order (the first on top) and unpins", () => {
+		jest.useFakeTimers({ now: 1000 });
+		const a = scan("a");
+		const b = scan("b");
+		library().setPinned([a.id, b.id, "missing"], true);
+		const pinnedA = library().items[a.id].pinnedAt ?? 0;
+		const pinnedB = library().items[b.id].pinnedAt ?? 0;
+		expect(pinnedA).toBeGreaterThan(pinnedB);
+		expect(library().items.missing).toBeUndefined();
+
+		library().setPinned([a.id], false);
+		expect(library().items[a.id]).not.toHaveProperty("pinnedAt");
+		expect(library().items[b.id].pinnedAt).toBe(pinnedB);
+	});
+});
+
+describe("restore", () => {
+	it("adds a backup's new items and folders, numbered after ours", () => {
+		scan("mine");
+		const added = library().restore({
+			items: {
+				t: {
+					kind: "code",
+					id: "t",
+					seq: 7,
+					folderId: "tf",
+					createdAt: 5,
+					source: "scanner",
+					format: "qr",
+					data: "theirs",
+				},
+			},
+			folders: { tf: makeFolder({ id: "tf" }) },
+			nextSeq: 8,
+		});
+		expect(added.map((item) => item.id)).toEqual(["t"]);
+		expect(library().items.t).toMatchObject({ seq: 2, folderId: "tf" });
+		expect(library().folders.tf).toBeDefined();
+		expect(library().nextSeq).toBe(3);
+	});
+});
+
 describe("folders", () => {
 	it("creates and updates folders", () => {
 		const { a } = folderTree();
@@ -231,7 +323,7 @@ describe("persistence", () => {
 		});
 		scan("saved");
 		const saved = JSON.parse(storage.getString("library") ?? "{}");
-		expect(saved.version).toBe(3);
+		expect(saved.version).toBe(LIBRARY_VERSION);
 		expect(Object.keys(saved.state).sort()).toEqual([
 			"folders",
 			"items",

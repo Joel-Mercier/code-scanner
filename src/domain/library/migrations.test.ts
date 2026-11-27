@@ -3,9 +3,9 @@ import { byId, makeCode, makeDoc, makeFolder } from "@/test/fixtures";
 import { LIBRARY_VERSION, migrateLibrary } from "./migrations";
 
 describe("migrateLibrary", () => {
-	it("is at version 3", () => {
+	it("is at version 4", () => {
 		// Changing the persisted shape means a new version and a new step here.
-		expect(LIBRARY_VERSION).toBe(3);
+		expect(LIBRARY_VERSION).toBe(4);
 	});
 
 	describe("from v1", () => {
@@ -124,6 +124,44 @@ describe("migrateLibrary", () => {
 			expect(migrated.items.d).toEqual(state.items.d);
 			expect(migrated.folders).toBe(state.folders);
 			expect(migrated.nextSeq).toBe(9);
+		});
+	});
+
+	describe("from v3", () => {
+		it("keeps only the file names of a document's pages and PDF", () => {
+			const doc = {
+				...makeDoc({
+					id: "d",
+					pages: [
+						"file:///var/mobile/Containers/Data/Application/OLD/Documents/documents/d/page-1.jpg",
+						"file:///var/mobile/Containers/Data/Application/OLD/Documents/documents/d/page-2.png",
+					],
+				}),
+				pdfUri:
+					"file:///var/mobile/Containers/Data/Application/OLD/Documents/documents/d/document.pdf",
+			};
+			const state = {
+				items: byId<LibraryItem>(makeCode({ id: "c" }), doc as LibraryItem),
+				folders: {},
+				nextSeq: 3,
+			};
+			const migrated = migrateLibrary(state, 3);
+			expect(migrated.items.d).toEqual({
+				...makeDoc({ id: "d", pages: ["page-1.jpg", "page-2.png"] }),
+				pdf: "document.pdf",
+			});
+			expect(migrated.items.c).toBe(state.items.c);
+		});
+
+		it("leaves documents without a PDF without one", () => {
+			const state = {
+				items: byId<LibraryItem>(
+					makeDoc({ id: "d", pages: ["file:///x/p.jpg"] }),
+				),
+				folders: {},
+				nextSeq: 2,
+			};
+			expect(migrateLibrary(state, 3).items.d).not.toHaveProperty("pdf");
 		});
 	});
 

@@ -10,6 +10,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDocumentImport } from "@/components/documents/useDocumentImport";
 import { IconButton } from "@/components/ui/IconButton";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { scannableFormats } from "@/domain/codes/formats";
@@ -50,7 +51,8 @@ export function ScannerScreen() {
 	const openCapture = (id: string) =>
 		router.push({ pathname: "/capture/[id]", params: { id } });
 	const codeScanner = useCodeScanner(openCapture);
-	const docScanner = useDocumentScanner(openCapture);
+	const importer = useDocumentImport(openCapture);
+	const docScanner = useDocumentScanner(openCapture, importer.fromPhotos);
 	const { mode, moving, progress, changeMode, swipe } = useModeSwitch(() =>
 		setTorch(false),
 	);
@@ -163,7 +165,13 @@ export function ScannerScreen() {
 								style={torch && styles.torchOn}
 							/>
 						) : (
-							<View style={styles.spacer} />
+							<IconButton
+								icon="upload"
+								variant="solid"
+								accessibilityLabel={t("app.document.import_title")}
+								disabled={importer.busy}
+								onPress={importer.open}
+							/>
 						)}
 					</View>
 
@@ -175,9 +183,10 @@ export function ScannerScreen() {
 
 			<BottomBar
 				mode={mode}
-				busy={docScanner.scanning}
+				busy={docScanner.scanning || importer.busy}
 				onShutter={codes ? codeScanner.scanFromGallery : docScanner.scan}
 			/>
+			{importer.element}
 		</View>
 	);
 }
@@ -199,7 +208,6 @@ const useStyles = makeStyles(({ colors }) => ({
 		justifyContent: "space-between",
 	},
 	torchOn: { backgroundColor: colors.accent },
-	spacer: { width: 46, height: 46 },
 	status: {
 		position: "absolute",
 		left: 0,

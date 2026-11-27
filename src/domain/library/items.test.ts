@@ -4,9 +4,11 @@ import {
 	catalogueNumber,
 	countInFolder,
 	isNew,
+	isPinned,
 	itemCaption,
 	itemTitle,
 	sortByRecent,
+	sortPinnedFirst,
 } from "./items";
 
 describe("isNew", () => {
@@ -32,6 +34,25 @@ describe("sortByRecent", () => {
 	});
 });
 
+describe("sortPinnedFirst", () => {
+	it("puts the latest pinned on top, then the newest", () => {
+		const list = [
+			{ id: "old", createdAt: 1 },
+			{ id: "pinned-first", createdAt: 2, pinnedAt: 10 },
+			{ id: "new", createdAt: 5 },
+			{ id: "pinned-last", createdAt: 0, pinnedAt: 20 },
+		];
+		expect(sortPinnedFirst(list).map((entry) => entry.id)).toEqual([
+			"pinned-last",
+			"pinned-first",
+			"new",
+			"old",
+		]);
+		expect(isPinned(list[1])).toBe(true);
+		expect(isPinned(list[0])).toBe(false);
+	});
+});
+
 describe("catalogueNumber", () => {
 	it("pads to three digits", () => {
 		expect(catalogueNumber({ seq: 7 })).toBe("007");
@@ -49,6 +70,9 @@ describe("itemTitle / itemCaption", () => {
 		const doc = makeDoc({ seq: 41, name: "Lease" });
 		expect(itemTitle(doc)).toBe("Lease");
 		expect(itemCaption(doc, "Document")).toBe("041 · DOCUMENT");
+		expect(itemCaption({ ...doc, docType: "receipt" }, "Document")).toBe(
+			"041 · RECEIPT",
+		);
 	});
 
 	it("describe a code by its content and kind", () => {

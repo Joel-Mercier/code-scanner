@@ -8,7 +8,7 @@ import { useLibraryActions } from "@/components/library/useLibraryActions";
 import { Icon } from "@/components/ui/Icon";
 import { Pressable } from "@/components/ui/Pressable";
 import { Text } from "@/components/ui/Text";
-import { isNew, sortByRecent } from "@/domain/library/items";
+import { isNew, sortByRecent, sortPinnedFirst } from "@/domain/library/items";
 import { haptics } from "@/lib/haptics";
 import useLibrary from "@/stores/library";
 import { makeStyles, radii, useSharedStyles, useTheme } from "@/theme";
@@ -19,8 +19,9 @@ export const RECENT_GAP = 12;
 const SLOTS = 3;
 
 /**
- * The last three codes (or documents), and empty slots for the rest. A long
- * press opens a tile's actions (rename, share, move, delete).
+ * The pinned and latest codes (or documents), three at most, and empty slots
+ * for the rest. A long press opens a tile's actions (rename, share, pin,
+ * move, delete).
  */
 export function RecentItems({ mode, tile }: { mode: ScanMode; tile: number }) {
 	const shared = useSharedStyles();
@@ -34,9 +35,10 @@ export function RecentItems({ mode, tile }: { mode: ScanMode; tile: number }) {
 
 	const all = sortByRecent(Object.values(items));
 	const newestId = all[0] && isNew(all[0]) ? all[0].id : null;
-	const recent = all
-		.filter((item) => (codes ? item.kind === "code" : item.kind === "doc"))
-		.slice(0, SLOTS);
+	// Pinned ones first, then the latest.
+	const recent = sortPinnedFirst(
+		all.filter((item) => (codes ? item.kind === "code" : item.kind === "doc")),
+	).slice(0, SLOTS);
 
 	return (
 		<View style={styles.recent}>

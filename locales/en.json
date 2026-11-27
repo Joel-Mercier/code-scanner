@@ -1,0 +1,13 @@
+{
+	"ios": {
+		"NSCameraUsageDescription": "Allow Code Scanner to use the camera to scan codes and documents.",
+		"NSPhotoLibraryUsageDescription": "Allow Code Scanner to open your photos to scan codes and import documents.",
+		"NSPhotoLibraryAddUsageDescription": "Allow Code Scanner to save codes and pages to your photos.",
+		"NSContactsUsageDescription": "Allow Code Scanner to add scanned contacts to your contacts.",
+		"NSCalendarsUsageDescription": "Allow Code Scanner to add scanned events to your calendar.",
+		"NSCalendarsFullAccessUsageDescription": "Allow Code Scanner to add scanned events to your calendar.",
+		"NSRemindersUsageDescription": "Allow Code Scanner to access your reminders.",
+		"NSRemindersFullAccessUsageDescription": "Allow Code Scanner to access your reminders.",
+		"NSMicrophoneUsageDescription": "Code Scanner doesn't record sound."
+	}
+}

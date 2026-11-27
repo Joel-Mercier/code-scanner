@@ -1,0 +1,13 @@
+{
+	"ios": {
+		"NSCameraUsageDescription": "Autoriser Code Scanner à utiliser l'appareil photo pour scanner des codes et des documents.",
+		"NSPhotoLibraryUsageDescription": "Autoriser Code Scanner à ouvrir tes photos pour scanner des codes et importer des documents.",
+		"NSPhotoLibraryAddUsageDescription": "Autoriser Code Scanner à enregistrer des codes et des pages dans tes photos.",
+		"NSContactsUsageDescription": "Autoriser Code Scanner à ajouter les contacts scannés à tes contacts.",
+		"NSCalendarsUsageDescription": "Autoriser Code Scanner à ajouter les événements scannés à ton calendrier.",
+		"NSCalendarsFullAccessUsageDescription": "Autoriser Code Scanner à ajouter les événements scannés à ton calendrier.",
+		"NSRemindersUsageDescription": "Autoriser Code Scanner à accéder à tes rappels.",
+		"NSRemindersFullAccessUsageDescription": "Autoriser Code Scanner à accéder à tes rappels.",
+		"NSMicrophoneUsageDescription": "Code Scanner n'enregistre pas de son."
+	}
+}

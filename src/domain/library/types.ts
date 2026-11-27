@@ -47,6 +47,8 @@ export type CodeItem = {
 	seq: number;
 	folderId: string | null;
 	createdAt: number;
+	/** When it was pinned (to the top of the collection and the home screen). */
+	pinnedAt?: number;
 	source: "scanner" | "created";
 	format: BarcodeType;
 	/** Encoded payload, exactly as scanned / generated. */
@@ -57,6 +59,27 @@ export type CodeItem = {
 	style?: CodeStyle;
 };
 
+/** What sort of paper a document is, picked by the user. */
+export const docTypes = [
+	"receipt",
+	"invoice",
+	"id",
+	"ticket",
+	"letter",
+	"contract",
+	"warranty",
+	"medical",
+	"other",
+] as const;
+
+export type DocType = (typeof docTypes)[number];
+
+/** A code found printed on a page. */
+export type FoundCode = { format: BarcodeType; data: string };
+
+/** What a page says, read on the device: its text and the codes on it. */
+export type PageReading = { text: string; codes: FoundCode[] };
+
 export type DocItem = {
 	kind: "doc";
 	id: string;
@@ -64,12 +87,21 @@ export type DocItem = {
 	seq: number;
 	folderId: string | null;
 	createdAt: number;
+	pinnedAt?: number;
 	name: string;
-	/** Page images, in the app's documents directory. */
+	/**
+	 * Page images, as file names in the document's own directory. Never
+	 * absolute: iOS moves the app's container between installs and updates.
+	 */
 	pages: string[];
-	pdfUri?: string;
+	/** The PDF's file name in that directory. */
+	pdf?: string;
 	/** Bytes on disk, pages and PDF together. */
 	size: number;
+	docType?: DocType;
+	notes?: string;
+	/** Each page's text and codes, by page file name; unread pages are missing. */
+	readings?: Record<string, PageReading>;
 };
 
 export type LibraryItem = CodeItem | DocItem;

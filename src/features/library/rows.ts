@@ -1,5 +1,6 @@
 import { describeItem, qrKinds, scanOnlyKinds } from "@/domain/codes/describe";
-import { itemTitle } from "@/domain/library/items";
+import { docSearchText } from "@/domain/library/documents";
+import { isPinned, itemTitle } from "@/domain/library/items";
 import type { Folder, LibraryItem } from "@/domain/library/types";
 import { format } from "@/lib/date";
 
@@ -28,17 +29,18 @@ export const matchesFilter = (item: LibraryItem, filter: Filter) =>
 export const matchesFolder = (folder: Folder, query: string) =>
 	folder.name.toLowerCase().includes(query.toLowerCase());
 
-/** Title, then a code's content and kind. */
+/**
+ * Title, then a code's content and kind, or a document's notes, type and
+ * the text read on its pages.
+ */
 export const matchesQuery = (item: LibraryItem, query: string) => {
 	const needle = query.toLowerCase();
-	if (itemTitle(item).toLowerCase().includes(needle)) return true;
-	if (item.kind === "code") {
-		return (
-			item.data.toLowerCase().includes(needle) ||
-			describeItem(item).subtitle.toLowerCase().includes(needle)
-		);
-	}
-	return false;
+	if (item.kind === "doc") return docSearchText(item).includes(needle);
+	return (
+		itemTitle(item).toLowerCase().includes(needle) ||
+		item.data.toLowerCase().includes(needle) ||
+		describeItem(item).subtitle.toLowerCase().includes(needle)
+	);
 };
 
 /** Up to this many tiles per row. */
@@ -49,10 +51,16 @@ export type Row =
 	| { type: "items"; key: string; items: LibraryItem[]; offset: number };
 
 /**
- * Groups items (newest first) by month, then into rows of `COLUMNS`. `offset`
- * is the index of a row's first item, for staggering.
+ * Groups items (newest first) by month, then into rows of `COLUMNS`. With a
+ * `pinned` label, pinned items come first under it (the latest pinned on
+ * top) and leave their month. `offset` is the index of a row's first item,
+ * for staggering.
  */
-export const toRows = (items: LibraryItem[], thisMonth: string): Row[] => {
+export const toRows = (
+	items: LibraryItem[],
+	thisMonth: string,
+	pinned?: string,
+): Row[] => {
 	const rows: Row[] = [];
 	let month = "";
 	let bucket: LibraryItem[] = [];
@@ -69,7 +77,18 @@ export const toRows = (items: LibraryItem[], thisMonth: string): Row[] => {
 		offset += bucket.length;
 		bucket = [];
 	};
-	for (const item of items) {
+	const pins = pinned
+		? items
+				.filter(isPinned)
+				.sort((a, b) => (b.pinnedAt ?? 0) - (a.pinnedAt ?? 0))
+		: [];
+	if (pinned && pins.length > 0) {
+		month = "pinned";
+		rows.push({ type: "heading", key: "heading-pinned", label: pinned });
+		bucket = pins;
+		flush();
+	}
+	for (const item of pinned ? items.filter((item) => !isPinned(item)) : items) {
 		const key = format(item.createdAt, "yyyy-MM");
 		if (key !== month) {
 			flush();

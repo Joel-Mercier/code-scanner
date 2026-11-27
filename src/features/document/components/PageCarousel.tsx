@@ -109,14 +109,20 @@ function Dot({
 
 /**
  * The pages side by side, snapping one at a time, with dots and a counter.
- * Fills the space it is given; pages shrink on short screens.
+ * Fills the `height` it is given; pages shrink on short screens. Tapping the
+ * current page opens it (`onOpen`), tapping another one brings it forward.
  */
 export function PageCarousel({
 	pages,
 	paddingTop,
+	height,
+	onOpen,
 }: {
+	/** Page image URIs. */
 	pages: string[];
 	paddingTop: number;
+	height: number;
+	onOpen: (index: number) => void;
 }) {
 	const { colors } = useTheme();
 	const styles = useStyles();
@@ -142,7 +148,7 @@ export function PageCarousel({
 
 	return (
 		<View
-			style={[styles.carousel, { paddingTop }]}
+			style={[styles.carousel, { paddingTop, height }]}
 			onLayout={(event) => setArea(event.nativeEvent.layout.height)}
 		>
 			{area > 0 && (
@@ -175,7 +181,9 @@ export function PageCarousel({
 								step={step}
 								width={pageWidth}
 								height={pageHeight}
-								onPress={() => goTo(index)}
+								onPress={() =>
+									index === current ? onOpen(index) : goTo(index)
+								}
 							/>
 						))}
 					</Animated.ScrollView>
@@ -204,7 +212,7 @@ export function PageCarousel({
 }
 
 const useStyles = makeStyles(({ colors, shadows }) => ({
-	carousel: { flex: 1, justifyContent: "center" },
+	carousel: { justifyContent: "center" },
 	scroller: { flexGrow: 0 },
 	page: {
 		borderRadius: 6,

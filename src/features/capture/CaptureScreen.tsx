@@ -5,7 +5,10 @@ import { ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { type Action, CodeActions } from "@/components/codes/CodeActions";
 import { CodeFields } from "@/components/codes/CodeFields";
-import { saveDocumentToFiles } from "@/components/documents/actions";
+import {
+	saveDocumentToFiles,
+	shareDocument,
+} from "@/components/documents/actions";
 import { useMoveToFolder } from "@/components/library/FolderPicker";
 import { itemHref } from "@/components/library/hrefs";
 import { useLibraryActions } from "@/components/library/useLibraryActions";
@@ -17,7 +20,6 @@ import { StatusBar } from "@/components/ui/StatusBar";
 import { Text } from "@/components/ui/Text";
 import { describeItem } from "@/domain/codes/describe";
 import { catalogueNumber } from "@/domain/library/items";
-import { shareItem } from "@/services/share";
 import useLibrary from "@/stores/library";
 import {
 	makeStyles,
@@ -127,7 +129,7 @@ export function CaptureScreen({ id }: { id: string }) {
 							<DetailRows
 								rows={[
 									[t("app.document.pages_label"), String(item.pages.length)],
-									[t("app.document.format"), item.pdfUri ? "PDF" : "JPG"],
+									[t("app.document.format"), item.pdf ? "PDF" : "JPG"],
 								]}
 							/>
 						)
@@ -147,10 +149,8 @@ export function CaptureScreen({ id }: { id: string }) {
 							<>
 								<Button
 									icon="share"
-									label={t(
-										item.pdfUri ? "app.document.share_pdf" : "app.common.share",
-									)}
-									onPress={() => shareItem(item).catch(console.error)}
+									label={t("app.document.share_pdf")}
+									onPress={() => shareDocument(item)}
 								/>
 								<ButtonGrid>
 									<Button

@@ -7,8 +7,15 @@
 		"icon": "./assets/images/icon.png",
 		"scheme": "codescanner",
 		"userInterfaceStyle": "automatic",
+		"locales": {
+			"en": "./locales/en.json",
+			"fr": "./locales/fr.json"
+		},
 		"ios": {
 			"supportsTablet": true,
+			"infoPlist": {
+				"CFBundleAllowMixedLocalizations": true
+			},
 			"bundleIdentifier": "com.jmercier.codescanner",
 			"entitlements": {
 				"com.apple.developer.networking.HotspotConfiguration": true
@@ -20,53 +27,6 @@
 				"monochromeImage": "./assets/images/adaptive-icon-monochrome.png",
 				"backgroundColor": "#FFFFFF"
 			},
-			"intentFilters": [
-				{
-					"action": "VIEW",
-					"autoVerify": true,
-					"data": [
-						{
-							"scheme": "https"
-						}
-					]
-				},
-				{
-					"action": "VIEW",
-					"autoVerify": true,
-					"data": [
-						{
-							"scheme": "http"
-						}
-					]
-				},
-				{
-					"action": "VIEW",
-					"autoVerify": true,
-					"data": [
-						{
-							"scheme": "mailto"
-						}
-					]
-				},
-				{
-					"action": "VIEW",
-					"autoVerify": true,
-					"data": [
-						{
-							"scheme": "tel"
-						}
-					]
-				},
-				{
-					"action": "VIEW",
-					"autoVerify": true,
-					"data": [
-						{
-							"scheme": "sms"
-						}
-					]
-				}
-			],
 			"permissions": ["android.permission.CAMERA"],
 			"package": "com.jmercier.codescanner"
 		},
@@ -93,7 +53,7 @@
 			[
 				"expo-camera",
 				{
-					"cameraPermission": "Autoriser $(PRODUCT_NAME) à accéder à votre caméra.",
+					"cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to scan codes and documents.",
 					"recordAudioAndroid": false,
 					"barcodeScannerEnabled": true
 				}
@@ -101,15 +61,15 @@
 			[
 				"expo-media-library",
 				{
-					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos.",
-					"savePhotosPermission": "Autoriser $(PRODUCT_NAME) à enregistrer des photos.",
+					"photosPermission": "Allow $(PRODUCT_NAME) to open your photos to scan codes and import documents.",
+					"savePhotosPermission": "Allow $(PRODUCT_NAME) to save codes and pages to your photos.",
 					"granularPermissions": ["photo"]
 				}
 			],
 			[
 				"expo-image-picker",
 				{
-					"photosPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos photos.",
+					"photosPermission": "Allow $(PRODUCT_NAME) to open your photos to scan codes and import documents.",
 					"microphonePermission": false
 				}
 			],
@@ -123,14 +83,14 @@
 			[
 				"expo-contacts",
 				{
-					"contactsPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos contacts."
+					"contactsPermission": "Allow $(PRODUCT_NAME) to add scanned contacts to your contacts."
 				}
 			],
 			"expo-web-browser",
 			[
 				"expo-calendar",
 				{
-					"calendarPermission": "Autoriser $(PRODUCT_NAME) à accéder à vos calendriers."
+					"calendarPermission": "Allow $(PRODUCT_NAME) to add scanned events to your calendar."
 				}
 			],
 			"expo-font",
@@ -145,6 +105,15 @@
 				}
 			],
 			"./plugins/withGradleTuning",
+			"./plugins/withMlKitModels",
+			[
+				"expo-share-intent",
+				{
+					"iosActivationRules": "SUBQUERY (extensionItems, $extensionItem, SUBQUERY ($extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO \"public.image\" || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO \"com.adobe.pdf\").@count > 0).@count > 0",
+					"androidIntentFilters": ["image/*", "application/pdf"],
+					"androidMultiIntentFilters": ["image/*"]
+				}
+			],
 			"expo-image",
 			"@react-native-community/datetimepicker"
 		],

@@ -10,9 +10,11 @@ import { Pressable } from "@/components/ui/Pressable";
 import { Text } from "@/components/ui/Text";
 import { describeItem } from "@/domain/codes/describe";
 import { hasPaper } from "@/domain/codes/style";
-import { catalogueNumber, itemTitle } from "@/domain/library/items";
+import { docTypeLabel } from "@/domain/library/documents";
+import { catalogueNumber, isPinned, itemTitle } from "@/domain/library/items";
 import type { LibraryItem } from "@/domain/library/types";
 import { withAlpha } from "@/lib/color";
+import { pageUri } from "@/services/documents";
 import { makeStyles, radii, useSharedStyles, useTheme } from "@/theme";
 import { enter, transition } from "@/theme/motion";
 
@@ -38,7 +40,10 @@ function Thumb({ item, size }: { item: LibraryItem; size: number }) {
 			<View
 				style={[shared.floating, shared.center, { width: size, height: size }]}
 			>
-				<PageThumb uri={item.pages[0]} width={size * 0.44} />
+				<PageThumb
+					uri={item.pages[0] && pageUri(item, item.pages[0])}
+					width={size * 0.44}
+				/>
 			</View>
 		);
 	}
@@ -137,7 +142,9 @@ function Tile({
 		item.kind === "doc"
 			? caption === "short"
 				? t("app.document.pages", { count: item.pages.length })
-				: t("app.library.doc_short")
+				: item.docType
+					? docTypeLabel(item.docType)
+					: t("app.library.doc_short")
 			: describeItem(item).subtitle,
 	);
 
@@ -184,6 +191,14 @@ function Tile({
 						</Animated.View>
 					)}
 				</View>
+				{isPinned(item) && !selecting && (
+					<View
+						style={styles.pin}
+						accessibilityLabel={t("app.library.pinned_label")}
+					>
+						<Icon name="pin" size={11} color={colors.muted} strokeWidth={2} />
+					</View>
+				)}
 				{showNew && !selecting && (
 					<View style={styles.new} accessibilityLabel={t("app.library.new")} />
 				)}
@@ -229,6 +244,17 @@ const useStyles = makeStyles(({ colors }) => ({
 		backgroundColor: colors.accent,
 	},
 	caption: { gap: CAPTION_GAP },
+	pin: {
+		position: "absolute",
+		top: 7,
+		left: 7,
+		width: 20,
+		height: 20,
+		borderRadius: 10,
+		alignItems: "center",
+		justifyContent: "center",
+		backgroundColor: withAlpha(colors.surface, 0.9),
+	},
 	ring: {
 		position: "absolute",
 		top: 0,

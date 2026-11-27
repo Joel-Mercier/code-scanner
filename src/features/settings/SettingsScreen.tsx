@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import * as Application from "expo-application";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -22,6 +22,7 @@ import {
 	useTheme,
 } from "@/theme";
 import { enter } from "@/theme/motion";
+import { backUpLibrary, restoreLibrary } from "./backup";
 import { SearchEngineSheet } from "./components/SearchEngineSheet";
 
 export function SettingsScreen() {
@@ -42,6 +43,14 @@ export function SettingsScreen() {
 	const searchEngine = useSettings((state) => state.searchEngine);
 	const setSearchEngine = useSettings((state) => state.setSearchEngine);
 	const engineSheet = useRef<BottomSheetModal>(null);
+	const [working, setWorking] = useState(false);
+
+	const run = async (task: () => Promise<void>) => {
+		if (working) return;
+		setWorking(true);
+		await task();
+		setWorking(false);
+	};
 
 	return (
 		<View style={shared.screen}>
@@ -155,6 +164,29 @@ export function SettingsScreen() {
 							chevron
 							last
 							onPress={() => router.push("/settings/privacy")}
+						/>
+					</ListCard>
+				</Animated.View>
+
+				<Animated.View entering={enter.up(140)} style={styles.section}>
+					<Eyebrow style={styles.label}>{t("app.backup.title")}</Eyebrow>
+					<ListCard>
+						<ListRow
+							icon="archive"
+							iconTile={36}
+							label={t("app.backup.export")}
+							description={t("app.backup.export_hint")}
+							height={64}
+							onPress={() => run(backUpLibrary)}
+						/>
+						<ListRow
+							icon="upload"
+							iconTile={36}
+							label={t("app.backup.import")}
+							description={t("app.backup.import_hint")}
+							height={64}
+							last
+							onPress={() => run(restoreLibrary)}
 						/>
 					</ListCard>
 				</Animated.View>

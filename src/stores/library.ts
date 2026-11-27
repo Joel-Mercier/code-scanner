@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { mergeLibrary } from "@/domain/library/backup";
+import { keepReadings } from "@/domain/library/documents";
 import { descendantFolderIds } from "@/domain/library/folders";
 import {
 	LIBRARY_VERSION,
@@ -10,8 +12,10 @@ import type {
 	CodeItem,
 	DocItem,
 	Folder,
+	LibraryItem,
 	NewCode,
 	NewDoc,
+	PageReading,
 } from "@/domain/library/types";
 import { createId } from "@/lib/id";
 import { zustandStorage } from "@/lib/storage";
@@ -22,6 +26,19 @@ interface LibraryState extends PersistedLibrary {
 	addCode: (code: NewCode) => CodeItem;
 	addDocument: (doc: NewDoc) => DocItem;
 	renameItem: (id: string, name: string) => void;
+	/** Changes a document's details or files; readings of dropped pages go. */
+	updateDocument: (
+		id: string,
+		changes: Partial<
+			Pick<DocItem, "pages" | "pdf" | "size" | "docType" | "notes" | "readings">
+		>,
+	) => void;
+	/** Keeps what a page says; ignored if the page has gone meanwhile. */
+	setReading: (id: string, page: string, reading: PageReading) => void;
+	/** Pins or unpins items (to the top of the collection and the home screen). */
+	setPinned: (ids: string[], pinned: boolean) => void;
+	/** Adds a backup's folders and items to the library; returns what was added. */
+	restore: (backup: PersistedLibrary) => LibraryItem[];
 	moveItem: (id: string, folderId: string | null) => void;
 	/** Moves several items at once; unknown ids are skipped. */
 	moveItems: (ids: string[], folderId: string | null) => void;
@@ -101,6 +118,57 @@ const useLibrary = create<LibraryState>()(
 						? { items: { ...state.items, [id]: { ...item, name } } }
 						: state;
 				}),
+			updateDocument: (id, changes) =>
+				set((state) => {
+					const item = state.items[id];
+					if (item?.kind !== "doc") return state;
+					const next: DocItem = { ...item, ...changes };
+					next.readings = keepReadings(next.readings, next.pages);
+					if (changes.docType === undefined && "docType" in changes) {
+						delete next.docType;
+					}
+					if (changes.notes !== undefined && !changes.notes.trim()) {
+						delete next.notes;
+					}
+					return { items: { ...state.items, [id]: next } };
+				}),
+			setReading: (id, page, reading) =>
+				set((state) => {
+					const item = state.items[id];
+					if (item?.kind !== "doc" || !item.pages.includes(page)) return state;
+					return {
+						items: {
+							...state.items,
+							[id]: {
+								...item,
+								readings: { ...item.readings, [page]: reading },
+							},
+						},
+					};
+				}),
+			setPinned: (ids, pinned) =>
+				set((state) => {
+					const items = { ...state.items };
+					const now = Date.now();
+					ids.forEach((id, index) => {
+						const item = items[id];
+						if (!item) return;
+						if (pinned) {
+							// Keep the picked order: the first one ends up on top.
+							items[id] = { ...item, pinnedAt: now + ids.length - index };
+						} else {
+							const { pinnedAt: _, ...rest } = item;
+							items[id] = rest as LibraryItem;
+						}
+					});
+					return { items };
+				}),
+			restore: (backup) => {
+				const { items, folders, nextSeq } = get();
+				const merged = mergeLibrary({ items, folders, nextSeq }, backup);
+				set(merged.library);
+				return merged.added;
+			},
 			moveItem: (id, folderId) => get().moveItems([id], folderId),
 			moveItems: (ids, folderId) =>
 				set((state) => {

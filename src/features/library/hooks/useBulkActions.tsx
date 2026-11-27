@@ -3,14 +3,19 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import { mergeDocuments } from "@/components/documents/actions";
 import { useFolderPicker } from "@/components/library/FolderPicker";
 import { ItemThumb } from "@/components/library/ItemTile";
 import { Button } from "@/components/ui/Button";
+import { ListCard, ListRow } from "@/components/ui/List";
 import { Sheet } from "@/components/ui/Sheet";
 import { Text } from "@/components/ui/Text";
 import { toast } from "@/components/ui/Toast";
-import type { LibraryItem } from "@/domain/library/types";
+import { isPinned } from "@/domain/library/items";
+import type { DocItem, LibraryItem } from "@/domain/library/types";
+import { attempt } from "@/lib/attempt";
 import { haptics } from "@/lib/haptics";
+import { shareItems } from "@/services/share";
 import useLibrary from "@/stores/library";
 import { makeStyles, useTheme } from "@/theme";
 import { enter } from "@/theme/motion";
@@ -21,19 +26,68 @@ const PREVIEW = 4;
 const THUMB = 52;
 
 /**
- * What the selection bar does to the picked items: move them to a folder, or
- * delete them after a confirmation. `onDone` runs once they're moved or gone.
- * Render `element` once in the screen.
+ * What the selection bar does to the picked items: move them to a folder,
+ * delete them after a confirmation, or (under "More") share, pin and merge
+ * documents into one. `onDone` runs once the action is through; `onMerged`
+ * gets the new document. Render `element` once in the screen.
  */
-export function useBulkActions({ onDone }: { onDone: () => void }) {
+export function useBulkActions({
+	onDone,
+	onMerged,
+}: {
+	onDone: () => void;
+	onMerged: (id: string) => void;
+}) {
 	const { colors } = useTheme();
 	const styles = useStyles();
 	const { t } = useTranslation();
 	const picker = useFolderPicker();
 	const sheet = useRef<BottomSheetModal>(null);
+	const moreSheet = useRef<BottomSheetModal>(null);
 	const [doomed, setDoomed] = useState<LibraryItem[]>([]);
+	const [picked, setPicked] = useState<LibraryItem[]>([]);
+	const [merging, setMerging] = useState(false);
 	const moveItems = useLibrary((state) => state.moveItems);
 	const deleteItems = useLibrary((state) => state.deleteItems);
+	const setPinned = useLibrary((state) => state.setPinned);
+
+	const more = (items: LibraryItem[]) => {
+		setPicked(items);
+		moreSheet.current?.present();
+	};
+
+	const share = async () => {
+		moreSheet.current?.dismiss();
+		await attempt(() => shareItems(picked));
+	};
+
+	// Pin them all, unless they all are already.
+	const allPinned = picked.length > 0 && picked.every(isPinned);
+	const togglePins = () => {
+		haptics.pop();
+		setPinned(
+			picked.map((item) => item.id),
+			!allPinned,
+		);
+		toast(
+			t(allPinned ? "app.library.unpinned_count" : "app.library.pinned_count", {
+				count: picked.length,
+			}),
+		);
+		moreSheet.current?.dismiss();
+		onDone();
+	};
+
+	const docs = picked.filter((item): item is DocItem => item.kind === "doc");
+	const merge = async () => {
+		setMerging(true);
+		const id = await mergeDocuments(docs);
+		setMerging(false);
+		moreSheet.current?.dismiss();
+		if (!id) return;
+		onDone();
+		onMerged(id);
+	};
 
 	const move = (items: LibraryItem[]) =>
 		picker.open({
@@ -64,6 +118,42 @@ export function useBulkActions({ onDone }: { onDone: () => void }) {
 	const element = (
 		<>
 			{picker.element}
+			<Sheet ref={moreSheet} onDismiss={() => setPicked([])}>
+				{picked.length > 0 && (
+					<>
+						<Text size={24} weight="semibold" tracking={-0.02}>
+							{t("app.library.selected", { count: picked.length })}
+						</Text>
+						<ListCard>
+							<ListRow
+								icon="share"
+								label={t("app.common.share")}
+								onPress={share}
+							/>
+							<ListRow
+								icon={allPinned ? "pinOff" : "pin"}
+								label={t(allPinned ? "app.library.unpin" : "app.library.pin")}
+								last={docs.length < 2}
+								onPress={togglePins}
+							/>
+							{docs.length >= 2 && (
+								<ListRow
+									icon="layers"
+									label={t("app.document.merge", { count: docs.length })}
+									description={t(
+										merging
+											? "app.document.merging"
+											: "app.document.merge_hint",
+									)}
+									height={64}
+									last
+									onPress={merging ? undefined : merge}
+								/>
+							)}
+						</ListCard>
+					</>
+				)}
+			</Sheet>
 			<Sheet ref={sheet} inset={16} gap={16} onDismiss={() => setDoomed([])}>
 				{doomed.length > 0 && (
 					<>
@@ -111,7 +201,7 @@ export function useBulkActions({ onDone }: { onDone: () => void }) {
 		</>
 	);
 
-	return { move, remove, element };
+	return { move, remove, more, element };
 }
 
 const useStyles = makeStyles(() => ({

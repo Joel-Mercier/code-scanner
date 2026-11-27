@@ -6,6 +6,7 @@ import { Text } from "@/components/ui/Text";
 import { Turntable } from "@/components/ui/Turntable";
 import { catalogueNumber } from "@/domain/library/items";
 import type { DocItem } from "@/domain/library/types";
+import { pageUri } from "@/services/documents";
 import { useTheme } from "@/theme";
 import { Paper } from "./Paper";
 
@@ -36,7 +37,7 @@ export function DocObject({
 			front={
 				item.pages[0] ? (
 					<Image
-						source={item.pages[0]}
+						source={pageUri(item, item.pages[0])}
 						style={StyleSheet.absoluteFill}
 						contentFit="cover"
 					/>
@@ -48,7 +49,7 @@ export function DocObject({
 				<View style={styles.back}>
 					<Icon name="file" size={44} color={colors.accent} strokeWidth={1.5} />
 					<Text size={11} mono color={colors.muted}>
-						No. {catalogueNumber(item)} · {item.pdfUri ? "PDF" : "JPG"}
+						No. {catalogueNumber(item)} · {item.pdf ? "PDF" : "JPG"}
 					</Text>
 				</View>
 			}

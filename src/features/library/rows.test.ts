@@ -61,6 +61,20 @@ describe("filters", () => {
 		expect(matchesQuery(makeDoc({ name: "Lease 2026" }), "lease")).toBe(true);
 		expect(matchesQuery(makeDoc({ name: "Lease" }), "page")).toBe(false);
 	});
+
+	it("searches a document's notes, type and the text read on it", () => {
+		const doc = makeDoc({
+			name: "Scan",
+			notes: "Dentist",
+			docType: "invoice",
+			pages: ["p"],
+			readings: { p: { text: "Total due 84,00 EUR", codes: [] } },
+		});
+		expect(matchesQuery(doc, "dentist")).toBe(true);
+		expect(matchesQuery(doc, "invoice")).toBe(true);
+		expect(matchesQuery(doc, "total due")).toBe(true);
+		expect(matchesQuery(doc, "receipt")).toBe(false);
+	});
 });
 
 describe("toRows", () => {
@@ -108,5 +122,28 @@ describe("toRows", () => {
 
 	it("is empty without items", () => {
 		expect(toRows([], "Now")).toEqual([]);
+		expect(toRows([], "Now", "Pinned")).toEqual([]);
+	});
+
+	it("puts pinned items first, out of their month", () => {
+		const items = [
+			at("a", 5, 10),
+			{ ...at("b", 5, 9), pinnedAt: 1 },
+			at("c", 4),
+			{ ...at("d", 3), pinnedAt: 2 },
+		];
+		const rows = toRows(items, "Now", "Pinned");
+		expect(
+			rows.map((row) =>
+				row.type === "heading"
+					? row.label
+					: row.items.map((item) => item.id).join(""),
+			),
+		).toEqual(["Pinned", "db", "Now", "a", "May 2026", "c"]);
+		expect(new Set(rows.map((row) => row.key)).size).toBe(rows.length);
+		// Without the label, pinned items stay in their month.
+		expect(
+			toRows(items, "Now").filter((row) => row.type === "heading"),
+		).toHaveLength(3);
 	});
 });

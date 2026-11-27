@@ -1,6 +1,7 @@
 import { normalizeBarcodeType } from "@/domain/codes/formats";
 import {
 	type CodeItem,
+	type DocItem,
 	type Folder,
 	type FolderColor,
 	folderIcons,
@@ -116,8 +117,33 @@ const migrateV2 = (state: PersistedLibrary): PersistedLibrary => {
 	return { ...state, items };
 };
 
+/** The last part of a path or URI ("file:///…/doc/page-1.jpg" → "page-1.jpg"). */
+const fileName = (uri: string) => uri.split("/").pop() ?? uri;
+
+type V3Doc = Omit<DocItem, "pdf"> & { pdfUri?: string };
+
+// v3 stored a document's pages and PDF as absolute URIs, which break when
+// iOS moves the app's container. They all live in the document's own
+// directory, so their file names are enough.
+const migrateV3 = (state: PersistedLibrary): PersistedLibrary => {
+	const items: Record<string, LibraryItem> = {};
+	for (const item of Object.values(state.items ?? {})) {
+		if (item.kind !== "doc") {
+			items[item.id] = item;
+			continue;
+		}
+		const { pdfUri, ...doc } = item as V3Doc;
+		items[item.id] = {
+			...doc,
+			pages: doc.pages.map(fileName),
+			...(pdfUri ? { pdf: fileName(pdfUri) } : {}),
+		};
+	}
+	return { ...state, items };
+};
+
 /** Bump with every change to the persisted shape, and add a step below. */
-export const LIBRARY_VERSION = 3;
+export const LIBRARY_VERSION = 4;
 
 export const migrateLibrary = (
 	persisted: unknown,
@@ -127,5 +153,6 @@ export const migrateLibrary = (
 		version < 2
 			? migrateV1(persisted as V1State)
 			: (persisted as PersistedLibrary);
-	return version < 3 ? migrateV2(v2) : v2;
+	const v3 = version < 3 ? migrateV2(v2) : v2;
+	return version < 4 ? migrateV3(v3) : v3;
 };

@@ -32,7 +32,7 @@ export const makeDoc = (overrides: Partial<DocItem> = {}): DocItem => ({
 	folderId: null,
 	createdAt: 0,
 	name: "Scan",
-	pages: ["file:///page-1.jpg"],
+	pages: ["page-1.jpg"],
 	size: 100,
 	...overrides,
 });

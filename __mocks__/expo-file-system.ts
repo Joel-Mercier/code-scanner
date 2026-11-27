@@ -8,15 +8,15 @@ const directories = new Set<string>();
 
 const join = (parent: string, name: string) =>
 	`${parent.replace(/\/+$/, "")}/${name}`;
-const uriOf = (base: string | { uri: string }, name?: string) => {
-	const uri = typeof base === "string" ? base : base.uri;
-	return name ? join(uri, name) : uri;
-};
+const uriOf = (...parts: (string | { uri: string })[]) =>
+	parts
+		.map((part) => (typeof part === "string" ? part : part.uri))
+		.reduce((uri, name) => join(uri, name));
 
 export class File {
 	uri: string;
-	constructor(base: string | { uri: string }, name?: string) {
-		this.uri = uriOf(base, name);
+	constructor(...parts: (string | { uri: string })[]) {
+		this.uri = uriOf(...parts);
 	}
 	get name() {
 		return this.uri.split("/").pop() ?? "";
@@ -32,10 +32,16 @@ export class File {
 	get size() {
 		return files.get(this.uri)?.byteLength ?? null;
 	}
-	async copy(target: File) {
+	async copy(target: File, options?: { overwrite?: boolean }) {
 		const content = files.get(this.uri);
 		if (!content) throw new Error(`No such file: ${this.uri}`);
+		if (files.has(target.uri) && !options?.overwrite) {
+			throw new Error(`Already exists: ${target.uri}`);
+		}
 		files.set(target.uri, content);
+	}
+	delete() {
+		if (!files.delete(this.uri)) throw new Error(`No such file: ${this.uri}`);
 	}
 	async bytes() {
 		const content = files.get(this.uri);
@@ -52,8 +58,8 @@ export class File {
 
 export class Directory {
 	uri: string;
-	constructor(base: string | { uri: string }, name?: string) {
-		this.uri = uriOf(base, name);
+	constructor(...parts: (string | { uri: string })[]) {
+		this.uri = uriOf(...parts);
 	}
 	get exists() {
 		return directories.has(this.uri);
@@ -81,9 +87,12 @@ export const Paths = {
 };
 
 export const fileSystem = {
-	/** Creates a file with `size` bytes of content. */
-	seed(uri: string, size = 1) {
-		files.set(uri, new Uint8Array(size));
+	/** Creates a file with `size` bytes of content, or the given bytes. */
+	seed(uri: string, content: number | Uint8Array = 1) {
+		files.set(
+			uri,
+			typeof content === "number" ? new Uint8Array(content) : content,
+		);
 	},
 	has: (uri: string) => files.has(uri),
 	read: (uri: string) => files.get(uri),
