@@ -118,6 +118,32 @@ describe("items", () => {
 		expect(library().items).toEqual({});
 		expect(deleteDocumentFiles).not.toHaveBeenCalled();
 	});
+	it("moves several items at once, skipping unknown ids", () => {
+		const one = scan("one");
+		const two = scan("two");
+		const three = scan("three");
+		library().moveItems([one.id, two.id, "missing"], "f");
+		expect(library().items[one.id].folderId).toBe("f");
+		expect(library().items[two.id].folderId).toBe("f");
+		expect(library().items[three.id].folderId).toBeNull();
+
+		const before = library().items;
+		library().moveItems(["missing"], "f");
+		expect(library().items).toBe(before);
+	});
+
+	it("deletes several items at once, with their documents' files", () => {
+		const code = scan("x");
+		const kept = scan("kept");
+		doc("d1");
+		library().deleteItems([code.id, "d1", "missing"]);
+		expect(Object.keys(library().items)).toEqual([kept.id]);
+		expect(jest.mocked(deleteDocumentFiles).mock.calls).toEqual([["d1"]]);
+
+		const before = library().items;
+		library().deleteItems(["missing"]);
+		expect(library().items).toBe(before);
+	});
 });
 
 describe("folders", () => {

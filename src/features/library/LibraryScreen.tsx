@@ -11,15 +11,24 @@ import { fullTileHeight, ItemTile } from "@/components/library/ItemTile";
 import { useLibraryActions } from "@/components/library/useLibraryActions";
 import { Header } from "@/components/ui/Header";
 import { IconButton } from "@/components/ui/IconButton";
+import { Pressable } from "@/components/ui/Pressable";
+import {
+	SELECTION_BAR_GAP,
+	SELECTION_BAR_HEIGHT,
+	SelectionBar,
+} from "@/components/ui/SelectionBar";
 import { Sheet } from "@/components/ui/Sheet";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { Tabs } from "@/components/ui/Tabs";
 import { Eyebrow, LargeTitle, Text } from "@/components/ui/Text";
 import { folderAncestors } from "@/domain/library/folders";
 import { countInFolder, sortByRecent } from "@/domain/library/items";
+import type { LibraryItem } from "@/domain/library/types";
+import { haptics } from "@/lib/haptics";
 import useLibrary from "@/stores/library";
 import {
 	makeStyles,
+	radii,
 	useScreenInsets,
 	useSharedStyles,
 	useTheme,
@@ -29,6 +38,7 @@ import { Breadcrumbs } from "./components/Breadcrumbs";
 import { FolderCard } from "./components/FolderCard";
 import { KindStrip } from "./components/KindStrip";
 import { SearchField } from "./components/SearchField";
+import { useBulkActions } from "./hooks/useBulkActions";
 import {
 	COLUMNS,
 	type Filter,
@@ -40,6 +50,13 @@ import {
 	stripKinds,
 	toRows,
 } from "./rows";
+import {
+	allSelected,
+	emptySelection,
+	type Selection,
+	selectedIn,
+	toggleSelected,
+} from "./selection";
 
 const SIDE = 16;
 const COLUMN_GAP = 12;
@@ -49,7 +66,9 @@ const HEADING = { above: 22, size: 11, leading: 1.4, below: 12 };
 
 /**
  * The collection (`folderId` null) or one folder: its subfolders, then its
- * items by month. Filter by tab or by kind, or search everything.
+ * items by month. Filter by tab or by kind, or search everything. A long
+ * press on an item starts a multi-select, with bulk actions in a bar at the
+ * bottom; a long press on a folder opens its actions.
  */
 export function LibraryScreen({ folderId }: { folderId: string | null }) {
 	const shared = useSharedStyles();
@@ -64,6 +83,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 	const [kind, setKind] = useState<Kind | null>(null);
 	const [searching, setSearching] = useState(false);
 	const [query, setQuery] = useState("");
+	const [selection, setSelection] = useState<Selection>(emptySelection);
 	const items = useLibrary((state) => state.items);
 	const folders = useLibrary((state) => state.folders);
 	const newFolderSheet = useRef<BottomSheetModal>(null);
@@ -73,25 +93,40 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 		},
 	});
 
+	const clearSelection = () => setSelection(emptySelection);
+	const bulk = useBulkActions({ onDone: clearSelection });
+
+	const openSearch = () => {
+		setSearching(true);
+		clearSelection();
+	};
+
 	const closeSearch = () => {
 		setSearching(false);
 		setQuery("");
+		clearSelection();
 	};
 
-	// Android's back button leaves the search before leaving the screen.
+	const hasSelection = selection.size > 0;
+	// Android's back button leaves the selection, then the search, before
+	// leaving the screen.
 	useFocusEffect(
 		useCallback(() => {
-			if (!searching) return;
+			if (!searching && !hasSelection) return;
 			const subscription = BackHandler.addEventListener(
 				"hardwareBackPress",
 				() => {
-					setSearching(false);
-					setQuery("");
+					if (hasSelection) {
+						setSelection(emptySelection);
+					} else {
+						setSearching(false);
+						setQuery("");
+					}
 					return true;
 				},
 			);
 			return () => subscription.remove();
-		}, [searching]),
+		}, [searching, hasSelection]),
 	);
 
 	const folder = folderId ? folders[folderId] : undefined;
@@ -152,8 +187,24 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 	const itemRowHeight = fullTileHeight(tile, fontScale) + ROW_GAP;
 	const rows = toRows(visibleItems, t("app.library.this_month"));
 
+	// Only what's on screen counts as picked (items deleted meanwhile drop out).
+	const picked = selectedIn(visibleItems, selection);
+	const selecting = picked.length > 0;
+	const everythingPicked = allSelected(visibleItems, selection);
+
+	const toggle = (item: LibraryItem) =>
+		setSelection((current) => toggleSelected(current, item.id));
+
+	const toggleAll = () =>
+		setSelection(
+			everythingPicked
+				? emptySelection
+				: new Set(visibleItems.map((item) => item.id)),
+		);
+
 	const selectKind = (next: Kind | null) => {
 		setKind(next);
+		clearSelection();
 		if (!next) return;
 		// Keep the tab from hiding what the kind shows.
 		if (
@@ -167,6 +218,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 
 	const selectFilter = (next: Filter) => {
 		setFilter(next);
+		clearSelection();
 		if (
 			next === "folders" ||
 			(next === "codes" && kind === "doc") ||
@@ -205,6 +257,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 					folder={child}
 					count={countInFolder(items, child.id)}
 					index={index}
+					disabled={selecting}
 					onPress={() => router.push(folderHref(child.id))}
 					onLongPress={() => actions.openFolder(child)}
 				/>
@@ -274,7 +327,20 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 					) : undefined
 				}
 				right={
-					searching ? (
+					selecting ? (
+						<Pressable
+							accessibilityRole="button"
+							onPress={toggleAll}
+							haptic
+							style={styles.selectAll}
+						>
+							<Text size={14} weight="medium">
+								{everythingPicked
+									? t("app.library.deselect_all")
+									: t("app.library.select_all")}
+							</Text>
+						</Pressable>
+					) : searching ? (
 						<IconButton
 							icon="close"
 							accessibilityLabel={t("app.library.close_search")}
@@ -285,7 +351,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 							<IconButton
 								icon="search"
 								accessibilityLabel={t("app.library.search")}
-								onPress={() => setSearching(true)}
+								onPress={openSearch}
 							/>
 							<IconButton
 								icon="folderPlus"
@@ -303,7 +369,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 				getFixedItemSize={(row) =>
 					row.type === "heading" ? headingHeight : itemRowHeight
 				}
-				extraData={itemRowHeight}
+				extraData={[itemRowHeight, selection]}
 				ListHeaderComponent={header}
 				ListEmptyComponent={
 					showEmpty ? (
@@ -324,7 +390,13 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 						</Animated.View>
 					) : null
 				}
-				contentContainerStyle={edges.content}
+				contentContainerStyle={[
+					edges.content,
+					selecting && {
+						paddingBottom:
+							edges.bottom + SELECTION_BAR_HEIGHT + SELECTION_BAR_GAP,
+					},
+				]}
 				showsVerticalScrollIndicator={false}
 				keyboardShouldPersistTaps="handled"
 				keyboardDismissMode="on-drag"
@@ -347,8 +419,15 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 									item={item}
 									size={tile}
 									delay={stagger(row.offset + index, 40, 0, 9)}
-									onPress={() => router.push(itemHref(item))}
-									onLongPress={() => actions.openItem(item)}
+									selecting={selecting}
+									selected={selection.has(item.id)}
+									onPress={() =>
+										selecting ? toggle(item) : router.push(itemHref(item))
+									}
+									onLongPress={() => {
+										haptics.pop();
+										toggle(item);
+									}}
 								/>
 							))}
 						</View>
@@ -361,12 +440,34 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 					onCreated={() => newFolderSheet.current?.dismiss()}
 				/>
 			</Sheet>
+			{selecting && (
+				<SelectionBar
+					label={t("app.library.selected", { count: picked.length })}
+					onCancel={clearSelection}
+					actions={[
+						{
+							key: "move",
+							icon: "folderInput",
+							label: t("app.library.move"),
+							onPress: () => bulk.move(picked),
+						},
+						{
+							key: "delete",
+							icon: "trash",
+							label: t("app.common.delete"),
+							tone: "danger",
+							onPress: () => bulk.remove(picked),
+						},
+					]}
+				/>
+			)}
 			{actions.element}
+			{bulk.element}
 		</View>
 	);
 }
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles(({ colors }) => ({
 	titles: { paddingHorizontal: 20, gap: 4 },
 	tabs: { marginTop: 16, marginHorizontal: 20 },
 	folders: {
@@ -388,4 +489,13 @@ const useStyles = makeStyles(() => ({
 		paddingHorizontal: SIDE,
 	},
 	empty: { paddingTop: 48, paddingHorizontal: 40, gap: 8 },
+	selectAll: {
+		height: 46,
+		paddingHorizontal: 18,
+		borderRadius: radii.pill,
+		justifyContent: "center",
+		backgroundColor: colors.surface,
+		borderWidth: 1,
+		borderColor: colors.border,
+	},
 }));

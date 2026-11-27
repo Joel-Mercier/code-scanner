@@ -5,14 +5,16 @@ import { CodeFace } from "@/components/codes/CodeFace";
 import { PageThumb } from "@/components/documents/PageThumb";
 import { BrokenTile } from "@/components/ui/BrokenTile";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { Icon } from "@/components/ui/Icon";
 import { Pressable } from "@/components/ui/Pressable";
 import { Text } from "@/components/ui/Text";
 import { describeItem } from "@/domain/codes/describe";
 import { hasPaper } from "@/domain/codes/style";
 import { catalogueNumber, itemTitle } from "@/domain/library/items";
 import type { LibraryItem } from "@/domain/library/types";
-import { makeStyles, useSharedStyles, useTheme } from "@/theme";
-import { enter } from "@/theme/motion";
+import { withAlpha } from "@/lib/color";
+import { makeStyles, radii, useSharedStyles, useTheme } from "@/theme";
+import { enter, transition } from "@/theme/motion";
 
 /** A code or a page sitting on a white square card. */
 export function ItemThumb(props: { item: LibraryItem; size: number }) {
@@ -84,9 +86,15 @@ type ItemTileProps = {
 	/** A blue dot in the corner (the latest capture). */
 	showNew?: boolean;
 	delay?: number;
+	/** In a multi-select: the tile shows a check circle and taps toggle it. */
+	selecting?: boolean;
+	selected?: boolean;
 	onPress: () => void;
 	onLongPress?: () => void;
 };
+
+/** How far a picked thumbnail shrinks inside its ring. */
+const PICKED_SCALE = 0.88;
 
 /** A tile in a grid; a tile that fails to draw doesn't break the grid. */
 export function ItemTile(props: ItemTileProps) {
@@ -116,6 +124,8 @@ function Tile({
 	caption = "full",
 	showNew = false,
 	delay = 0,
+	selecting = false,
+	selected = false,
 	onPress,
 	onLongPress,
 }: ItemTileProps) {
@@ -134,15 +144,47 @@ function Tile({
 	return (
 		<Animated.View entering={enter.lift(delay)} style={{ width: size }}>
 			<Pressable
-				accessibilityRole="button"
+				accessibilityRole={selecting ? "checkbox" : "button"}
 				accessibilityLabel={itemTitle(item)}
+				accessibilityState={selecting ? { checked: selected } : undefined}
 				onPress={onPress}
 				onLongPress={onLongPress}
 				haptic
 				style={styles.tile}
 			>
-				<ItemThumb item={item} size={size} />
-				{showNew && (
+				<View style={{ width: size, height: size }}>
+					<Animated.View
+						style={[
+							styles.ring,
+							{ opacity: selected ? 1 : 0 },
+							transition("opacity", 220),
+						]}
+					/>
+					<Animated.View
+						style={[
+							{ transform: [{ scale: selected ? PICKED_SCALE : 1 }] },
+							transition("transform", 260),
+						]}
+					>
+						<ItemThumb item={item} size={size} />
+					</Animated.View>
+					{selecting && (
+						<Animated.View
+							entering={enter.pop()}
+							style={[styles.check, selected && styles.checked]}
+						>
+							{selected && (
+								<Icon
+									name="check"
+									size={13}
+									color={colors.onAccent}
+									strokeWidth={3}
+								/>
+							)}
+						</Animated.View>
+					)}
+				</View>
+				{showNew && !selecting && (
 					<View style={styles.new} accessibilityLabel={t("app.library.new")} />
 				)}
 				{caption === "short" ? (
@@ -187,4 +229,33 @@ const useStyles = makeStyles(({ colors }) => ({
 		backgroundColor: colors.accent,
 	},
 	caption: { gap: CAPTION_GAP },
+	ring: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		borderRadius: radii.lg,
+		borderWidth: 2,
+		borderColor: colors.accent,
+		backgroundColor: colors.accentSoft,
+	},
+	check: {
+		position: "absolute",
+		top: 8,
+		right: 8,
+		width: 22,
+		height: 22,
+		borderRadius: 11,
+		alignItems: "center",
+		justifyContent: "center",
+		borderWidth: 1.5,
+		borderColor: colors.faint,
+		backgroundColor: withAlpha(colors.surface, 0.85),
+	},
+	checked: {
+		borderWidth: 2,
+		borderColor: colors.surface,
+		backgroundColor: colors.accent,
+	},
 }));

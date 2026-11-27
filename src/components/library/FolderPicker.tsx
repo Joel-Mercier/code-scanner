@@ -20,7 +20,8 @@ import { FolderBadge } from "./FolderBadge";
 import { FolderForm } from "./FolderForm";
 
 type PickRequest = {
-	current: string | null;
+	/** The folder ticked in the list; `undefined` ticks none (a mixed selection). */
+	current?: string | null;
 	/** Folder that cannot be picked, with its descendants (when moving a folder). */
 	exclude?: string;
 	onPick: (folderId: string | null) => void;
@@ -33,7 +34,7 @@ export function FolderList({
 	onPick,
 	onCreate,
 }: {
-	current: string | null;
+	current?: string | null;
 	/** Folder that cannot be picked, with its descendants (when moving a folder). */
 	exclude?: string;
 	onPick: (folderId: string | null) => void;
@@ -153,7 +154,7 @@ export function useFolderPicker() {
 				/>
 			) : (
 				<FolderList
-					current={request?.current ?? null}
+					current={request?.current}
 					exclude={request?.exclude}
 					onPick={pick}
 					onCreate={() => pages.go("create")}

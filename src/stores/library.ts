@@ -23,8 +23,12 @@ interface LibraryState extends PersistedLibrary {
 	addDocument: (doc: NewDoc) => DocItem;
 	renameItem: (id: string, name: string) => void;
 	moveItem: (id: string, folderId: string | null) => void;
+	/** Moves several items at once; unknown ids are skipped. */
+	moveItems: (ids: string[], folderId: string | null) => void;
 	/** Also deletes a document's files. */
 	deleteItem: (id: string) => void;
+	/** Deletes several items at once, with their documents' files. */
+	deleteItems: (ids: string[]) => void;
 	createFolder: (
 		folder: Pick<Folder, "name" | "color" | "icon" | "parentId">,
 	) => Folder;
@@ -97,17 +101,24 @@ const useLibrary = create<LibraryState>()(
 						? { items: { ...state.items, [id]: { ...item, name } } }
 						: state;
 				}),
-			moveItem: (id, folderId) =>
+			moveItem: (id, folderId) => get().moveItems([id], folderId),
+			moveItems: (ids, folderId) =>
 				set((state) => {
-					const item = state.items[id];
-					return item
-						? { items: { ...state.items, [id]: { ...item, folderId } } }
-						: state;
+					const moving = ids.filter((id) => state.items[id]);
+					if (moving.length === 0) return state;
+					const items = { ...state.items };
+					for (const id of moving) items[id] = { ...items[id], folderId };
+					return { items };
 				}),
-			deleteItem: (id) => {
-				const item = get().items[id];
-				if (item?.kind === "doc") deleteDocumentFiles(item.id);
-				set((state) => ({ items: without(state.items, new Set([id])) }));
+			deleteItem: (id) => get().deleteItems([id]),
+			deleteItems: (ids) => {
+				const { items } = get();
+				const removed = new Set(ids.filter((id) => items[id]));
+				if (removed.size === 0) return;
+				for (const id of removed) {
+					if (items[id].kind === "doc") deleteDocumentFiles(id);
+				}
+				set((state) => ({ items: without(state.items, removed) }));
 			},
 			createFolder: (folder) => {
 				const created: Folder = {

@@ -4,19 +4,24 @@ import { Pressable } from "@/components/ui/Pressable";
 import { Text } from "@/components/ui/Text";
 import type { Folder } from "@/domain/library/types";
 import { makeStyles, radii, useSharedStyles, useTheme } from "@/theme";
-import { enter, stagger } from "@/theme/motion";
+import { enter, stagger, transition } from "@/theme/motion";
 
-/** A folder in the grid: its badge, name and item count. */
+/**
+ * A folder in the grid: its badge, name and item count. `disabled` fades it
+ * out of the way while items are being picked.
+ */
 export function FolderCard({
 	folder,
 	count,
 	index,
+	disabled = false,
 	onPress,
 	onLongPress,
 }: {
 	folder: Folder;
 	count: number;
 	index: number;
+	disabled?: boolean;
 	onPress: () => void;
 	onLongPress: () => void;
 }) {
@@ -28,22 +33,28 @@ export function FolderCard({
 			entering={enter.pop(stagger(index, 50))}
 			style={styles.folderCell}
 		>
-			<Pressable
-				accessibilityRole="button"
-				accessibilityLabel={folder.name}
-				onPress={onPress}
-				onLongPress={onLongPress}
-				haptic
-				style={[shared.card, styles.folder]}
+			<Animated.View
+				style={[{ opacity: disabled ? 0.4 : 1 }, transition("opacity", 220)]}
 			>
-				<FolderBadge color={folder.color} icon={folder.icon} />
-				<Text size={15} weight="medium" numberOfLines={1} style={shared.flex}>
-					{folder.name}
-				</Text>
-				<Text size={12} mono color={colors.muted}>
-					{count}
-				</Text>
-			</Pressable>
+				<Pressable
+					accessibilityRole="button"
+					accessibilityLabel={folder.name}
+					accessibilityState={{ disabled }}
+					disabled={disabled}
+					onPress={onPress}
+					onLongPress={onLongPress}
+					haptic
+					style={[shared.card, styles.folder]}
+				>
+					<FolderBadge color={folder.color} icon={folder.icon} />
+					<Text size={15} weight="medium" numberOfLines={1} style={shared.flex}>
+						{folder.name}
+					</Text>
+					<Text size={12} mono color={colors.muted}>
+						{count}
+					</Text>
+				</Pressable>
+			</Animated.View>
 		</Animated.View>
 	);
 }

@@ -4,10 +4,12 @@ import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { itemHref } from "@/components/library/hrefs";
 import { ItemTile } from "@/components/library/ItemTile";
+import { useLibraryActions } from "@/components/library/useLibraryActions";
 import { Icon } from "@/components/ui/Icon";
 import { Pressable } from "@/components/ui/Pressable";
 import { Text } from "@/components/ui/Text";
 import { isNew, sortByRecent } from "@/domain/library/items";
+import { haptics } from "@/lib/haptics";
 import useLibrary from "@/stores/library";
 import { makeStyles, radii, useSharedStyles, useTheme } from "@/theme";
 import { enter } from "@/theme/motion";
@@ -16,7 +18,10 @@ import type { ScanMode } from "../hooks/useModeSwitch";
 export const RECENT_GAP = 12;
 const SLOTS = 3;
 
-/** The last three codes (or documents), and empty slots for the rest. */
+/**
+ * The last three codes (or documents), and empty slots for the rest. A long
+ * press opens a tile's actions (rename, share, move, delete).
+ */
 export function RecentItems({ mode, tile }: { mode: ScanMode; tile: number }) {
 	const shared = useSharedStyles();
 	const { colors } = useTheme();
@@ -24,6 +29,7 @@ export function RecentItems({ mode, tile }: { mode: ScanMode; tile: number }) {
 	const { t } = useTranslation();
 	const router = useRouter();
 	const items = useLibrary((state) => state.items);
+	const actions = useLibraryActions();
 	const codes = mode === "codes";
 
 	const all = sortByRecent(Object.values(items));
@@ -59,6 +65,10 @@ export function RecentItems({ mode, tile }: { mode: ScanMode; tile: number }) {
 						showNew={item.id === newestId}
 						delay={50 + index * 70}
 						onPress={() => router.push(itemHref(item))}
+						onLongPress={() => {
+							haptics.pop();
+							actions.openItem(item);
+						}}
 					/>
 				))}
 				{Array.from({ length: SLOTS - recent.length }, (_, index) => (
@@ -80,6 +90,7 @@ export function RecentItems({ mode, tile }: { mode: ScanMode; tile: number }) {
 					</Animated.View>
 				))}
 			</View>
+			{actions.element}
 		</View>
 	);
 }

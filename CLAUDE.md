@@ -7,7 +7,7 @@ Offline QR code, barcode and document scanner for Android and iOS (Expo SDK 58, 
 - **Scanner** (home, `/`): live scanning of QR and 12 barcode formats, scanning from a photo, pinch zoom, torch. Swipe to **Docs** mode for the system document scanner (VisionKit / ML Kit), which saves page images and a PDF.
 - **Capture** (`/capture/[id]`): the new item spins in as a 3D object, with quick actions.
 - **Smart actions**: the app parses payloads itself (URL, Wi-Fi, e-mail, phone, SMS, vCard/MECARD, iCalendar, geo) to open, call, copy the password, add a contact or event… Barcodes get a web search.
-- **Collection** (`/library`): codes and documents with catalogue numbers, grouped by month, nested folders (colour + icon), kind strip, filters, search, and move / rename / share / delete.
+- **Collection** (`/library`): codes and documents with catalogue numbers, grouped by month, nested folders (colour + icon), kind strip, filters, search. Long press an item to multi-select it, then move or delete in bulk from the floating `SelectionBar`; long press a folder (or a recent item on the home screen) for its rename / share / move / delete sheet.
 - **Create** (`/create`): QR codes (9 payload kinds) and 11 barcode formats generated offline, with ink and paper colours, dot style and a centre logo. Save, share as PNG, or save to the gallery.
 - **Settings**: language (en / fr), theme (system / light / dark), haptics, 3D motion, plus help and privacy pages.
 
@@ -54,7 +54,7 @@ src/
 
 ## Tests
 
-- Jest (`jest-expo` preset). Tests sit next to the code as `*.test.ts`. They cover the logic: `domain/`, `lib/`, `i18n/`, `services/`, `stores/`, code geometry and export, and the pure parts of features (`qrForms`, `barcodeOptions`, library `rows`, `saveToGallery`). Screens and hooks aren't tested.
+- Jest (`jest-expo` preset). Tests sit next to the code as `*.test.ts`. They cover the logic: `domain/`, `lib/`, `i18n/`, `services/`, `stores/`, code geometry and export, and the pure parts of features (`qrForms`, `barcodeOptions`, library `rows` and `selection`, `saveToGallery`). Screens and hooks aren't tested.
 - New logic gets a test. Keep it pure where possible (`domain/`, or a plain `.ts` next to the screen) so it can be tested without rendering.
 - Mocks: `jest.setup.ts` replaces MMKV with an in-memory store. `__mocks__/expo-file-system.ts` is an in-memory file system, used automatically; seed and inspect it through `fileSystem` from `@/test/fileSystem`. Mock other native modules per test with `jest.mock`.
 - Skia: files that build paths start with `/** @jest-environment @shopify/react-native-skia/jestEnv.js */` and import `@shopify/react-native-skia/jestSetup.js` (real CanvasKit). `drawAsImage` needs a stub.

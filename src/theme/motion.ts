@@ -1,4 +1,6 @@
 import {
+	type CSSTransitionProperties,
+	cubicBezier,
 	Easing,
 	FadeOut,
 	Keyframe,
@@ -21,6 +23,19 @@ export const easeSheet = Easing.bezier(0.2, 0.9, 0.25, 1);
 
 /** `.v-ease`: every state change (pills, tabs, swatches, switches). */
 export const ease: WithTimingConfig = { duration: 350, easing: easeOut };
+
+/**
+ * `.v-ease` as a Reanimated CSS transition, for a style that follows a prop
+ * (`style={[{ opacity: on ? 1 : 0 }, transition("opacity")]}`).
+ */
+export const transition = (
+	property: CSSTransitionProperties["transitionProperty"],
+	duration = 350,
+): CSSTransitionProperties => ({
+	transitionProperty: property,
+	transitionDuration: duration,
+	transitionTimingFunction: cubicBezier(0.2, 0.8, 0.2, 1),
+});
 
 export const enter = {
 	/** `.v-up`: fade in while rising 10px. */
@@ -76,6 +91,16 @@ export const enter = {
 
 export const exit = {
 	fade: () => FadeOut.duration(160),
+	/** Sinks 16px while fading out (floating bars leaving the bottom). */
+	sink: () =>
+		new Keyframe({
+			0: { opacity: 1, transform: [{ translateY: 0 }] },
+			100: {
+				opacity: 0,
+				transform: [{ translateY: 16 }],
+				easing: Easing.in(Easing.ease),
+			},
+		}).duration(200),
 };
 
 /** Staggers a list without letting long lists wait forever. */
