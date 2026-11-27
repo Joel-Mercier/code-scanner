@@ -12,8 +12,17 @@ import useSettings from "@/stores/settings";
 import { makeStyles } from "@/theme";
 import { enter } from "@/theme/motion";
 
-/** The code on its tile, gently tilting; a tap gives it a full turn. */
-export function CodeStage({ item }: { item: CodeItem }) {
+/**
+ * The code on its tile, gently tilting. A tap shows it full screen (to be
+ * scanned); a long press gives it a full turn.
+ */
+export function CodeStage({
+	item,
+	onShow,
+}: {
+	item: CodeItem;
+	onShow: () => void;
+}) {
 	const styles = useStyles();
 	const { t } = useTranslation();
 	const [turns, setTurns] = useState(0);
@@ -28,13 +37,19 @@ export function CodeStage({ item }: { item: CodeItem }) {
 			<Animated.View entering={enter.lift()}>
 				<Pressable
 					accessibilityRole="button"
-					accessibilityLabel={t("app.capture.turn_code")}
+					accessibilityLabel={t("app.code.show_full_screen")}
+					accessibilityHint={motion3d ? t("app.code.turn_hint") : undefined}
 					pressedScale={0.98}
-					disabled={!motion3d}
-					onPress={() => {
-						haptics.pop();
-						setTurns((count) => count + 1);
-					}}
+					haptic
+					onPress={onShow}
+					onLongPress={
+						motion3d
+							? () => {
+									haptics.pop();
+									setTurns((count) => count + 1);
+								}
+							: undefined
+					}
 				>
 					<CodeObject
 						item={item}

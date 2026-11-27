@@ -26,6 +26,7 @@ import { countInFolder, sortByRecent } from "@/domain/library/items";
 import type { LibraryItem } from "@/domain/library/types";
 import { haptics } from "@/lib/haptics";
 import useLibrary from "@/stores/library";
+import useLockSession from "@/stores/lockSession";
 import {
 	makeStyles,
 	radii,
@@ -133,6 +134,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 		}, [searching, hasSelection]),
 	);
 
+	const itemsUnlocked = useLockSession((state) => state.itemsUnlocked);
 	const folder = folderId ? folders[folderId] : undefined;
 	const allItems = Object.values(items);
 	const scope = folderId
@@ -154,7 +156,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 							matchesFilter(item, activeFilter) &&
 							(!activeKind || kindOf(item) === activeKind) &&
 							(filtering
-								? matchesQuery(item, needle)
+								? matchesQuery(item, needle, itemsUnlocked)
 								: item.folderId === folderId),
 					),
 				);

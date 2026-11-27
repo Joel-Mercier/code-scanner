@@ -14,6 +14,8 @@ import {
 import Animated, { LinearTransition } from "react-native-reanimated";
 import { savePageEdits } from "@/components/documents/actions";
 import { pickPhotos } from "@/components/documents/useDocumentImport";
+import { useRevealed } from "@/components/lock/hooks";
+import { LockedItem } from "@/components/lock/LockedItem";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
 import { IconButton } from "@/components/ui/IconButton";
@@ -273,6 +275,8 @@ function Editor({ doc }: { doc: DocItem }) {
 export function PagesScreen({ id }: { id: string }) {
 	const shared = useSharedStyles();
 	const item = useLibrary((state) => state.items[id]);
+	const revealed = useRevealed(item);
+	if (item?.kind === "doc" && !revealed) return <LockedItem item={item} />;
 	if (item?.kind !== "doc") {
 		return (
 			<View style={shared.screen}>

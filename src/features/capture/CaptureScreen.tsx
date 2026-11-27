@@ -12,6 +12,7 @@ import {
 import { useMoveToFolder } from "@/components/library/FolderPicker";
 import { itemHref } from "@/components/library/hrefs";
 import { useLibraryActions } from "@/components/library/useLibraryActions";
+import { useModalGuard } from "@/components/lock/hooks";
 import { Button, ButtonGrid, gridCell } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
 import { DetailRows } from "@/components/ui/List";
@@ -42,6 +43,10 @@ export function CaptureScreen({ id }: { id: string }) {
 	const [replay, setReplay] = useState(0);
 	const actions = useLibraryActions({ onDeleted: () => router.back() });
 	const mover = useMoveToFolder();
+	// A native modal sits above the lock: it hides itself.
+	const hidden = useModalGuard();
+
+	if (hidden) return <View style={shared.screen} />;
 
 	if (!item) {
 		return (

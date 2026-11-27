@@ -49,6 +49,8 @@ export type CodeItem = {
 	createdAt: number;
 	/** When it was pinned (to the top of the collection and the home screen). */
 	pinnedAt?: number;
+	/** When it was locked: opening it, or showing what it holds, asks first. */
+	lockedAt?: number;
 	source: "scanner" | "created";
 	format: BarcodeType;
 	/** Encoded payload, exactly as scanned / generated. */
@@ -88,6 +90,7 @@ export type DocItem = {
 	folderId: string | null;
 	createdAt: number;
 	pinnedAt?: number;
+	lockedAt?: number;
 	name: string;
 	/**
 	 * Page images, as file names in the document's own directory. Never

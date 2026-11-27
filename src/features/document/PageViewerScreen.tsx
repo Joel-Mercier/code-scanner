@@ -3,6 +3,7 @@ import { type ComponentRef, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useModalGuard } from "@/components/lock/hooks";
 import { IconButton } from "@/components/ui/IconButton";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { Text } from "@/components/ui/Text";
@@ -26,10 +27,14 @@ export function PageViewerScreen({ id, page }: { id: string; page: number }) {
 	const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
 	const [current, setCurrent] = useState(page);
 	const [zoomed, setZoomed] = useState(false);
+	// A native modal sits above the lock: it hides its pages itself.
+	const hidden = useModalGuard(item);
 
 	const pages = item?.kind === "doc" ? pageUris(item) : [];
 	const close = () =>
 		router.canGoBack() ? router.back() : router.replace("/");
+
+	if (hidden) return <View style={styles.screen} />;
 
 	return (
 		<View style={styles.screen}>

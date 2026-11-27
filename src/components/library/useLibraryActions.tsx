@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { shareCode } from "@/components/codes/exportCode";
+import { useRevealed } from "@/components/lock/hooks";
+import { canLock, unlockItems } from "@/components/lock/unlock";
 import { Button } from "@/components/ui/Button";
 import type { IconName } from "@/components/ui/Icon";
 import { ListCard, ListRow } from "@/components/ui/List";
@@ -14,14 +16,17 @@ import { toast } from "@/components/ui/Toast";
 import { canRender } from "@/domain/codes/formats";
 import {
 	countInFolder,
+	isLocked,
 	isPinned,
 	itemCaption,
 	itemTitle,
+	shownTitle,
 } from "@/domain/library/items";
 import type { Folder, LibraryItem } from "@/domain/library/types";
 import { haptics } from "@/lib/haptics";
 import { shareItem } from "@/services/share";
 import useLibrary from "@/stores/library";
+import useLockSession from "@/stores/lockSession";
 import { useTheme } from "@/theme";
 import { enter } from "@/theme/motion";
 import { FolderBadge } from "./FolderBadge";
@@ -62,19 +67,62 @@ export function useLibraryActions({
 	const moveItem = useLibrary((state) => state.moveItem);
 	const deleteItem = useLibrary((state) => state.deleteItem);
 	const setPinned = useLibrary((state) => state.setPinned);
+	const setLocked = useLibrary((state) => state.setLocked);
+	const relockItems = useLockSession((state) => state.relockItems);
 	const updateFolder = useLibrary((state) => state.updateFolder);
 	const moveFolder = useLibrary((state) => state.moveFolder);
 	const deleteFolder = useLibrary((state) => state.deleteFolder);
 
 	const item = target?.type === "item" ? items[target.id] : undefined;
 	const folder = target?.type === "folder" ? folders[target.id] : undefined;
+	const revealed = useRevealed(item);
+	const title = item ? shownTitle(item, revealed) : "";
 	const countIn = (id: string) => countInFolder(items, id);
 
+	/**
+	 * Runs `task` once a locked item has been unlocked (straight away for any
+	 * other): renaming, sharing and deleting all need what it holds.
+	 */
+	const unlocked = async (subject: LibraryItem, task: () => void) => {
+		if (isLocked(subject) && !(await unlockItems())) return;
+		task();
+	};
+
 	const openItem = (next: LibraryItem, initialStep: Step = "menu") => {
-		setTarget({ type: "item", id: next.id });
-		setName(itemTitle(next));
-		pages.reset(initialStep);
-		sheet.current?.present();
+		const open = () => {
+			setTarget({ type: "item", id: next.id });
+			setName(itemTitle(next));
+			pages.reset(initialStep);
+			sheet.current?.present();
+		};
+		if (initialStep === "rename") unlocked(next, open);
+		else open();
+	};
+
+	const startRename = (target: LibraryItem) =>
+		unlocked(target, () => {
+			setName(itemTitle(target));
+			setStep("rename");
+		});
+
+	const toggleLock = async (target: LibraryItem) => {
+		if (isLocked(target)) {
+			if (!(await unlockItems())) return;
+			setLocked([target.id], false);
+			toast(t("app.lock.unlocked_toast"));
+		} else {
+			if (!(await canLock())) {
+				haptics.warning();
+				toast(t("app.lock.set_up_first"), "warning");
+				return;
+			}
+			setLocked([target.id], true);
+			// Locking is "lock it now": hide it (and the others) again.
+			relockItems();
+			toast(t("app.lock.locked_toast"));
+		}
+		haptics.pop();
+		close();
 	};
 
 	const openFolder = (next: Folder) => {
@@ -118,8 +166,8 @@ export function useLibraryActions({
 							numberOfLines={2}
 						>
 							{step === "confirm"
-								? t("app.common.delete_question", { name: itemTitle(item) })
-								: itemTitle(item)}
+								? t("app.common.delete_question", { name: title })
+								: title}
 						</Text>
 						<Text size={12} mono color={colors.muted}>
 							{itemCaption(item, t("app.library.document"))}
@@ -176,7 +224,9 @@ export function useLibraryActions({
 					variant="danger"
 					icon="trash"
 					label={deleteLabel}
-					onPress={() => setStep("confirm")}
+					onPress={() =>
+						item ? unlocked(item, () => setStep("confirm")) : setStep("confirm")
+					}
 				/>
 			</Animated.View>
 		</>
@@ -288,16 +338,17 @@ export function useLibraryActions({
 					key: "rename",
 					icon: "pencil",
 					label: t("app.common.rename"),
-					run: () => setStep("rename"),
+					run: () => startRename(item),
 				},
 				{
 					key: "share",
 					icon: "share",
 					label: t("app.common.share"),
-					run: () => {
-						shareItem(item).catch(console.error);
-						close();
-					},
+					run: () =>
+						unlocked(item, () => {
+							shareItem(item).catch(console.error);
+							close();
+						}),
 				},
 			];
 			if (item.kind === "code" && canRender(item.format)) {
@@ -305,10 +356,13 @@ export function useLibraryActions({
 					key: "image",
 					icon: "image",
 					label: t("app.code.share_image"),
-					run: () => {
-						shareCode(item.format, item.data, item.style).catch(console.error);
-						close();
-					},
+					run: () =>
+						unlocked(item, () => {
+							shareCode(item.format, item.data, item.style).catch(
+								console.error,
+							);
+							close();
+						}),
 				});
 			}
 			const pinned = isPinned(item);
@@ -325,6 +379,12 @@ export function useLibraryActions({
 						);
 						close();
 					},
+				},
+				{
+					key: "lock",
+					icon: isLocked(item) ? "unlock" : "lock",
+					label: t(isLocked(item) ? "app.lock.remove_lock" : "app.lock.lock"),
+					run: () => toggleLock(item),
 				},
 				{
 					key: "move",

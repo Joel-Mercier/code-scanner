@@ -115,7 +115,14 @@
 				}
 			],
 			"expo-image",
-			"@react-native-community/datetimepicker"
+			"@react-native-community/datetimepicker",
+			[
+				"expo-local-authentication",
+				{
+					"faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID to unlock the app and your locked codes and documents."
+				}
+			],
+			"expo-secure-store"
 		],
 		"experiments": {
 			"typedRoutes": true,

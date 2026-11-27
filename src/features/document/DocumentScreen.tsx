@@ -12,6 +12,8 @@ import {
 } from "@/components/documents/actions";
 import { useMoveToFolder } from "@/components/library/FolderPicker";
 import { useLibraryActions } from "@/components/library/useLibraryActions";
+import { useRevealed } from "@/components/lock/hooks";
+import { LockedItem } from "@/components/lock/LockedItem";
 import { Button, ButtonGrid, gridCell } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
 import { Icon } from "@/components/ui/Icon";
@@ -70,11 +72,14 @@ export function DocumentScreen({ id }: { id: string }) {
 	const mover = useMoveToFolder();
 	const doc = item?.kind === "doc" ? item : undefined;
 	const details = useDocDetailsSheet(doc);
+	const revealed = useRevealed(doc);
 
 	// Documents saved before PDFs and text recognition catch up here.
 	useEffect(() => {
 		prepareDocument(id);
 	}, [id]);
+
+	if (doc && !revealed) return <LockedItem item={doc} />;
 
 	if (!doc) {
 		return (

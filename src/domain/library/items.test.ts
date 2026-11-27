@@ -3,10 +3,12 @@ import { byId, makeCode, makeDoc } from "@/test/fixtures";
 import {
 	catalogueNumber,
 	countInFolder,
+	isLocked,
 	isNew,
 	isPinned,
 	itemCaption,
 	itemTitle,
+	shownTitle,
 	sortByRecent,
 	sortPinnedFirst,
 } from "./items";
@@ -93,5 +95,31 @@ describe("countInFolder", () => {
 		expect(countInFolder(items, "f")).toBe(2);
 		expect(countInFolder(items, "sub")).toBe(1);
 		expect(countInFolder(items, "empty")).toBe(0);
+	});
+});
+
+describe("locks", () => {
+	it("tells locked items apart", () => {
+		expect(isLocked(makeCode({ lockedAt: 5 }))).toBe(true);
+		expect(isLocked(makeCode())).toBe(false);
+	});
+
+	it("hides a locked code's content-based title until revealed", () => {
+		const wifi = makeCode({
+			data: "WIFI:T:WPA;S:Home;P:hunter2;;",
+			lockedAt: 5,
+		});
+		expect(shownTitle(wifi, false)).toBe("Wi-Fi");
+		expect(shownTitle(wifi, true)).toBe(itemTitle(wifi));
+		expect(shownTitle({ ...wifi, name: "Flat" }, false)).toBe("Flat");
+		expect(shownTitle(makeCode({ data: "WIFI:S:Home;;" }), false)).toBe(
+			itemTitle(makeCode({ data: "WIFI:S:Home;;" })),
+		);
+	});
+
+	it("keeps a locked document's name", () => {
+		expect(shownTitle(makeDoc({ name: "Passport", lockedAt: 5 }), false)).toBe(
+			"Passport",
+		);
 	});
 });

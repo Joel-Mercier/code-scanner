@@ -9,6 +9,7 @@ import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { LockOverlay } from "@/components/lock/LockOverlay";
 import { ToastHost } from "@/components/ui/Toast";
 import { ShareIntentListener } from "@/features/import/ShareIntentListener";
 import { applyLocale, detectLocale } from "@/i18n";
@@ -73,10 +74,20 @@ export default function RootLayout() {
 									animation: "fade",
 								}}
 							/>
+							<Stack.Screen
+								name="code/[id]/show"
+								options={{
+									presentation: "fullScreenModal",
+									animation: "fade",
+								}}
+							/>
 						</Stack>
 						<ShareIntentListener />
-						<ToastHost />
 					</BottomSheetModalProvider>
+					{/* After the sheets' provider, so toasts show above an open sheet
+					    and its backdrop, and the lock covers sheets and toasts. */}
+					<ToastHost />
+					<LockOverlay />
 				</KeyboardProvider>
 			</GestureHandlerRootView>
 		</ShareIntentProvider>

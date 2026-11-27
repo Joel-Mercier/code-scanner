@@ -3,6 +3,7 @@ import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { CodeFace } from "@/components/codes/CodeFace";
 import { PageThumb } from "@/components/documents/PageThumb";
+import { useRevealed } from "@/components/lock/hooks";
 import { BrokenTile } from "@/components/ui/BrokenTile";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Icon } from "@/components/ui/Icon";
@@ -11,7 +12,12 @@ import { Text } from "@/components/ui/Text";
 import { describeItem } from "@/domain/codes/describe";
 import { hasPaper } from "@/domain/codes/style";
 import { docTypeLabel } from "@/domain/library/documents";
-import { catalogueNumber, isPinned, itemTitle } from "@/domain/library/items";
+import {
+	catalogueNumber,
+	isLocked,
+	isPinned,
+	shownTitle,
+} from "@/domain/library/items";
 import type { LibraryItem } from "@/domain/library/types";
 import { withAlpha } from "@/lib/color";
 import { pageUri } from "@/services/documents";
@@ -35,6 +41,26 @@ export function ItemThumb(props: { item: LibraryItem; size: number }) {
 
 function Thumb({ item, size }: { item: LibraryItem; size: number }) {
 	const shared = useSharedStyles();
+	const { colors } = useTheme();
+	const revealed = useRevealed(item);
+	if (!revealed) {
+		// A locked item shows nothing of what it holds: a lock on its card.
+		return (
+			<View
+				style={[
+					item.kind === "doc" ? shared.floating : shared.object,
+					shared.center,
+					{ width: size, height: size },
+				]}
+			>
+				<Icon
+					name="lock"
+					size={Math.max(16, Math.round(size * 0.26))}
+					color={colors.faint}
+				/>
+			</View>
+		);
+	}
 	if (item.kind === "doc") {
 		return (
 			<View
@@ -137,6 +163,8 @@ function Tile({
 	const { colors } = useTheme();
 	const styles = useStyles();
 	const { t } = useTranslation();
+	const revealed = useRevealed(item);
+	const title = shownTitle(item, revealed);
 	const number = catalogueNumber(item);
 	const kind = String(
 		item.kind === "doc"
@@ -152,7 +180,9 @@ function Tile({
 		<Animated.View entering={enter.lift(delay)} style={{ width: size }}>
 			<Pressable
 				accessibilityRole={selecting ? "checkbox" : "button"}
-				accessibilityLabel={itemTitle(item)}
+				accessibilityLabel={
+					isLocked(item) ? `${title}, ${t("app.lock.locked")}` : title
+				}
 				accessibilityState={selecting ? { checked: selected } : undefined}
 				onPress={onPress}
 				onLongPress={onLongPress}
@@ -191,12 +221,31 @@ function Tile({
 						</Animated.View>
 					)}
 				</View>
-				{isPinned(item) && !selecting && (
-					<View
-						style={styles.pin}
-						accessibilityLabel={t("app.library.pinned_label")}
-					>
-						<Icon name="pin" size={11} color={colors.muted} strokeWidth={2} />
+				{(isPinned(item) || isLocked(item)) && !selecting && (
+					<View style={styles.badges}>
+						{isPinned(item) && (
+							<View
+								style={styles.badge}
+								accessibilityLabel={t("app.library.pinned_label")}
+							>
+								<Icon
+									name="pin"
+									size={11}
+									color={colors.muted}
+									strokeWidth={2}
+								/>
+							</View>
+						)}
+						{isLocked(item) && revealed && (
+							<View style={styles.badge}>
+								<Icon
+									name="lock"
+									size={11}
+									color={colors.muted}
+									strokeWidth={2}
+								/>
+							</View>
+						)}
 					</View>
 				)}
 				{showNew && !selecting && (
@@ -214,7 +263,7 @@ function Tile({
 							weight="medium"
 							numberOfLines={1}
 						>
-							{itemTitle(item)}
+							{title}
 						</Text>
 						<Text
 							size={META.size}
@@ -244,10 +293,14 @@ const useStyles = makeStyles(({ colors }) => ({
 		backgroundColor: colors.accent,
 	},
 	caption: { gap: CAPTION_GAP },
-	pin: {
+	badges: {
 		position: "absolute",
 		top: 7,
 		left: 7,
+		flexDirection: "row",
+		gap: 4,
+	},
+	badge: {
 		width: 20,
 		height: 20,
 		borderRadius: 10,

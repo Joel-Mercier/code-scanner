@@ -1,6 +1,11 @@
 import { describeItem, qrKinds, scanOnlyKinds } from "@/domain/codes/describe";
 import { docSearchText } from "@/domain/library/documents";
-import { isPinned, itemTitle } from "@/domain/library/items";
+import {
+	isLocked,
+	isPinned,
+	itemTitle,
+	shownTitle,
+} from "@/domain/library/items";
 import type { Folder, LibraryItem } from "@/domain/library/types";
 import { format } from "@/lib/date";
 
@@ -31,10 +36,18 @@ export const matchesFolder = (folder: Folder, query: string) =>
 
 /**
  * Title, then a code's content and kind, or a document's notes, type and
- * the text read on its pages.
+ * the text read on its pages. A locked item that isn't `revealed` only
+ * answers to the title it shows, so a search can't tell what it holds.
  */
-export const matchesQuery = (item: LibraryItem, query: string) => {
+export const matchesQuery = (
+	item: LibraryItem,
+	query: string,
+	revealed = true,
+) => {
 	const needle = query.toLowerCase();
+	if (!revealed && isLocked(item)) {
+		return shownTitle(item, false).toLowerCase().includes(needle);
+	}
 	if (item.kind === "doc") return docSearchText(item).includes(needle);
 	return (
 		itemTitle(item).toLowerCase().includes(needle) ||

@@ -8,6 +8,7 @@
 		"NSCalendarsFullAccessUsageDescription": "Allow Code Scanner to add scanned events to your calendar.",
 		"NSRemindersUsageDescription": "Allow Code Scanner to access your reminders.",
 		"NSRemindersFullAccessUsageDescription": "Allow Code Scanner to access your reminders.",
+		"NSFaceIDUsageDescription": "Allow Code Scanner to use Face ID to unlock the app and your locked codes and documents.",
 		"NSMicrophoneUsageDescription": "Code Scanner doesn't record sound."
 	}
 }

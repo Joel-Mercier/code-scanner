@@ -212,6 +212,33 @@ describe("pins", () => {
 	});
 });
 
+describe("setLocked", () => {
+	it("locks items, keeps when they were first locked, and unlocks them", () => {
+		jest.useFakeTimers({ now: 1000 });
+		const a = scan("a");
+		const b = scan("b");
+		library().setLocked([a.id, "missing"], true);
+		expect(library().items[a.id].lockedAt).toBe(1000);
+		expect(library().items[b.id]).not.toHaveProperty("lockedAt");
+		expect(library().items.missing).toBeUndefined();
+
+		jest.setSystemTime(2000);
+		library().setLocked([a.id, b.id], true);
+		expect(library().items[a.id].lockedAt).toBe(1000);
+		expect(library().items[b.id].lockedAt).toBe(2000);
+
+		library().setLocked([a.id], false);
+		expect(library().items[a.id]).not.toHaveProperty("lockedAt");
+	});
+
+	it("keeps a lock when the same code is scanned again", () => {
+		const a = scan("a");
+		library().setLocked([a.id], true);
+		scan("a");
+		expect(library().items[a.id].lockedAt).toBeDefined();
+	});
+});
+
 describe("restore", () => {
 	it("adds a backup's new items and folders, numbered after ours", () => {
 		scan("mine");

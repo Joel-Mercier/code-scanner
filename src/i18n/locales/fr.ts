@@ -393,6 +393,10 @@ export default {
 					"L'accès aux photos est désactivé pour Code Scanner. Autorise-le dans les réglages pour enregistrer des images.",
 				scanned_on: "Scanné le {{date}}",
 				created_on: "Créé le {{date}}",
+				show_full_screen: "Afficher en plein écran",
+				turn_hint: "Appuie longuement pour le faire tourner",
+				close_full_screen: "Fermer le code en plein écran",
+				tap_to_close: "Touche l'écran pour fermer",
 			},
 			document: {
 				pages_one: "{{count}} page",
@@ -501,6 +505,41 @@ export default {
 				restored_other: "{{count}} objets restaurés",
 				nothing_new: "Tout ce que contient cette sauvegarde est déjà là",
 			},
+			auto_backup: {
+				toggle: "Sauvegarder automatiquement",
+				toggle_hint:
+					"Une sauvegarde par jour dans le dossier de ton choix. Seulement si quelque chose a changé, jamais pendant que tu utilises l'app.",
+				folder: "Dossier",
+				choose: "Choisir…",
+				time: "Heure",
+				time_hint:
+					"Vers cette heure-là : Android peut attendre un peu pour économiser la batterie",
+				keep: "Sauvegardes à garder",
+				keep_hint:
+					"Les sauvegardes automatiques plus anciennes sont supprimées du dossier. Rien d'autre n'y est touché.",
+				keep_fewer: "En garder une de moins",
+				keep_more: "En garder une de plus",
+				now: "Sauvegarder maintenant",
+				now_running: "Sauvegarde…",
+				now_done: "Sauvegarde enregistrée dans le dossier",
+				now_failed: "La sauvegarde n'a pas pu être enregistrée dans le dossier",
+				last_success: "Dernière sauvegarde automatique {{time}}",
+				never: "Pas encore de sauvegarde automatique",
+				last_failed:
+					"La dernière sauvegarde automatique a échoué. Elle sera retentée à la prochaine heure de sauvegarde.",
+				folder_unavailable:
+					"Impossible d'écrire dans ce dossier. Rebranche le stockage ou choisis un autre dossier.",
+				problems: {
+					restricted:
+						"Android n'autorise pas les apps à enregistrer dans ce dossier. Choisis-en ou crée-en un autre.",
+					unsupported:
+						"Choisis un dossier sur ce téléphone ou sa carte SD : les dossiers cloud ne sont pas pris en charge.",
+					unwritable:
+						"Code Scanner ne peut pas écrire dans ce dossier. Choisis-en un autre.",
+				},
+				privacy:
+					"Les sauvegardes ne sont pas chiffrées et contiennent tout, éléments verrouillés compris : choisis un dossier que toi seul utilises.",
+			},
 			color: {
 				custom: "Couleur personnalisée",
 				use: "Utiliser cette couleur",
@@ -580,6 +619,108 @@ export default {
 				upc_a: "11 ou 12 chiffres",
 				upc_e: "7 ou 8 chiffres, commençant par 0 ou 1",
 			},
+			lock: {
+				settings_title: "Verrouillage",
+				unlock_with_title: "Déverrouiller avec",
+				app_lock: "Verrouiller l'app",
+				app_lock_hint: "Demander à chaque ouverture de Code Scanner",
+				app_locked_toast: "Code Scanner le demandera à l'ouverture",
+				lock_after: "Reverrouiller après avoir quitté l'app depuis",
+				after_now: "Aussitôt",
+				after_minutes_one: "{{count}} min",
+				after_minutes_other: "{{count}} min",
+				items_hint:
+					"Verrouille un code ou un document depuis son menu ⋮ : il reste masqué dans la collection et la recherche tant que tu ne l'as pas déverrouillé.",
+				methods: {
+					password: "Mot de passe",
+					totp: "App d'authentification",
+				},
+				device: {
+					faceId: "Face ID",
+					touchId: "Touch ID",
+					face: "Reconnaissance faciale",
+					fingerprint: "Empreinte digitale",
+					iris: "Iris",
+					passcode: "Code du téléphone",
+					none: "Code du téléphone",
+				},
+				device_hint: "Le verrouillage du téléphone, avec son code en secours",
+				device_unavailable: "Définis d'abord un code sur ce téléphone",
+				password_method_hint: "Un mot de passe propre à Code Scanner",
+				totp_method_hint:
+					"Un code à 6 chiffres de Google Authenticator, 1Password, Authy…",
+				method_saved: "{{method}} déverrouille désormais Code Scanner",
+				new_password: "Nouveau mot de passe",
+				confirm_password: "Retape-le",
+				too_short: "Au moins {{count}} caractères",
+				mismatch: "Les deux mots de passe sont différents",
+				use_password: "Utiliser ce mot de passe",
+				saving: "Enregistrement…",
+				totp_title: "Ajoute Code Scanner à ton app d'authentification",
+				totp_steps:
+					"Scanne ce code avec ton app d'authentification, ou saisis la clé à la main. Tape ensuite le code à 6 chiffres qu'elle affiche.",
+				totp_account: "Verrouillage",
+				open_authenticator: "Ouvrir l'app",
+				copy_key: "Copier la clé",
+				forgot_note:
+					"En cas d'oubli, {{method}} ou le code de secours que tu vas recevoir peut toujours déverrouiller Code Scanner.",
+				forgot_note_none:
+					"En cas d'oubli, seul le code de secours que tu vas recevoir peut déverrouiller Code Scanner.",
+				recovery_title: "Garde ton code de secours",
+				recovery_body:
+					"Si tu oublies ton mot de passe, ce code déverrouille toujours Code Scanner. Note-le ou garde-le dans un gestionnaire de mots de passe, ailleurs que sur ce téléphone : il n'est affiché qu'une fois.",
+				recovery_body_totp:
+					"Si tu perds ou réinitialises ton app d'authentification, ce code déverrouille toujours Code Scanner. Note-le ou garde-le dans un gestionnaire de mots de passe, ailleurs que sur ce téléphone : il n'est affiché qu'une fois.",
+				copy_recovery: "Copier le code",
+				recovery_saved: "Je l'ai noté",
+				locked_title: "Code Scanner est verrouillé",
+				title_items: "Déverrouiller pour ouvrir",
+				title_confirm: "Confirme que c'est toi",
+				prompt_app: "Déverrouiller Code Scanner",
+				prompt_items: "Ouvrir un élément verrouillé",
+				prompt_confirm: "Confirme que c'est toi",
+				unlock: "Déverrouiller",
+				unlock_with: "Déverrouiller avec {{method}}",
+				checking: "Vérification…",
+				password_placeholder: "Mot de passe",
+				password_hint: "Saisis ton mot de passe Code Scanner",
+				code_placeholder: "Code à 6 chiffres",
+				code_hint:
+					"Saisis le code que ton app d'authentification affiche pour Code Scanner",
+				wrong_password: "Mot de passe incorrect",
+				wrong_code: "Code incorrect, ou expiré",
+				wait: "Trop d'essais. Réessaie dans {{time}}",
+				forgot: "Oublié ?",
+				prompt_forgot: "Déverrouiller Code Scanner autrement",
+				recover_hint:
+					"Déverrouille autrement. Ton mot de passe est alors supprimé : choisis-en un nouveau dans Réglages › Verrouillage.",
+				recover_hint_totp:
+					"Déverrouille autrement. Le code d'authentification est alors désactivé : configure-le à nouveau dans Réglages › Verrouillage.",
+				use_method: "Utiliser {{method}}",
+				recovery_placeholder: "Code de secours",
+				use_recovery: "Déverrouiller avec le code de secours",
+				wrong_recovery: "Ce n'est pas le code de secours",
+				no_way_back:
+					"Ce téléphone n'a pas de verrouillage et aucun code de secours n'a été enregistré : il n'y a pas d'autre moyen d'entrer.",
+				back_to_password: "Revenir au mot de passe",
+				back_to_code: "Revenir au code",
+				recovered:
+					"Déverrouillé. {{method}} déverrouille Code Scanner jusqu'à ce que tu choisisses un nouveau mot de passe ou une app d'authentification dans Réglages › Verrouillage",
+				recovered_open:
+					"Déverrouillé. Le verrouillage reste ouvert jusqu'à ce que tu choisisses un nouveau mot de passe ou une app d'authentification dans Réglages › Verrouillage",
+				lock: "Verrouiller",
+				remove_lock: "Retirer le verrou",
+				locked: "Verrouillé",
+				locked_body: "Déverrouille-le pour voir son contenu.",
+				locked_toast: "Verrouillé",
+				unlocked_toast: "Verrou retiré",
+				locked_count_one: "{{count}} objet verrouillé",
+				locked_count_other: "{{count}} objets verrouillés",
+				unlocked_count_one: "Verrou retiré de {{count}} objet",
+				unlocked_count_other: "Verrou retiré de {{count}} objets",
+				set_up_first:
+					"Ce téléphone n'a pas de code : choisis d'abord un mot de passe ou une app d'authentification dans Réglages › Verrouillage",
+			},
 			settings: {
 				title: "Réglages",
 				language: "Langue",
@@ -621,7 +762,7 @@ export default {
 					},
 					{
 						q: "Comment garder ma collection si je change de téléphone ?",
-						a: "Dans les Réglages, appuie sur Sauvegarder la collection et range le .zip en lieu sûr (Fichiers, un ordinateur, un cloud). Sur le nouveau téléphone, appuie sur Restaurer une sauvegarde et choisis-le.",
+						a: "Dans les Réglages, appuie sur Sauvegarder la collection et range le .zip en lieu sûr (Fichiers, un ordinateur, un cloud). Sur le nouveau téléphone, appuie sur Restaurer une sauvegarde et choisis-le. Sur Android, Sauvegarder automatiquement en enregistre une par jour dans le dossier de ton choix, en gardant les plus récentes.",
 					},
 					{
 						q: "Où sont mes scans ?",
@@ -634,6 +775,14 @@ export default {
 					{
 						q: "Que faire d'un code scanné ?",
 						a: "Ça dépend de son contenu : rejoindre un réseau Wi-Fi, appeler, ajouter un contact ou un événement, ajouter un code de double authentification, copier un IBAN… Les codes-barres de produits ouvrent Open Food Facts et d'autres bases ouvertes, les livres des catalogues de bibliothèques, les colis leur page de suivi. Les liens montrent où ils mènent vraiment avant de les ouvrir.",
+					},
+					{
+						q: "Puis-je présenter un code à scanner, en caisse ou à un portique ?",
+						a: "Oui. Ouvre le code et touche-le : il remplit l'écran, la luminosité passe au maximum et l'écran reste allumé. Touche l'écran pour fermer. Appuie longuement sur le code pour le faire tourner.",
+					},
+					{
+						q: "Comment garder un code ou un document privé ?",
+						a: "Ouvre son menu ⋮ et touche Verrouiller : il reste masqué dans la collection et la recherche tant que tu ne l'as pas déverrouillé. Dans Réglages › Verrouillage, choisis ce qui le déverrouille (Face ID ou empreinte, un mot de passe, ou un code d'app d'authentification) et verrouille toute l'app si tu veux. Mot de passe oublié ou app d'authentification perdue ? Touche Oublié ? et utilise Face ID ou le code de secours que tu as noté.",
 					},
 					{
 						q: "L'app a-t-elle besoin d'internet ?",
@@ -669,6 +818,11 @@ export default {
 								text: "pour scanner un code depuis une image, ajouter un logo ou enregistrer l'image d'un code.",
 							},
 							{
+								icon: "lock",
+								name: "Face ID et empreinte",
+								text: "uniquement pour déverrouiller l'app ou les éléments verrouillés, si tu actives le verrouillage. L'app ne voit jamais ton visage ni ton empreinte, seulement le oui ou le non du téléphone.",
+							},
+							{
 								icon: "calendar",
 								name: "Contacts et calendrier",
 								text: "uniquement quand tu choisis d'ajouter un contact ou un événement scanné.",
@@ -686,6 +840,8 @@ export default {
 						body: [
 							"Tu peux supprimer n'importe quel élément de ta Collection à tout moment. Désinstaller l'app ou effacer ses données supprime tout.",
 							"Une sauvegarde est un fichier que tu enregistres toi-même, où tu veux. Elle n'est pas chiffrée : garde-la dans un endroit de confiance.",
+							"Les sauvegardes automatiques (Android) vont seulement dans le dossier que tu choisis, sur ce téléphone ou sa carte SD, et nulle part ailleurs.",
+							"Le verrouillage tient les autres à l'écart de l'app et des éléments verrouillés. Il ne chiffre pas les fichiers sur ton téléphone.",
 						],
 					},
 					{

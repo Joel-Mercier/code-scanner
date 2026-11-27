@@ -25,6 +25,7 @@ import { logoFile, readLogo, writeLogo } from "./logos";
 export const writeBackup = async (
 	library: PersistedLibrary,
 	now = Date.now(),
+	name = `code-scanner-backup-${format(now, "yyyy-MM-dd")}.zip`,
 ) => {
 	const entries: Zippable = {
 		[MANIFEST]: strToU8(JSON.stringify(makeManifest(library, now))),
@@ -45,10 +46,7 @@ export const writeBackup = async (
 			if (bytes) entries[archivePath(item.id, name)] = [bytes, { level: 0 }];
 		}
 	}
-	const target = new File(
-		Paths.cache,
-		`code-scanner-backup-${format(now, "yyyy-MM-dd")}.zip`,
-	);
+	const target = new File(Paths.cache, name);
 	await target.write(zipSync(entries, { level: 6 }));
 	return target.uri;
 };

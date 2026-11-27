@@ -75,6 +75,29 @@ describe("filters", () => {
 		expect(matchesQuery(doc, "total due")).toBe(true);
 		expect(matchesQuery(doc, "receipt")).toBe(false);
 	});
+
+	it("matches a hidden locked item by the title it shows only", () => {
+		const wifi = makeCode({
+			data: "WIFI:T:WPA;S:Home;P:hunter2;;",
+			lockedAt: 1,
+		});
+		expect(matchesQuery(wifi, "home", false)).toBe(false);
+		expect(matchesQuery(wifi, "hunter", false)).toBe(false);
+		expect(matchesQuery(wifi, "wi-fi", false)).toBe(true);
+		expect(matchesQuery(wifi, "home", true)).toBe(true);
+
+		const doc = makeDoc({
+			name: "Passport",
+			notes: "Renew in May",
+			pages: ["p"],
+			readings: { p: { text: "Republique francaise", codes: [] } },
+			lockedAt: 1,
+		});
+		expect(matchesQuery(doc, "passport", false)).toBe(true);
+		expect(matchesQuery(doc, "renew", false)).toBe(false);
+		expect(matchesQuery(doc, "francaise", false)).toBe(false);
+		expect(matchesQuery(doc, "francaise", true)).toBe(true);
+	});
 });
 
 describe("toRows", () => {

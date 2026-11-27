@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.autobackup'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.autobackup"
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  // The worker starts the JS runtime itself when it runs with the app closed.
+  // Unpinned: React Native's Gradle plugin resolves the version.
+  implementation "com.facebook.react:react-android"
+  implementation "androidx.work:work-runtime-ktx:2.11.2"
+}

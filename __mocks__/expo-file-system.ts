@@ -5,6 +5,8 @@
 
 const files = new Map<string, Uint8Array>();
 const directories = new Set<string>();
+/** Copies to these URIs fail (a full or unplugged drive). */
+const failingCopies = new Set<string>();
 
 const join = (parent: string, name: string) =>
 	`${parent.replace(/\/+$/, "")}/${name}`;
@@ -32,13 +34,17 @@ export class File {
 	get size() {
 		return files.get(this.uri)?.byteLength ?? null;
 	}
-	async copy(target: File, options?: { overwrite?: boolean }) {
+	/** Into a `File`, or into a `Directory` under the same name. */
+	async copy(target: File | Directory, options?: { overwrite?: boolean }) {
 		const content = files.get(this.uri);
 		if (!content) throw new Error(`No such file: ${this.uri}`);
-		if (files.has(target.uri) && !options?.overwrite) {
-			throw new Error(`Already exists: ${target.uri}`);
+		const uri =
+			target instanceof Directory ? join(target.uri, this.name) : target.uri;
+		if (failingCopies.has(uri)) throw new Error(`Copy failed: ${uri}`);
+		if (files.has(uri) && !options?.overwrite) {
+			throw new Error(`Already exists: ${uri}`);
 		}
-		files.set(target.uri, content);
+		files.set(uri, content);
 	}
 	delete() {
 		if (!files.delete(this.uri)) throw new Error(`No such file: ${this.uri}`);
@@ -73,12 +79,30 @@ export class Directory {
 			if (uri.startsWith(`${this.uri}/`)) files.delete(uri);
 		}
 	}
+	/** Creates an empty file in it (throws when the folder is gone). */
 	createFile(name: string, _mimeType: string | null) {
-		return new File(this, name);
+		if (!this.exists) throw new Error(`No such directory: ${this.uri}`);
+		const file = new File(this, name);
+		files.set(file.uri, new Uint8Array());
+		return file;
 	}
-	static pickDirectoryAsync = jest.fn(
-		async () => new Directory("content://picked"),
-	);
+	/** The files right inside it. */
+	list() {
+		const prefix = `${this.uri}/`;
+		return [...files.keys()]
+			.filter(
+				(uri) =>
+					uri.startsWith(prefix) && !uri.slice(prefix.length).includes("/"),
+			)
+			.sort()
+			.map((uri) => new File(uri));
+	}
+	/** A picked folder exists, like the real one. */
+	static pickDirectoryAsync = jest.fn(async () => {
+		const picked = new Directory("content://picked");
+		directories.add(picked.uri);
+		return picked;
+	});
 }
 
 export const Paths = {
@@ -95,11 +119,16 @@ export const fileSystem = {
 		);
 	},
 	has: (uri: string) => files.has(uri),
+	/** Makes a directory exist (a picked folder, say). */
+	mkdir: (uri: string) => directories.add(uri),
+	/** Makes copies to `uri` fail. */
+	failCopiesTo: (uri: string) => failingCopies.add(uri),
 	read: (uri: string) => files.get(uri),
 	list: () => [...files.keys()].sort(),
 	reset() {
 		files.clear();
 		directories.clear();
+		failingCopies.clear();
 		Directory.pickDirectoryAsync.mockClear();
 	},
 };

@@ -5,6 +5,12 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
+import { useActiveMethod, useMethodLabel } from "@/components/lock/hooks";
+import {
+	canLock,
+	confirmIdentity,
+	unlockItems,
+} from "@/components/lock/unlock";
 import { AppMark } from "@/components/ui/AppMark";
 import { Header } from "@/components/ui/Header";
 import { ListCard, ListRow } from "@/components/ui/List";
@@ -12,9 +18,17 @@ import { Segmented } from "@/components/ui/Segmented";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { Switch } from "@/components/ui/Switch";
 import { Eyebrow, LargeTitle, Text } from "@/components/ui/Text";
+import { toast } from "@/components/ui/Toast";
 import { searchEngineNames } from "@/domain/codes/lookup";
+import { isLocked } from "@/domain/library/items";
 import type { Locale } from "@/i18n";
-import useSettings, { type ThemePreference } from "@/stores/settings";
+import { haptics } from "@/lib/haptics";
+import useLibrary from "@/stores/library";
+import useSettings, {
+	type LockDelay,
+	lockDelays,
+	type ThemePreference,
+} from "@/stores/settings";
 import {
 	makeStyles,
 	useScreenInsets,
@@ -23,6 +37,8 @@ import {
 } from "@/theme";
 import { enter } from "@/theme/motion";
 import { backUpLibrary, restoreLibrary } from "./backup";
+import { AutoBackupSettings } from "./components/AutoBackupSettings";
+import { LockMethodSheet } from "./components/LockMethodSheet";
 import { SearchEngineSheet } from "./components/SearchEngineSheet";
 
 export function SettingsScreen() {
@@ -42,8 +58,49 @@ export function SettingsScreen() {
 	const setTheme = useSettings((state) => state.setTheme);
 	const searchEngine = useSettings((state) => state.searchEngine);
 	const setSearchEngine = useSettings((state) => state.setSearchEngine);
+	const appLock = useSettings((state) => state.appLock);
+	const setAppLock = useSettings((state) => state.setAppLock);
+	const lockAfter = useSettings((state) => state.lockAfter);
+	const setLockAfter = useSettings((state) => state.setLockAfter);
+	const anyLocked = useLibrary((state) =>
+		Object.values(state.items).some(isLocked),
+	);
+	const method = useActiveMethod();
+	const methodLabel = useMethodLabel();
 	const engineSheet = useRef<BottomSheetModal>(null);
+	const lockSheet = useRef<BottomSheetModal>(null);
 	const [working, setWorking] = useState(false);
+
+	/** Changing what unlocks asks first, while something is locked with it. */
+	const changeMethod = async () => {
+		if ((appLock || anyLocked) && !(await confirmIdentity())) return;
+		lockSheet.current?.present();
+	};
+
+	const toggleAppLock = async (next: boolean) => {
+		if (next && !(await canLock())) {
+			haptics.warning();
+			toast(t("app.lock.set_up_first"), "warning");
+			return;
+		}
+		// Turning it on proves the method works, so nobody locks themselves out.
+		if (!(await confirmIdentity())) return;
+		setAppLock(next);
+		if (next) toast(t("app.lock.app_locked_toast"));
+	};
+
+	const changeDelay = async (next: LockDelay) => {
+		// A longer delay loosens the lock.
+		if (next > lockAfter && (appLock || anyLocked) && !(await unlockItems())) {
+			return;
+		}
+		setLockAfter(next);
+	};
+
+	const delayLabel = (delay: LockDelay) =>
+		delay === 0
+			? t("app.lock.after_now")
+			: t("app.lock.after_minutes", { count: delay / 60_000 });
 
 	const run = async (task: () => Promise<void>) => {
 		if (working) return;
@@ -168,6 +225,61 @@ export function SettingsScreen() {
 					</ListCard>
 				</Animated.View>
 
+				<Animated.View entering={enter.up(120)} style={styles.section}>
+					<Eyebrow style={styles.label}>{t("app.lock.settings_title")}</Eyebrow>
+					<ListCard>
+						<ListRow
+							icon="fingerprint"
+							iconTile={36}
+							label={t("app.lock.unlock_with_title")}
+							height={64}
+							trailing={
+								<Text size={15} color={colors.muted} numberOfLines={1}>
+									{method ? methodLabel(method) : ""}
+								</Text>
+							}
+							chevron
+							onPress={changeMethod}
+						/>
+						<ListRow
+							icon="lock"
+							iconTile={36}
+							label={t("app.lock.app_lock")}
+							description={t("app.lock.app_lock_hint")}
+							height={64}
+							last
+							trailing={
+								<Switch
+									value={appLock}
+									onChange={toggleAppLock}
+									accessibilityLabel={t("app.lock.app_lock")}
+								/>
+							}
+						/>
+					</ListCard>
+					<Text size={13} style={styles.label}>
+						{t("app.lock.lock_after")}
+					</Text>
+					<Segmented<string>
+						value={String(lockAfter)}
+						onChange={(value) => changeDelay(Number(value) as LockDelay)}
+						height={42}
+						accessibilityLabel={t("app.lock.lock_after")}
+						options={lockDelays.map((delay) => ({
+							value: String(delay),
+							label: delayLabel(delay),
+						}))}
+					/>
+					<Text
+						size={13}
+						leading={1.5}
+						color={colors.muted}
+						style={styles.label}
+					>
+						{t("app.lock.items_hint")}
+					</Text>
+				</Animated.View>
+
 				<Animated.View entering={enter.up(140)} style={styles.section}>
 					<Eyebrow style={styles.label}>{t("app.backup.title")}</Eyebrow>
 					<ListCard>
@@ -189,6 +301,7 @@ export function SettingsScreen() {
 							onPress={() => run(restoreLibrary)}
 						/>
 					</ListCard>
+					<AutoBackupSettings />
 				</Animated.View>
 
 				<Animated.View entering={enter.up(180)} style={styles.footer}>
@@ -214,6 +327,7 @@ export function SettingsScreen() {
 					</Text>
 				</Animated.View>
 			</ScrollView>
+			<LockMethodSheet ref={lockSheet} />
 			<SearchEngineSheet
 				ref={engineSheet}
 				value={searchEngine}

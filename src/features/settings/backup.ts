@@ -1,6 +1,8 @@
 import * as DocumentPicker from "expo-document-picker";
+import { unlockItems } from "@/components/lock/unlock";
 import { toast } from "@/components/ui/Toast";
 import { InvalidBackupError } from "@/domain/library/backup";
+import { isLocked } from "@/domain/library/items";
 import i18n from "@/i18n";
 import { attempt } from "@/lib/attempt";
 import { haptics } from "@/lib/haptics";
@@ -14,6 +16,8 @@ const t = (key: string, options?: Record<string, unknown>) =>
 /** Writes the whole collection to a .zip and opens the share sheet with it. */
 export const backUpLibrary = async () => {
 	const { items, folders, nextSeq } = useLibrary.getState();
+	// A backup holds everything, locked items included: unlock them first.
+	if (Object.values(items).some(isLocked) && !(await unlockItems())) return;
 	const result = await attempt(async () => {
 		const uri = await writeBackup({ items, folders, nextSeq });
 		await shareFile(uri, "application/zip");

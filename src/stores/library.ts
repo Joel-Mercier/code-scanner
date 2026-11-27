@@ -37,6 +37,8 @@ interface LibraryState extends PersistedLibrary {
 	setReading: (id: string, page: string, reading: PageReading) => void;
 	/** Pins or unpins items (to the top of the collection and the home screen). */
 	setPinned: (ids: string[], pinned: boolean) => void;
+	/** Locks or unlocks items (opening a locked one asks first). */
+	setLocked: (ids: string[], locked: boolean) => void;
 	/** Adds a backup's folders and items to the library; returns what was added. */
 	restore: (backup: PersistedLibrary) => LibraryItem[];
 	moveItem: (id: string, folderId: string | null) => void;
@@ -161,6 +163,22 @@ const useLibrary = create<LibraryState>()(
 							items[id] = rest as LibraryItem;
 						}
 					});
+					return { items };
+				}),
+			setLocked: (ids, locked) =>
+				set((state) => {
+					const items = { ...state.items };
+					const now = Date.now();
+					for (const id of ids) {
+						const item = items[id];
+						if (!item) continue;
+						if (locked) {
+							items[id] = { ...item, lockedAt: item.lockedAt ?? now };
+						} else {
+							const { lockedAt: _, ...rest } = item;
+							items[id] = rest as LibraryItem;
+						}
+					}
 					return { items };
 				}),
 			restore: (backup) => {

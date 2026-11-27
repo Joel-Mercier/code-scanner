@@ -142,8 +142,11 @@ const migrateV3 = (state: PersistedLibrary): PersistedLibrary => {
 	return { ...state, items };
 };
 
+// v5 added `lockedAt` to items. It is optional and unset means unlocked, so
+// v4 data is already valid: the step only marks the version.
+
 /** Bump with every change to the persisted shape, and add a step below. */
-export const LIBRARY_VERSION = 4;
+export const LIBRARY_VERSION = 5;
 
 export const migrateLibrary = (
 	persisted: unknown,

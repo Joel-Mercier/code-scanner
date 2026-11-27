@@ -8,6 +8,7 @@
 		"NSCalendarsFullAccessUsageDescription": "Autoriser Code Scanner à ajouter les événements scannés à ton calendrier.",
 		"NSRemindersUsageDescription": "Autoriser Code Scanner à accéder à tes rappels.",
 		"NSRemindersFullAccessUsageDescription": "Autoriser Code Scanner à accéder à tes rappels.",
+		"NSFaceIDUsageDescription": "Autoriser Code Scanner à utiliser Face ID pour déverrouiller l'app et tes codes et documents verrouillés.",
 		"NSMicrophoneUsageDescription": "Code Scanner n'enregistre pas de son."
 	}
 }

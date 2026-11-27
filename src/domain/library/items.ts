@@ -14,6 +14,9 @@ export const sortByRecent = <T extends { createdAt: number }>(list: T[]) =>
 export const isPinned = (item: Pick<LibraryItem, "pinnedAt">) =>
 	item.pinnedAt !== undefined;
 
+export const isLocked = (item: Pick<LibraryItem, "lockedAt">) =>
+	item.lockedAt !== undefined;
+
 /** Pinned items first (the latest pinned on top), then the newest. */
 export const sortPinnedFirst = <
 	T extends { createdAt: number; pinnedAt?: number },
@@ -31,6 +34,19 @@ export const catalogueNumber = (item: Pick<LibraryItem, "seq">) =>
 
 export const itemTitle = (item: LibraryItem) =>
 	item.kind === "doc" ? item.name : describeItem(item).title;
+
+/**
+ * The title to show while the item may be hidden: a locked code's title is
+ * read from its content (a network name, a link…), so until it is revealed
+ * it goes by the name it was given, or else its kind. Documents keep their
+ * name, which never comes from the pages.
+ */
+export const shownTitle = (item: LibraryItem, revealed: boolean) => {
+	if (revealed || !isLocked(item) || item.kind === "doc") {
+		return itemTitle(item);
+	}
+	return item.name || String(describeItem(item).subtitle);
+};
 
 /** What kind of object it is: "Wi-Fi", "Code 128", "Receipt" or `docLabel`. */
 const itemKind = (item: LibraryItem, docLabel: string) =>

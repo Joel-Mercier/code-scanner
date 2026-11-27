@@ -385,6 +385,10 @@ export default {
 					"Photo access is turned off for Code Scanner. Allow it in Settings to save images.",
 				scanned_on: "Scanned {{date}}",
 				created_on: "Created {{date}}",
+				show_full_screen: "Show full screen",
+				turn_hint: "Touch and hold to turn it",
+				close_full_screen: "Close the full screen code",
+				tap_to_close: "Tap anywhere to close",
 			},
 			document: {
 				pages_one: "{{count}} page",
@@ -480,6 +484,41 @@ export default {
 				restored_other: "{{count}} objects restored",
 				nothing_new: "Everything in this backup is already here",
 			},
+			auto_backup: {
+				toggle: "Back up automatically",
+				toggle_hint:
+					"A backup a day in a folder you pick. Only when something changed, never while you're using the app.",
+				folder: "Folder",
+				choose: "Choose…",
+				time: "Time",
+				time_hint:
+					"Around this time: Android may wait a little to save battery",
+				keep: "Backups to keep",
+				keep_hint:
+					"Older automatic backups are deleted from the folder. Nothing else in it is touched.",
+				keep_fewer: "Keep one fewer",
+				keep_more: "Keep one more",
+				now: "Back up now",
+				now_running: "Backing up…",
+				now_done: "Backup saved to the folder",
+				now_failed: "The backup couldn't be saved to the folder",
+				last_success: "Last automatic backup {{time}}",
+				never: "No automatic backup yet",
+				last_failed:
+					"The last automatic backup failed. It's tried again at the next backup time.",
+				folder_unavailable:
+					"Can't write to this folder any more. Plug the storage back in or choose another folder.",
+				problems: {
+					restricted:
+						"Android doesn't let apps save in this folder. Pick or create another one.",
+					unsupported:
+						"Pick a folder on this phone or its SD card: cloud folders aren't supported.",
+					unwritable:
+						"Code Scanner can't write in this folder. Pick another one.",
+				},
+				privacy:
+					"Backups aren't encrypted and hold everything, locked items included: pick a folder only you use.",
+			},
 			color: {
 				custom: "Custom color",
 				use: "Use this color",
@@ -559,6 +598,108 @@ export default {
 				upc_a: "11 or 12 digits",
 				upc_e: "7 or 8 digits, starting with 0 or 1",
 			},
+			lock: {
+				settings_title: "Lock",
+				unlock_with_title: "Unlock with",
+				app_lock: "Lock the app",
+				app_lock_hint: "Ask each time Code Scanner opens",
+				app_locked_toast: "Code Scanner now asks when it opens",
+				lock_after: "Lock again after leaving the app for",
+				after_now: "No time",
+				after_minutes_one: "{{count}} min",
+				after_minutes_other: "{{count}} min",
+				items_hint:
+					"Lock a code or a document from its ⋮ menu: it stays hidden in the collection and in search until you unlock it.",
+				methods: {
+					password: "Password",
+					totp: "Authenticator app",
+				},
+				device: {
+					faceId: "Face ID",
+					touchId: "Touch ID",
+					face: "Face unlock",
+					fingerprint: "Fingerprint",
+					iris: "Iris",
+					passcode: "Phone passcode",
+					none: "Phone passcode",
+				},
+				device_hint: "This phone's own lock, with its passcode as a fallback",
+				device_unavailable: "Set a passcode on this phone first",
+				password_method_hint: "A password just for Code Scanner",
+				totp_method_hint:
+					"A 6-digit code from Google Authenticator, 1Password, Authy…",
+				method_saved: "{{method}} now unlocks Code Scanner",
+				new_password: "New password",
+				confirm_password: "Type it again",
+				too_short: "At least {{count}} characters",
+				mismatch: "The two passwords don't match",
+				use_password: "Use this password",
+				saving: "Saving…",
+				totp_title: "Add Code Scanner to your authenticator",
+				totp_steps:
+					"Scan this code with your authenticator app, or enter the key by hand. Then type the 6-digit code it shows.",
+				totp_account: "App lock",
+				open_authenticator: "Open app",
+				copy_key: "Copy key",
+				forgot_note:
+					"If you forget it, {{method}} or the recovery code you get next can still unlock Code Scanner.",
+				forgot_note_none:
+					"If you forget it, only the recovery code you get next can unlock Code Scanner.",
+				recovery_title: "Save your recovery code",
+				recovery_body:
+					"If you forget your password, this code still unlocks Code Scanner. Write it down or keep it in a password manager, away from this phone: it's only shown once.",
+				recovery_body_totp:
+					"If you lose or reset your authenticator app, this code still unlocks Code Scanner. Write it down or keep it in a password manager, away from this phone: it's only shown once.",
+				copy_recovery: "Copy the code",
+				recovery_saved: "I've saved it",
+				locked_title: "Code Scanner is locked",
+				title_items: "Unlock to open",
+				title_confirm: "Confirm it's you",
+				prompt_app: "Unlock Code Scanner",
+				prompt_items: "Open a locked item",
+				prompt_confirm: "Confirm it's you",
+				unlock: "Unlock",
+				unlock_with: "Unlock with {{method}}",
+				checking: "Checking…",
+				password_placeholder: "Password",
+				password_hint: "Enter your Code Scanner password",
+				code_placeholder: "6-digit code",
+				code_hint:
+					"Enter the code your authenticator app shows for Code Scanner",
+				wrong_password: "Wrong password",
+				wrong_code: "Wrong code, or it has expired",
+				wait: "Too many tries. Try again in {{time}}",
+				forgot: "Forgot it?",
+				prompt_forgot: "Unlock Code Scanner another way",
+				recover_hint:
+					"Unlock another way. Your password is then removed: set a new one in Settings › Lock.",
+				recover_hint_totp:
+					"Unlock another way. Your authenticator code is then turned off: set it up again in Settings › Lock.",
+				use_method: "Use {{method}}",
+				recovery_placeholder: "Recovery code",
+				use_recovery: "Unlock with the recovery code",
+				wrong_recovery: "That isn't the recovery code",
+				no_way_back:
+					"This phone has no lock of its own and no recovery code was saved: there's no other way in.",
+				back_to_password: "Back to the password",
+				back_to_code: "Back to the code",
+				recovered:
+					"Unlocked. {{method}} unlocks Code Scanner until you set a new password or authenticator in Settings › Lock",
+				recovered_open:
+					"Unlocked. Locks stay open until you set a new password or authenticator in Settings › Lock",
+				lock: "Lock",
+				remove_lock: "Remove lock",
+				locked: "Locked",
+				locked_body: "Unlock it to see what it holds.",
+				locked_toast: "Locked",
+				unlocked_toast: "Lock removed",
+				locked_count_one: "{{count}} object locked",
+				locked_count_other: "{{count}} objects locked",
+				unlocked_count_one: "Lock removed from {{count}} object",
+				unlocked_count_other: "Lock removed from {{count}} objects",
+				set_up_first:
+					"This phone has no passcode: pick a password or an authenticator in Settings › Lock first",
+			},
 			settings: {
 				title: "Settings",
 				language: "Language",
@@ -600,7 +741,7 @@ export default {
 					},
 					{
 						q: "How do I keep my collection if I change phones?",
-						a: "In Settings, tap Back up collection and save the .zip somewhere safe (Files, a computer, a cloud drive). On the new phone, tap Restore a backup and pick it.",
+						a: "In Settings, tap Back up collection and save the .zip somewhere safe (Files, a computer, a cloud drive). On the new phone, tap Restore a backup and pick it. On Android, Back up automatically saves one a day to a folder you pick, keeping the latest few.",
 					},
 					{
 						q: "Where are my scans?",
@@ -613,6 +754,14 @@ export default {
 					{
 						q: "What can I do with a scanned code?",
 						a: "It depends on what it holds: join a Wi-Fi network, call, add a contact or an event, add a 2FA code to your authenticator, copy an IBAN… Product barcodes open Open Food Facts and other open databases, books open library catalogues, parcels their tracking page. Links show where they really go before you open them.",
+					},
+					{
+						q: "Can I show a code to be scanned, at a till or a gate?",
+						a: "Yes. Open the code and tap it: it fills the screen, the screen turns up to full brightness and stays on. Tap anywhere to close it. Touch and hold the code instead to give it a turn.",
+					},
+					{
+						q: "How do I keep a code or a document private?",
+						a: "Open its ⋮ menu and tap Lock: it stays hidden in the collection and in search until you unlock it. In Settings › Lock, pick what unlocks it (Face ID or fingerprint, a password, or a code from an authenticator app) and lock the whole app if you like. Forgot the password or lost the authenticator? Tap Forgot it? and use Face ID or the recovery code you saved.",
 					},
 					{
 						q: "Does the app need internet?",
@@ -648,6 +797,11 @@ export default {
 								text: "to scan a code from an image, add a logo or save a code’s image.",
 							},
 							{
+								icon: "lock",
+								name: "Face ID and fingerprint",
+								text: "only to unlock the app or locked items, if you turn locks on. The app never sees your face or fingerprint, only the phone's yes or no.",
+							},
+							{
 								icon: "calendar",
 								name: "Contacts and calendar",
 								text: "only when you choose to add a scanned contact or event.",
@@ -665,6 +819,8 @@ export default {
 						body: [
 							"You can delete anything from your Collection at any time. Uninstalling the app or clearing its data removes everything.",
 							"A backup is a file you save yourself, wherever you choose. It isn't encrypted: keep it somewhere you trust.",
+							"Automatic backups (Android) go only to the folder you pick, on this phone or its SD card, and nowhere else.",
+							"Locks keep people out of the app and away from locked items. They don't encrypt the files on your phone.",
 						],
 					},
 					{

@@ -8,6 +8,8 @@ import { type Action, CodeActions } from "@/components/codes/CodeActions";
 import { CodeFields } from "@/components/codes/CodeFields";
 import { shareCode } from "@/components/codes/exportCode";
 import { useLibraryActions } from "@/components/library/useLibraryActions";
+import { useRevealed } from "@/components/lock/hooks";
+import { LockedItem } from "@/components/lock/LockedItem";
 import { Header } from "@/components/ui/Header";
 import { IconButton } from "@/components/ui/IconButton";
 import { StatusBar } from "@/components/ui/StatusBar";
@@ -40,6 +42,9 @@ export function CodeScreen({ id }: { id: string }) {
 	const item = useLibrary((state) => state.items[id]);
 	const actions = useLibraryActions({ onDeleted: () => router.back() });
 	const shareSheet = useRef<BottomSheetModal>(null);
+	const revealed = useRevealed(item);
+
+	if (item?.kind === "code" && !revealed) return <LockedItem item={item} />;
 
 	if (item?.kind !== "code") {
 		return (
@@ -89,7 +94,17 @@ export function CodeScreen({ id }: { id: string }) {
 				contentContainerStyle={edges.content}
 				showsVerticalScrollIndicator={false}
 			>
-				{renderable && <CodeStage item={item} />}
+				{renderable && (
+					<CodeStage
+						item={item}
+						onShow={() =>
+							router.push({
+								pathname: "/code/[id]/show",
+								params: { id: item.id },
+							})
+						}
+					/>
+				)}
 
 				<Animated.View entering={enter.up(200)} style={styles.titles}>
 					<Text size={12} mono color={colors.muted}>

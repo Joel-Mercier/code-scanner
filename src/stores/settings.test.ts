@@ -28,7 +28,25 @@ describe("settings", () => {
 			motion3d: true,
 			theme: "system",
 			searchEngine: "duckduckgo",
+			lockMethod: "device",
+			appLock: false,
+			lockAfter: 60_000,
+			autoBackup: false,
+			autoBackupFolder: null,
+			autoBackupMinute: 180,
+			autoBackupKeep: 7,
 		});
+	});
+
+	it("keeps the automatic backup time and count in range", () => {
+		settings().setAutoBackupKeep(0);
+		expect(settings().autoBackupKeep).toBe(1);
+		settings().setAutoBackupKeep(100);
+		expect(settings().autoBackupKeep).toBe(30);
+		settings().setAutoBackupMinute(24 * 60 + 5);
+		expect(settings().autoBackupMinute).toBe(24 * 60 - 1);
+		settings().setAutoBackupKeep(7);
+		settings().setAutoBackupMinute(180);
 	});
 
 	it("keeps the search engine picked", () => {

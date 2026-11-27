@@ -3,9 +3,18 @@ import { byId, makeCode, makeDoc, makeFolder } from "@/test/fixtures";
 import { LIBRARY_VERSION, migrateLibrary } from "./migrations";
 
 describe("migrateLibrary", () => {
-	it("is at version 4", () => {
+	it("is at version 5", () => {
 		// Changing the persisted shape means a new version and a new step here.
-		expect(LIBRARY_VERSION).toBe(4);
+		expect(LIBRARY_VERSION).toBe(5);
+	});
+
+	it("keeps v4 data as it is (v5 only added the optional `lockedAt`)", () => {
+		const v4 = {
+			items: byId<LibraryItem>(makeCode({ id: "c" }), makeDoc({ id: "d" })),
+			folders: {},
+			nextSeq: 3,
+		};
+		expect(migrateLibrary(v4, 4)).toEqual(v4);
 	});
 
 	describe("from v1", () => {
