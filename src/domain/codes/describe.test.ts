@@ -45,14 +45,47 @@ describe("describeItem", () => {
 		);
 	});
 
-	it("shows barcodes as text, with their format", () => {
+	it("shows barcodes as text, with their format and what the number means", () => {
 		expect(
 			describeItem(code({ format: "ean13", data: "5901234123457" })),
 		).toEqual({
 			kind: "barcode",
 			parsed: { kind: "text", text: "5901234123457" },
+			barcode: { type: "product", gtin: "5901234123457", region: "PL" },
 			title: "5901234123457",
 			subtitle: "EAN-13",
+		});
+	});
+
+	it("parses the payloads of 2D barcodes, keeping the format", () => {
+		expect(
+			describeItem(code({ format: "datamatrix", data: "https://example.com" })),
+		).toMatchObject({ kind: "url", subtitle: "Data Matrix · Link" });
+		expect(
+			describeItem(code({ format: "aztec", data: "WIFI:S:Home;T:SAE;P:x;;" }))
+				.kind,
+		).toBe("wifi");
+	});
+
+	it("reads GS1 data from a Data Matrix that holds no payload", () => {
+		expect(
+			describeItem(
+				code({
+					format: "datamatrix",
+					data: "]d20103400930000120172612311012AB",
+				}),
+			),
+		).toMatchObject({
+			kind: "barcode",
+			subtitle: "Data Matrix",
+			barcode: { type: "gs1", gtin: "3400930000120", lot: "12AB" },
+		});
+	});
+
+	it("reads what a plain-text QR code's number means", () => {
+		expect(describeItem(code({ data: "RR123456785FR" }))).toMatchObject({
+			kind: "text",
+			barcode: { type: "parcel", carrier: "laposte" },
 		});
 	});
 

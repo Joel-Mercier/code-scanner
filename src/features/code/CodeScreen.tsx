@@ -124,7 +124,7 @@ export function CodeScreen({ id }: { id: string }) {
 				</Animated.View>
 
 				<Animated.View entering={enter.up(360)} style={styles.blocks}>
-					<CodeFields parsed={code.parsed} />
+					<CodeFields code={code} />
 					<View style={shared.well}>
 						<Eyebrow>{t("app.code.raw")}</Eyebrow>
 						<Text size={14} mono selectable>

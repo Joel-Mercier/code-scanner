@@ -27,7 +27,14 @@ describe("settings", () => {
 			haptics: true,
 			motion3d: true,
 			theme: "system",
+			searchEngine: "duckduckgo",
 		});
+	});
+
+	it("keeps the search engine picked", () => {
+		settings().setSearchEngine("qwant");
+		expect(settings().searchEngine).toBe("qwant");
+		settings().setSearchEngine("duckduckgo");
 	});
 
 	it("switches the app's language", () => {

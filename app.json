@@ -9,7 +9,10 @@
 		"userInterfaceStyle": "automatic",
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.jmercier.codescanner"
+			"bundleIdentifier": "com.jmercier.codescanner",
+			"entitlements": {
+				"com.apple.developer.networking.HotspotConfiguration": true
+			}
 		},
 		"android": {
 			"adaptiveIcon": {

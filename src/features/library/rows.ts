@@ -1,4 +1,4 @@
-import { describeItem, qrKinds } from "@/domain/codes/describe";
+import { describeItem, qrKinds, scanOnlyKinds } from "@/domain/codes/describe";
 import { itemTitle } from "@/domain/library/items";
 import type { Folder, LibraryItem } from "@/domain/library/types";
 import { format } from "@/lib/date";
@@ -6,8 +6,17 @@ import { format } from "@/lib/date";
 export type Filter = "all" | "codes" | "docs" | "folders";
 
 /** Every kind of object the collection can hold, in the kind strip's order. */
-export const KINDS = [...qrKinds, "barcode", "doc"] as const;
+export const KINDS = [...qrKinds, ...scanOnlyKinds, "barcode", "doc"] as const;
 export type Kind = (typeof KINDS)[number];
+
+const SCAN_ONLY = new Set<Kind>(scanOnlyKinds);
+
+/**
+ * The kinds the strip shows: the everyday ones always (dashed until found),
+ * the scan-only ones (2FA, payments…) once the collection holds one.
+ */
+export const stripKinds = (found: Set<Kind>) =>
+	KINDS.filter((kind) => !SCAN_ONLY.has(kind) || found.has(kind));
 
 export const kindOf = (item: LibraryItem): Kind =>
 	item.kind === "doc" ? "doc" : describeItem(item).kind;

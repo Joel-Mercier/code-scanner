@@ -1,5 +1,7 @@
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import * as Application from "expo-application";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -10,6 +12,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { StatusBar } from "@/components/ui/StatusBar";
 import { Switch } from "@/components/ui/Switch";
 import { Eyebrow, LargeTitle, Text } from "@/components/ui/Text";
+import { searchEngineNames } from "@/domain/codes/lookup";
 import type { Locale } from "@/i18n";
 import useSettings, { type ThemePreference } from "@/stores/settings";
 import {
@@ -19,6 +22,7 @@ import {
 	useTheme,
 } from "@/theme";
 import { enter } from "@/theme/motion";
+import { SearchEngineSheet } from "./components/SearchEngineSheet";
 
 export function SettingsScreen() {
 	const shared = useSharedStyles();
@@ -35,6 +39,9 @@ export function SettingsScreen() {
 	const setMotion3d = useSettings((state) => state.setMotion3d);
 	const theme = useSettings((state) => state.theme);
 	const setTheme = useSettings((state) => state.setTheme);
+	const searchEngine = useSettings((state) => state.searchEngine);
+	const setSearchEngine = useSettings((state) => state.setSearchEngine);
+	const engineSheet = useRef<BottomSheetModal>(null);
 
 	return (
 		<View style={shared.screen}>
@@ -119,6 +126,20 @@ export function SettingsScreen() {
 							}
 						/>
 						<ListRow
+							icon="search"
+							iconTile={36}
+							label={t("app.settings.search_engine")}
+							description={t("app.settings.search_engine_hint")}
+							height={64}
+							trailing={
+								<Text size={15} color={colors.muted}>
+									{searchEngineNames[searchEngine]}
+								</Text>
+							}
+							chevron
+							onPress={() => engineSheet.current?.present()}
+						/>
+						<ListRow
 							icon="help"
 							iconTile={36}
 							label={t("app.help.title")}
@@ -161,6 +182,14 @@ export function SettingsScreen() {
 					</Text>
 				</Animated.View>
 			</ScrollView>
+			<SearchEngineSheet
+				ref={engineSheet}
+				value={searchEngine}
+				onChange={(engine) => {
+					setSearchEngine(engine);
+					engineSheet.current?.dismiss();
+				}}
+			/>
 		</View>
 	);
 }

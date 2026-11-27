@@ -410,6 +410,62 @@ const icons = {
 		["circle", { cx: 6.5, cy: 12.5, r: 0.5, fill: "currentColor" }],
 		["circle", { cx: 8.5, cy: 7.5, r: 0.5, fill: "currentColor" }],
 	],
+	lock: [
+		["rect", { x: 3, y: 11, width: 18, height: 11, rx: 2 }],
+		["path", { d: "M7 11V7a5 5 0 0 1 10 0v4" }],
+	],
+	banknote: [
+		["rect", { x: 2, y: 6, width: 20, height: 12, rx: 2 }],
+		["circle", { cx: 12, cy: 12, r: 2 }],
+		["path", { d: "M6 12h.01M18 12h.01" }],
+	],
+	smartphone: [
+		["rect", { x: 5, y: 2, width: 14, height: 20, rx: 2 }],
+		["path", { d: "M12 18h.01" }],
+	],
+	globe: [
+		["circle", { cx: 12, cy: 12, r: 10 }],
+		["path", { d: "M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" }],
+	],
+	navigation: [["path", { d: "M3 11 22 2l-9 19-2-8-8-2z" }]],
+	package: [
+		[
+			"path",
+			{
+				d: "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z",
+			},
+		],
+		["path", { d: "M12 22V12" }],
+		["path", { d: "m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7" }],
+		["path", { d: "m7.5 4.27 9 5.15" }],
+	],
+	tag: [
+		[
+			"path",
+			{
+				d: "M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z",
+			},
+		],
+		["circle", { cx: 7.5, cy: 7.5, r: 0.5, fill: "currentColor" }],
+	],
+	car: [
+		[
+			"path",
+			{
+				d: "M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2",
+			},
+		],
+		["circle", { cx: 7, cy: 17, r: 2 }],
+		["path", { d: "M9 17h6" }],
+		["circle", { cx: 17, cy: 17, r: 2 }],
+	],
+	pill: [
+		[
+			"path",
+			{ d: "m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" },
+		],
+		["path", { d: "m8.5 8.5 7 7" }],
+	],
 } satisfies Record<string, Shape[]>;
 
 export type IconName = keyof typeof icons;

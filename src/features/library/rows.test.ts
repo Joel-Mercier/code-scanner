@@ -6,13 +6,20 @@ import {
 	matchesFilter,
 	matchesFolder,
 	matchesQuery,
+	stripKinds,
 	toRows,
 } from "./rows";
 
 describe("kinds", () => {
-	it("lists the 9 QR kinds, barcodes and documents", () => {
-		expect(KINDS).toHaveLength(11);
-		expect(new Set(KINDS).size).toBe(11);
+	it("lists the 9 QR kinds, 5 scan-only kinds, barcodes and documents", () => {
+		expect(KINDS).toHaveLength(16);
+		expect(new Set(KINDS).size).toBe(16);
+	});
+
+	it("shows scan-only kinds in the strip once one is found", () => {
+		expect(stripKinds(new Set())).toHaveLength(11);
+		expect(stripKinds(new Set(["otp"]))).toContain("otp");
+		expect(stripKinds(new Set(["otp"]))).toHaveLength(12);
 	});
 
 	it("tells the kind of an item", () => {

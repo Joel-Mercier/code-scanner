@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Pressable } from "@/components/ui/Pressable";
 import { haptics } from "@/lib/haptics";
 import { boxShadow, makeStyles, useSharedStyles, useTheme } from "@/theme";
-import { KINDS, type Kind } from "../rows";
+import { type Kind, stripKinds } from "../rows";
 
 /**
  * Every kind of object, lit when the collection holds one. Tapping a lit
@@ -26,7 +26,7 @@ export function KindStrip({
 	const { t } = useTranslation();
 	return (
 		<View style={styles.kinds}>
-			{KINDS.map((kind) => {
+			{stripKinds(found).map((kind) => {
 				const has = found.has(kind);
 				const active = kind === selected;
 				const label = t(

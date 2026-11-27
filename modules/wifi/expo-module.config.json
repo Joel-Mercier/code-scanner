@@ -1,0 +1,9 @@
+{
+	"platforms": ["apple", "android"],
+	"apple": {
+		"modules": ["WifiModule"]
+	},
+	"android": {
+		"modules": ["expo.modules.wifi.WifiModule"]
+	}
+}

@@ -1,3 +1,16 @@
+import {
+	type BoardingPass,
+	type FrenchDoc,
+	type OtpCode,
+	type PaymentCode,
+	parseBoardingPass,
+	parseFrenchDoc,
+	parseOtp,
+	parsePayment,
+} from "./extraPayloads";
+import { decode, lineFields, queryParams, semicolonFields } from "./fields";
+
+/** Payload kinds the workshop can create. */
 export type QRKind =
 	| "url"
 	| "text"
@@ -9,7 +22,20 @@ export type QRKind =
 	| "event"
 	| "geoPoint";
 
+/** Payload kinds that are only ever read from scans. */
+export type ScanOnlyKind =
+	| "otp"
+	| "payment"
+	| "boardingPass"
+	| "frenchDoc"
+	| "app";
+
+export type PayloadKind = QRKind | ScanOnlyKind;
+
 export type WifiEncryption = "WPA" | "WEP" | "nopass";
+
+/** What a scanned network uses: what the workshop offers, plus WPA3 and enterprise. */
+export type WifiSecurity = WifiEncryption | "SAE" | "EAP";
 
 export type ParsedCode =
 	| { kind: "url"; url: string }
@@ -21,8 +47,10 @@ export type ParsedCode =
 			kind: "wifi";
 			ssid: string;
 			password?: string;
-			encryption: WifiEncryption;
+			encryption: WifiSecurity;
 			hidden: boolean;
+			/** WPA2-Enterprise: EAP method and identity. */
+			eap?: { method?: string; identity?: string; phase2?: string };
 	  }
 	| {
 			kind: "vcard";
@@ -30,8 +58,8 @@ export type ParsedCode =
 			lastName?: string;
 			organization?: string;
 			title?: string;
-			phone?: string;
-			email?: string;
+			phones?: string[];
+			emails?: string[];
 			url?: string;
 			address?: string;
 	  }
@@ -42,104 +70,71 @@ export type ParsedCode =
 			location?: string;
 			start?: Date;
 			end?: Date;
+			/** Dates without a time (`VALUE=DATE`). */
+			allDay?: boolean;
 	  }
-	| { kind: "geoPoint"; lat: number; lng: number; alt?: number };
+	| {
+			kind: "geoPoint";
+			lat: number;
+			lng: number;
+			alt?: number;
+			/** A place name or address (`?q=`); alone when the point is 0,0. */
+			query?: string;
+	  }
+	| OtpCode
+	| PaymentCode
+	| BoardingPass
+	| FrenchDoc
+	| { kind: "app"; uri: string; scheme: string };
 
-const decode = (value: string) => {
-	try {
-		return decodeURIComponent(value.replace(/\+/g, " "));
-	} catch {
-		return value;
-	}
-};
+/** A geo: point that is only a search (`geo:0,0?q=address`). */
+export const isPlaceSearch = (
+	parsed: Extract<ParsedCode, { kind: "geoPoint" }>,
+) => parsed.lat === 0 && parsed.lng === 0 && !!parsed.query;
 
-const queryParams = (query: string) => {
-	const params: Record<string, string> = {};
-	for (const pair of query.split("&")) {
-		const [key, ...rest] = pair.split("=");
-		if (key) params[key.toLowerCase()] = decode(rest.join("="));
-	}
-	return params;
-};
+type DateParts = [number, number, number, number, number, number];
 
-/** Splits on the `separator`s that aren't escaped, keeping the escapes. */
-const splitUnescaped = (value: string, separator: string) => {
-	const parts: string[] = [];
-	let current = "";
-	for (let i = 0; i < value.length; i++) {
-		const char = value[i];
-		if (char === "\\" && i + 1 < value.length) {
-			current += char + value[i + 1];
-			i++;
-		} else if (char === separator) {
-			parts.push(current);
-			current = "";
-		} else {
-			current += char;
-		}
-	}
-	parts.push(current);
-	return parts;
-};
-
-/** Undoes the `\;`, `\,`, `\:`, `\"` and `\\` escapes of Wi-Fi / MECARD / MATMSG. */
-const unescapeField = (value: string) => value.replace(/\\([\\;,:"])/g, "$1");
-
-/** Parses `KEY:value;KEY:value` payloads (Wi-Fi, MECARD, MATMSG). */
-const semicolonFields = (body: string) => {
-	const raw: Record<string, string> = {};
-	for (const field of splitUnescaped(body, ";")) {
-		const index = field.indexOf(":");
-		if (index > 0)
-			raw[field.slice(0, index).toUpperCase()] = field.slice(index + 1);
-	}
-	return {
-		/** A value, unescaped. */
-		text: (key: string) =>
-			raw[key] === undefined ? undefined : unescapeField(raw[key]),
-		/**
-		 * The comma-separated parts of a value (MECARD's `N:last,first`). Split
-		 * before unescaping, so an escaped `\,` stays inside its part.
-		 */
-		parts: (key: string) =>
-			raw[key] === undefined
-				? []
-				: splitUnescaped(raw[key], ",").map(unescapeField),
-	};
-};
-
-/** Parses `KEY;PARAMS:value` lines of vCard / iCalendar payloads. */
-const lineFields = (payload: string) => {
-	const raw: Record<string, string> = {};
-	const unfolded = payload.replace(/\r?\n[ \t]/g, "");
-	for (const line of unfolded.split(/\r?\n/)) {
-		const index = line.indexOf(":");
-		if (index <= 0) continue;
-		const key = line.slice(0, index).split(";")[0].toUpperCase();
-		if (!(key in raw)) raw[key] = line.slice(index + 1);
-	}
-	return {
-		/** A text value, unescaped. */
-		text: (key: string) =>
-			raw[key] === undefined ? undefined : unescapeText(raw[key]),
-		/**
-		 * The parts of a structured value (N, ADR, ORG). Split before
-		 * unescaping, so an escaped `\;` stays inside its part.
-		 */
-		parts: (key: string) =>
-			raw[key] === undefined
-				? []
-				: splitUnescaped(raw[key], ";").map(unescapeText),
-	};
-};
-
-/** Undoes vCard / iCalendar text escapes: `\n`, `\\`, `\;`, `\,`. */
-const unescapeText = (value: string) =>
-	value.replace(/\\([nN\\;,])/g, (_, char: string) =>
-		char === "n" || char === "N" ? "\n" : char,
+/** How far `timeZone` is ahead of UTC at `utc`, in milliseconds. */
+const zoneOffset = (utc: number, timeZone: string) => {
+	const parts = new Intl.DateTimeFormat("en-US", {
+		timeZone,
+		hour12: false,
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+	}).formatToParts(new Date(utc));
+	const get = (type: string) =>
+		Number(parts.find((part) => part.type === type)?.value);
+	const asUtc = Date.UTC(
+		get("year"),
+		get("month") - 1,
+		get("day"),
+		get("hour") % 24,
+		get("minute"),
+		get("second"),
 	);
+	return asUtc - utc;
+};
 
-const parseICalDate = (value?: string) => {
+/** A wall-clock time in an IANA time zone; `undefined` for unknown zones. */
+const zonedDate = (parts: DateParts, timeZone: string) => {
+	try {
+		const guess = Date.UTC(...parts);
+		const offset = zoneOffset(guess, timeZone);
+		let utc = guess - offset;
+		// Around a DST change the offset at the real instant can differ.
+		const actual = zoneOffset(utc, timeZone);
+		if (actual !== offset) utc = guess - actual;
+		return new Date(utc);
+	} catch {
+		return undefined;
+	}
+};
+
+const parseICalDate = (value?: string, timeZone?: string) => {
 	if (!value) return undefined;
 	const match = value.match(
 		/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/,
@@ -148,12 +143,123 @@ const parseICalDate = (value?: string) => {
 		const date = new Date(value);
 		return Number.isNaN(date.getTime()) ? undefined : date;
 	}
-	const [, y, mo, d, h = "0", mi = "0", s = "0", utc] = match;
-	const args = [+y, +mo - 1, +d, +h, +mi, +s] as const;
-	return utc ? new Date(Date.UTC(...args)) : new Date(...args);
+	const [, y, mo, d, h, mi = "0", s = "0", utc] = match;
+	const parts: DateParts = [+y, +mo - 1, +d, +(h ?? 0), +mi, +s];
+	if (utc) return new Date(Date.UTC(...parts));
+	// Date-only values (all-day) stay on the device's calendar day.
+	if (h !== undefined && timeZone) {
+		const zoned = zonedDate(parts, timeZone.replace(/^\/[^/]+\/[^/]+\//, ""));
+		if (zoned) return zoned;
+	}
+	return new Date(...parts);
 };
 
-export const parseCode = (raw: string): ParsedCode => {
+const parseWifi = (body: string): ParsedCode => {
+	const fields = semicolonFields(body);
+	const type = (fields.text("T") ?? "").toUpperCase();
+	const encryption: WifiSecurity =
+		type.includes("EAP") || (fields.text("E") && type.startsWith("WPA"))
+			? "EAP"
+			: type === "SAE" || type.startsWith("WPA3")
+				? "SAE"
+				: type.startsWith("WPA")
+					? "WPA"
+					: type === "WEP"
+						? "WEP"
+						: "nopass";
+	return {
+		kind: "wifi",
+		ssid: fields.text("S") ?? "",
+		password: fields.text("P") || undefined,
+		encryption,
+		hidden: (fields.text("H") ?? "").toLowerCase() === "true",
+		...(encryption === "EAP" && {
+			eap: {
+				method: fields.text("E") || undefined,
+				identity: fields.text("I") || fields.text("A") || undefined,
+				phase2: fields.text("PH2") || undefined,
+			},
+		}),
+	};
+};
+
+const parseGeo = (body: string): ParsedCode | undefined => {
+	const [path, search = ""] = body.split("?");
+	// Drop `;crs=` / `;u=` parameters before reading the numbers.
+	const [lat, lng, alt] = path.split(";")[0].split(",").map(Number);
+	if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
+	const query = queryParams(search).q?.trim() || undefined;
+	// Android's `geo:0,0?q=lat,lng(Label)` puts the point in the query.
+	const point = query?.match(
+		/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*(?:\((.*)\))?$/,
+	);
+	if (point && lat === 0 && lng === 0) {
+		return {
+			kind: "geoPoint",
+			lat: Number(point[1]),
+			lng: Number(point[2]),
+			alt: undefined,
+			query: point[3]?.trim() || undefined,
+		};
+	}
+	return {
+		kind: "geoPoint",
+		lat,
+		lng,
+		alt: Number.isFinite(alt) ? alt : undefined,
+		query,
+	};
+};
+
+const list = (values: string[]) => (values.length ? values : undefined);
+
+/** URI schemes that open an app without `//` (`bitcoin:…`, `spotify:…`). */
+const APP_SCHEMES = new Set([
+	"bitcoin",
+	"bitcoincash",
+	"ethereum",
+	"litecoin",
+	"lightning",
+	"monero",
+	"spotify",
+	"facetime",
+	"facetime-audio",
+	"skype",
+	"sip",
+	"sips",
+	"xmpp",
+	"magnet",
+	"matrix",
+	"maps",
+	"fido",
+	"callto",
+	"webcal",
+]);
+
+/** Schemes that are never handed to another app. */
+const BLOCKED_SCHEMES = new Set([
+	"javascript",
+	"vbscript",
+	"data",
+	"file",
+	"content",
+	"intent",
+	"blob",
+	"about",
+]);
+
+const appLink = (data: string): ParsedCode | undefined => {
+	if (/\s/.test(data)) return undefined;
+	const scheme = data.match(/^([a-z][a-z0-9+.-]{1,31}):/i)?.[1].toLowerCase();
+	if (!scheme || BLOCKED_SCHEMES.has(scheme)) return undefined;
+	const rest = data.slice(scheme.length + 1);
+	if (!rest || (!rest.startsWith("//") && !APP_SCHEMES.has(scheme))) {
+		return undefined;
+	}
+	return { kind: "app", uri: data, scheme };
+};
+
+export const parseCode = (raw: string, now = new Date()): ParsedCode => {
 	const data = raw.trim();
 	const upper = data.toUpperCase();
 
@@ -162,6 +268,24 @@ export const parseCode = (raw: string): ParsedCode => {
 			kind: "url",
 			url: /^www\./i.test(data) ? `https://${data}` : data,
 		};
+	}
+	if (upper.startsWith("URLTO:")) {
+		const url = data.slice(6).trim();
+		if (url) {
+			return {
+				kind: "url",
+				url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
+			};
+		}
+	}
+	if (upper.startsWith("MEBKM:")) {
+		const url = semicolonFields(data.slice(6)).text("URL")?.trim();
+		if (url) {
+			return {
+				kind: "url",
+				url: /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`,
+			};
+		}
 	}
 	if (upper.startsWith("MAILTO:")) {
 		const [to, query = ""] = data.slice(7).split("?");
@@ -198,19 +322,7 @@ export const parseCode = (raw: string): ParsedCode => {
 		return { kind: "sms", number, message: queryParams(query).body };
 	}
 	if (upper.startsWith("WIFI:")) {
-		const fields = semicolonFields(data.slice(5));
-		const type = (fields.text("T") ?? "").toUpperCase();
-		return {
-			kind: "wifi",
-			ssid: fields.text("S") ?? "",
-			password: fields.text("P") || undefined,
-			encryption: type.startsWith("WPA")
-				? "WPA"
-				: type === "WEP"
-					? "WEP"
-					: "nopass",
-			hidden: (fields.text("H") ?? "").toLowerCase() === "true",
-		};
+		return parseWifi(data.slice(5));
 	}
 	if (upper.startsWith("BEGIN:VCARD")) {
 		const fields = lineFields(data);
@@ -229,8 +341,8 @@ export const parseCode = (raw: string): ParsedCode => {
 			lastName: lastName || undefined,
 			organization: joined("ORG"),
 			title: fields.text("TITLE"),
-			phone: fields.text("TEL"),
-			email: fields.text("EMAIL"),
+			phones: list(fields.all("TEL")),
+			emails: list(fields.all("EMAIL")),
 			url: fields.text("URL"),
 			address: joined("ADR"),
 		};
@@ -243,35 +355,58 @@ export const parseCode = (raw: string): ParsedCode => {
 			firstName: firstName || undefined,
 			lastName: lastName || undefined,
 			organization: fields.text("ORG"),
-			phone: fields.text("TEL"),
-			email: fields.text("EMAIL"),
+			phones: list(fields.all("TEL")),
+			emails: list(fields.all("EMAIL")),
 			url: fields.text("URL"),
 			address: fields.text("ADR"),
 		};
 	}
+	if (upper.startsWith("BIZCARD:")) {
+		const fields = semicolonFields(data.slice(8));
+		return {
+			kind: "vcard",
+			firstName: fields.text("N") || undefined,
+			lastName: fields.text("X") || undefined,
+			organization: fields.text("C") || undefined,
+			title: fields.text("T") || undefined,
+			phones: list([...fields.all("B"), ...fields.all("M")]),
+			emails: list(fields.all("E")),
+			address: fields.text("A") || undefined,
+		};
+	}
 	if (upper.startsWith("BEGIN:VEVENT") || upper.startsWith("BEGIN:VCALENDAR")) {
 		const fields = lineFields(data);
+		const dateOnly = (key: string) =>
+			fields.param(key, "VALUE")?.toUpperCase() === "DATE" ||
+			/^\d{8}$/.test(fields.text(key) ?? "");
 		return {
 			kind: "event",
 			summary: fields.text("SUMMARY"),
 			description: fields.text("DESCRIPTION"),
 			location: fields.text("LOCATION"),
-			start: parseICalDate(fields.text("DTSTART")),
-			end: parseICalDate(fields.text("DTEND")),
+			start: parseICalDate(
+				fields.text("DTSTART"),
+				fields.param("DTSTART", "TZID"),
+			),
+			end: parseICalDate(fields.text("DTEND"), fields.param("DTEND", "TZID")),
+			allDay: dateOnly("DTSTART"),
 		};
 	}
 	if (upper.startsWith("GEO:")) {
-		const [lat, lng, alt] = data.slice(4).split("?")[0].split(",").map(Number);
-		if (Number.isFinite(lat) && Number.isFinite(lng)) {
-			return {
-				kind: "geoPoint",
-				lat,
-				lng,
-				alt: Number.isFinite(alt) ? alt : undefined,
-			};
-		}
+		const geo = parseGeo(data.slice(4));
+		if (geo) return geo;
 	}
-	return { kind: "text", text: data };
+	if (upper.startsWith("OTPAUTH://")) {
+		const otp = parseOtp(data);
+		if (otp) return otp;
+	}
+	const payment = parsePayment(data);
+	if (payment) return payment;
+	const boardingPass = parseBoardingPass(data, now);
+	if (boardingPass) return boardingPass;
+	const frenchDoc = parseFrenchDoc(data);
+	if (frenchDoc) return frenchDoc;
+	return appLink(data) ?? { kind: "text", text: data };
 };
 
 const escapeWifi = (value: string) => value.replace(/([\\;,:"])/g, "\\$1");
@@ -409,12 +544,27 @@ export const describeCode = (parsed: ParsedCode) => {
 			return (
 				[parsed.firstName, parsed.lastName].filter(Boolean).join(" ") ||
 				parsed.organization ||
-				parsed.email ||
+				parsed.emails?.[0] ||
 				""
 			);
 		case "event":
 			return parsed.summary ?? "";
 		case "geoPoint":
-			return `${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`;
+			return (
+				parsed.query ?? `${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`
+			);
+		case "otp":
+			return (
+				[parsed.issuer, parsed.account].filter(Boolean).join(" · ") ||
+				parsed.uri
+			);
+		case "payment":
+			return parsed.name ?? parsed.iban ?? "";
+		case "boardingPass":
+			return `${parsed.carrier} ${parsed.flight} · ${parsed.from} → ${parsed.to}`;
+		case "frenchDoc":
+			return "2D-Doc";
+		case "app":
+			return parsed.uri;
 	}
 };

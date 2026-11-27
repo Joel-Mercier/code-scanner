@@ -121,7 +121,7 @@ export function CaptureScreen({ id }: { id: string }) {
 
 				<Animated.View entering={enter.up(1450, 600)} style={styles.details}>
 					{code ? (
-						<CodeFields parsed={code.parsed} omit={title} max={3} />
+						<CodeFields code={code} omit={title} max={3} />
 					) : (
 						item.kind === "doc" && (
 							<DetailRows
@@ -140,6 +140,7 @@ export function CaptureScreen({ id }: { id: string }) {
 							code={code}
 							data={item.data}
 							extra={[moveToFolder, viewDetails]}
+							compact
 						/>
 					) : (
 						item.kind === "doc" && (

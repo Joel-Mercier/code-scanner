@@ -133,6 +133,21 @@ describe("parseCode", () => {
 				password: "12345",
 			});
 		});
+
+		it("recognises WPA3 (SAE), as Android shares it", () => {
+			expect(
+				parseCode("WIFI:S:Home;T:SAE;P:secret123;H:false;;"),
+			).toMatchObject({ encryption: "SAE", password: "secret123" });
+		});
+
+		it("recognises WPA2-Enterprise and keeps the identity", () => {
+			expect(
+				parseCode("WIFI:T:WPA2-EAP;S:Corp;E:PEAP;PH2:MSCHAPV2;I:ada;P:pw;;"),
+			).toMatchObject({
+				encryption: "EAP",
+				eap: { method: "PEAP", identity: "ada", phase2: "MSCHAPV2" },
+			});
+		});
 	});
 
 	describe("contacts", () => {
@@ -156,8 +171,8 @@ describe("parseCode", () => {
 				lastName: "Lovelace",
 				organization: "Analytical, Engines",
 				title: "Mathematician",
-				phone: "+44 20",
-				email: "ada@example.com",
+				phones: ["+44 20"],
+				emails: ["ada@example.com"],
 				url: "https://ada.example",
 				address: "12 St James's Square, London",
 			});
@@ -170,12 +185,33 @@ describe("parseCode", () => {
 			});
 		});
 
-		it("unfolds folded lines and keeps the first value of a repeated key", () => {
+		it("unfolds folded lines and keeps every phone number", () => {
 			expect(
 				parseCode(
-					"BEGIN:VCARD\nN:Hopper;Grace\nTEL:+1 555\nTEL:+1 666\nTITLE:Rear\n  Admiral\nEND:VCARD",
+					"BEGIN:VCARD\nN:Hopper;Grace\nTEL:+1 555\nitem1.TEL:+1 666\nTITLE:Rear\n  Admiral\nEND:VCARD",
 				),
-			).toMatchObject({ phone: "+1 555", title: "Rear Admiral" });
+			).toMatchObject({ phones: ["+1 555", "+1 666"], title: "Rear Admiral" });
+		});
+
+		it("decodes vCard 2.1 quoted-printable values", () => {
+			expect(
+				parseCode(
+					[
+						"BEGIN:VCARD",
+						"VERSION:2.1",
+						"N;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:M=C3=BCller;Ren=C3=A9",
+						"ADR;QUOTED-PRINTABLE:;;1 rue de la Pai=",
+						"x;Paris;;",
+						"ORG;ENCODING=QUOTED-PRINTABLE;CHARSET=ISO-8859-1:Caf=E9",
+						"END:VCARD",
+					].join("\r\n"),
+				),
+			).toMatchObject({
+				firstName: "René",
+				lastName: "Müller",
+				address: "1 rue de la Paix, Paris",
+				organization: "Café",
+			});
 		});
 
 		it("keeps escaped separators inside names, organisations and addresses", () => {
@@ -211,8 +247,8 @@ describe("parseCode", () => {
 				firstName: "Ada",
 				lastName: "Lovelace",
 				organization: undefined,
-				phone: "+44 20",
-				email: "ada@example.com",
+				phones: ["+44 20"],
+				emails: ["ada@example.com"],
 				url: undefined,
 				address: undefined,
 			});
@@ -245,6 +281,7 @@ describe("parseCode", () => {
 				location: "Hall, B",
 				start: new Date(Date.UTC(2026, 11, 24, 19, 0, 0)),
 				end: new Date(Date.UTC(2026, 11, 24, 23, 0, 0)),
+				allDay: false,
 			});
 		});
 
@@ -255,7 +292,34 @@ describe("parseCode", () => {
 			expect(event).toMatchObject({
 				start: new Date(2026, 0, 5),
 				end: new Date(2026, 0, 5, 9, 30, 0),
+				allDay: true,
 			});
+		});
+
+		it("reads times in their TZID time zone", () => {
+			expect(
+				parseCode(
+					"BEGIN:VEVENT\nDTSTART;TZID=America/New_York:20260704T090000\nDTEND;TZID=Europe/Paris:20261225T180000\nEND:VEVENT",
+				),
+			).toMatchObject({
+				start: new Date(Date.UTC(2026, 6, 4, 13, 0, 0)),
+				end: new Date(Date.UTC(2026, 11, 25, 17, 0, 0)),
+				allDay: false,
+			});
+		});
+
+		it("falls back to the device's time zone for an unknown TZID", () => {
+			expect(
+				parseCode(
+					"BEGIN:VEVENT\nDTSTART;TZID=Nowhere/Land:20260704T090000\nEND:VEVENT",
+				),
+			).toMatchObject({ start: new Date(2026, 6, 4, 9, 0, 0) });
+		});
+
+		it("reads VALUE=DATE as all-day", () => {
+			expect(
+				parseCode("BEGIN:VEVENT\nDTSTART;VALUE=DATE:20260105\nEND:VEVENT"),
+			).toMatchObject({ allDay: true });
 		});
 
 		it("falls back to Date parsing, and drops dates it can't read", () => {
@@ -280,6 +344,34 @@ describe("parseCode", () => {
 				lat: 48.8584,
 				lng: 2.2945,
 				alt: 330,
+				query: "Eiffel",
+			});
+		});
+
+		it("reads a place search at 0,0", () => {
+			expect(parseCode("geo:0,0?q=1+rue+de+Rivoli,+Paris")).toEqual({
+				kind: "geoPoint",
+				lat: 0,
+				lng: 0,
+				alt: undefined,
+				query: "1 rue de Rivoli, Paris",
+			});
+		});
+
+		it("reads Android's point-and-label query", () => {
+			expect(parseCode("geo:0,0?q=48.8584,2.2945(Eiffel Tower)")).toEqual({
+				kind: "geoPoint",
+				lat: 48.8584,
+				lng: 2.2945,
+				alt: undefined,
+				query: "Eiffel Tower",
+			});
+		});
+
+		it("ignores geo: URI parameters", () => {
+			expect(parseCode("geo:48.85,2.29;u=35")).toMatchObject({
+				lat: 48.85,
+				lng: 2.29,
 			});
 		});
 
@@ -419,8 +511,8 @@ describe("buildPayload → parseCode round trip", () => {
 				lastName: "King, Lovelace",
 				organization: "Engines; Ltd",
 				title: "Countess",
-				phone: "+44 20",
-				email: "ada@example.com",
+				phones: ["+44 20"],
+				emails: ["ada@example.com"],
 				url: "https://ada.example",
 				address: "12 Square; London",
 			},
@@ -470,7 +562,7 @@ describe("describeCode", () => {
 			describeCode({ kind: "vcard", firstName: "Ada", lastName: "Lovelace" }),
 		).toBe("Ada Lovelace");
 		expect(describeCode({ kind: "vcard", organization: "Acme" })).toBe("Acme");
-		expect(describeCode({ kind: "vcard", email: "a@b.c" })).toBe("a@b.c");
+		expect(describeCode({ kind: "vcard", emails: ["a@b.c"] })).toBe("a@b.c");
 		expect(describeCode({ kind: "vcard" })).toBe("");
 	});
 
@@ -492,5 +584,85 @@ describe("describeCode", () => {
 		expect(
 			describeCode({ kind: "geoPoint", lat: 48.858_37, lng: 2.294_481 }),
 		).toBe("48.85837, 2.29448");
+	});
+});
+
+describe("parseCode, legacy and app formats", () => {
+	it("reads MEBKM bookmarks and URLTO links", () => {
+		expect(parseCode("MEBKM:TITLE:Menu;URL:example.com/menu;;")).toEqual({
+			kind: "url",
+			url: "https://example.com/menu",
+		});
+		expect(parseCode("URLTO:http://example.com")).toEqual({
+			kind: "url",
+			url: "http://example.com",
+		});
+	});
+
+	it("reads BIZCARD contacts", () => {
+		expect(
+			parseCode(
+				"BIZCARD:N:Sean;X:Owen;T:Engineer;C:Acme;A:1 Main St;B:+1 212;M:+1 646;E:s@example.com;;",
+			),
+		).toEqual({
+			kind: "vcard",
+			firstName: "Sean",
+			lastName: "Owen",
+			title: "Engineer",
+			organization: "Acme",
+			address: "1 Main St",
+			phones: ["+1 212", "+1 646"],
+			emails: ["s@example.com"],
+		});
+	});
+
+	it("reads 2FA setup links", () => {
+		expect(
+			parseCode(
+				"otpauth://totp/ACME%20Co:ada@example.com?secret=jbsw y3dp&issuer=ACME%20Co&digits=6&period=30&algorithm=sha1",
+			),
+		).toEqual({
+			kind: "otp",
+			type: "totp",
+			issuer: "ACME Co",
+			account: "ada@example.com",
+			secret: "JBSWY3DP",
+			algorithm: "SHA1",
+			digits: 6,
+			period: 30,
+			uri: "otpauth://totp/ACME%20Co:ada@example.com?secret=jbsw y3dp&issuer=ACME%20Co&digits=6&period=30&algorithm=sha1",
+		});
+	});
+
+	it("reads other app links, but never dangerous schemes or plain text", () => {
+		expect(
+			parseCode("bitcoin:1BoatSLRHtKNngkdXEeobR76b53LETtpyT?amount=1"),
+		).toEqual({
+			kind: "app",
+			uri: "bitcoin:1BoatSLRHtKNngkdXEeobR76b53LETtpyT?amount=1",
+			scheme: "bitcoin",
+		});
+		expect(parseCode("spotify://track/123")).toMatchObject({ kind: "app" });
+		expect(parseCode("javascript://alert(1)")).toMatchObject({ kind: "text" });
+		expect(parseCode("Note:buy-milk")).toMatchObject({ kind: "text" });
+		expect(parseCode("Note: buy milk")).toMatchObject({ kind: "text" });
+	});
+
+	it("summarises the scan-only kinds", () => {
+		expect(
+			describeCode({
+				kind: "otp",
+				type: "totp",
+				issuer: "ACME",
+				account: "ada",
+				uri: "otpauth://totp/ada",
+			}),
+		).toBe("ACME · ada");
+		expect(
+			describeCode({ kind: "geoPoint", lat: 0, lng: 0, query: "Paris" }),
+		).toBe("Paris");
+		expect(describeCode({ kind: "app", uri: "tg://x", scheme: "tg" })).toBe(
+			"tg://x",
+		);
 	});
 });

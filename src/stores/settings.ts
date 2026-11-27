@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import type { SearchEngine } from "@/domain/codes/lookup";
 import { applyLocale, type Locale } from "@/i18n";
 import { setHapticsEnabled } from "@/lib/haptics";
 import { zustandStorage } from "@/lib/storage";
@@ -18,6 +19,9 @@ interface SettingsState {
 	/** Follow the system appearance, or force light or dark. */
 	theme: ThemePreference;
 	setTheme: (theme: ThemePreference) => void;
+	/** Where "Search the web" and lookups' last resort go. */
+	searchEngine: SearchEngine;
+	setSearchEngine: (searchEngine: SearchEngine) => void;
 }
 
 const useSettings = create<SettingsState>()(
@@ -34,6 +38,8 @@ const useSettings = create<SettingsState>()(
 			setMotion3d: (motion3d) => set({ motion3d }),
 			theme: "system",
 			setTheme: (theme) => set({ theme }),
+			searchEngine: "duckduckgo",
+			setSearchEngine: (searchEngine) => set({ searchEngine }),
 		}),
 		{
 			// The storage key predates the rename: keep it, or settings are lost.

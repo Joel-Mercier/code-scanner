@@ -12,6 +12,11 @@ export const kindIcons: Record<DisplayKind | "doc", IconName> = {
 	vcard: "contact",
 	event: "calendar",
 	geoPoint: "location",
+	otp: "lock",
+	payment: "banknote",
+	boardingPass: "plane",
+	frenchDoc: "receipt",
+	app: "smartphone",
 	barcode: "barcode",
 	doc: "document",
 };

@@ -32,12 +32,12 @@ import { SearchField } from "./components/SearchField";
 import {
 	COLUMNS,
 	type Filter,
-	KINDS,
 	type Kind,
 	kindOf,
 	matchesFilter,
 	matchesFolder,
 	matchesQuery,
+	stripKinds,
 	toRows,
 } from "./rows";
 
@@ -228,7 +228,7 @@ export function LibraryScreen({ folderId }: { folderId: string | null }) {
 					{t("app.library.summary", {
 						objects: t("app.library.objects", { count: scope.length }),
 						found: found.size,
-						total: KINDS.length,
+						total: stripKinds(found).length,
 					}).toUpperCase()}
 				</Text>
 			</Animated.View>
