@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { kindIcons } from "@/components/codes/kindIcons";
 import { Icon, type IconName } from "@/components/ui/Icon";
@@ -8,29 +8,38 @@ import { Pressable } from "@/components/ui/Pressable";
 import { Segmented } from "@/components/ui/Segmented";
 import { LargeTitle, Text } from "@/components/ui/Text";
 import { qrKinds } from "@/domain/codes/describe";
-import { barcodeLabels, type GeneratableBarcode } from "@/domain/codes/formats";
 import type { QRKind } from "@/domain/codes/payload";
 import { makeStyles, useSharedStyles, useTheme } from "@/theme";
 import { enter, stagger } from "@/theme/motion";
-import { barcodeTypes } from "../barcodeOptions";
+import {
+	type BarcodeChoice,
+	barcodeTypes,
+	choiceLabel,
+} from "../barcodeOptions";
 
 export type CodeTab = "qr" | "barcode";
+
+const COLUMNS = 3;
+const GRID_PADDING = 16;
+const GRID_GAP = 12;
 
 function KindTile({
 	icon,
 	label,
 	delay,
+	width,
 	onPress,
 }: {
 	icon: IconName;
 	label: string;
 	delay: number;
+	width: number;
 	onPress: () => void;
 }) {
 	const shared = useSharedStyles();
 	const styles = useStyles();
 	return (
-		<Animated.View entering={enter.lift(delay)} style={styles.kindCell}>
+		<Animated.View entering={enter.lift(delay)} style={{ width }}>
 			<Pressable
 				accessibilityRole="button"
 				accessibilityLabel={label}
@@ -59,12 +68,17 @@ export function TypePicker({
 	tab: CodeTab;
 	onTabChange: (tab: CodeTab) => void;
 	onPickQR: (kind: QRKind) => void;
-	onPickBarcode: (type: GeneratableBarcode) => void;
+	onPickBarcode: (type: BarcodeChoice) => void;
 }) {
 	const shared = useSharedStyles();
 	const { colors } = useTheme();
 	const styles = useStyles();
 	const { t } = useTranslation();
+	// Fixed widths, so a last row that isn't full keeps the same tiles.
+	const { width } = useWindowDimensions();
+	const tileWidth = Math.floor(
+		(width - GRID_PADDING * 2 - GRID_GAP * (COLUMNS - 1)) / COLUMNS,
+	);
 	return (
 		<>
 			<Animated.View entering={enter.up()} style={shared.titleBlock}>
@@ -99,6 +113,7 @@ export function TypePicker({
 								icon={kindIcons[kind]}
 								label={t(`app.kinds.${kind}`)}
 								delay={index * 30}
+								width={tileWidth}
 								onPress={() => onPickQR(kind)}
 							/>
 						))}
@@ -117,7 +132,7 @@ export function TypePicker({
 								<ListRow
 									icon="barcode"
 									iconTile={40}
-									label={barcodeLabels[type] ?? type}
+									label={choiceLabel(type)}
 									description={t(`app.barcode_formats.${type}`)}
 									height={64}
 									chevron
@@ -139,10 +154,9 @@ const useStyles = makeStyles(() => ({
 	kinds: {
 		flexDirection: "row",
 		flexWrap: "wrap",
-		gap: 12,
-		paddingHorizontal: 16,
+		gap: GRID_GAP,
+		paddingHorizontal: GRID_PADDING,
 	},
-	kindCell: { width: "31%", flexGrow: 1 },
 	kind: { aspectRatio: 1, borderRadius: 20, gap: 12 },
 	kindIcon: { width: 46, height: 46, borderRadius: 14 },
 	formats: { marginHorizontal: 16 },

@@ -1,4 +1,4 @@
-import { type BarcodeScanningResult, scanFromURLAsync } from "expo-camera";
+import type { BarcodeScanningResult } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef } from "react";
@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { toast } from "@/components/ui/Toast";
 import { normalizeBarcodeType } from "@/domain/codes/formats";
+import type { FoundCode } from "@/domain/library/types";
 import { haptics } from "@/lib/haptics";
+import { findCodes } from "@/services/recognition";
 import useLibrary from "@/stores/library";
 import { ease, easeOut } from "@/theme/motion";
 import type { Quad } from "../components/Viewfinder";
@@ -68,12 +70,8 @@ export function useCodeScanner(onCaptured: (id: string) => void) {
 		}, [lock]),
 	);
 
-	const capture = (scan: BarcodeScanningResult, delay: number) => {
-		const item = addCode({
-			source: "scanner",
-			format: normalizeBarcodeType(scan.type),
-			data: scan.data,
-		});
+	const capture = (code: FoundCode, delay: number) => {
+		const item = addCode({ source: "scanner", ...code });
 		haptics.success();
 		setTimeout(() => onCaptured(item.id), delay);
 	};
@@ -91,7 +89,7 @@ export function useCodeScanner(onCaptured: (id: string) => void) {
 		lastScan.current = { data: scan.data, at: now };
 		quad.set(quadOf(scan));
 		lock.set(withTiming(1, { duration: 320, easing: easeOut }));
-		capture(scan, 420);
+		capture({ format: normalizeBarcodeType(scan.type), data: scan.data }, 420);
 	};
 
 	const scanFromGallery = async () => {
@@ -100,7 +98,8 @@ export function useCodeScanner(onCaptured: (id: string) => void) {
 			quality: 1,
 		});
 		if (picked.canceled) return;
-		const [found] = await scanFromURLAsync(picked.assets[0].uri);
+		// Thorough: inverted QR codes the phone can't read get a second look.
+		const [found] = await findCodes(picked.assets[0].uri, { thorough: true });
 		if (!found) {
 			haptics.warning();
 			toast(t("app.scan.no_code_in_image"), "warning");

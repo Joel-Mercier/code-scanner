@@ -2,6 +2,8 @@ import { qrKinds } from "@/domain/codes/describe";
 import i18n from "@/i18n";
 import { type FormState, qrForms, validateQR } from "./qrForms";
 
+afterEach(() => i18n.changeLanguage("en"));
+
 const errorsOf = (kind: keyof typeof qrForms, state: FormState) => {
 	const result = validateQR(kind, state);
 	return result.ok ? {} : result.errors;
@@ -134,5 +136,52 @@ describe("validateQR", () => {
 		expect(
 			errorsOf("geoPoint", { lat: "0", lng: "0", alt: "high" }),
 		).toHaveProperty("alt");
+	});
+
+	it("builds an EPC payment from a checked IBAN, BIC and amount", () => {
+		const base = {
+			name: "Ada Lovelace",
+			iban: "fr76 3000 6000 0112 3456 7890 189",
+			bic: "",
+			amount: "",
+			message: "",
+		};
+		expect(payloadOf("payment", base)).toBe(
+			"BCD\n002\n1\nSCT\n\nAda Lovelace\nFR7630006000011234567890189",
+		);
+		expect(
+			payloadOf("payment", { ...base, bic: "bnpafrpp", amount: "12,5" }),
+		).toBe(
+			"BCD\n002\n1\nSCT\nBNPAFRPP\nAda Lovelace\nFR7630006000011234567890189\nEUR12.50",
+		);
+	});
+
+	it("explains a wrong IBAN, BIC or amount, in the current language", () => {
+		const base = {
+			name: "Ada",
+			iban: "FR7630006000011234567890189",
+			bic: "",
+			amount: "",
+			message: "",
+		};
+		const ibanError = errorsOf("payment", {
+			...base,
+			iban: "FR7630006000011234567890188",
+		}).iban;
+		expect(ibanError).toBe(i18n.t("app.fields.iban_invalid"));
+		expect(errorsOf("payment", { ...base, bic: "BNP" }).bic).toBe(
+			i18n.t("app.create.bic_invalid"),
+		);
+		expect(errorsOf("payment", { ...base, amount: "12.345" }).amount).toBe(
+			i18n.t("app.create.amount_invalid"),
+		);
+		expect(errorsOf("payment", { ...base, amount: "0" })).toHaveProperty(
+			"amount",
+		);
+		expect(errorsOf("payment", { ...base, name: "" })).toHaveProperty("name");
+		i18n.changeLanguage("fr");
+		expect(errorsOf("payment", { ...base, bic: "BNP" }).bic).toBe(
+			"8 ou 11 lettres et chiffres",
+		);
 	});
 });

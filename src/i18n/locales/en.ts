@@ -282,6 +282,11 @@ export default {
 				longitude: "2.2945",
 				altitude: "Optional",
 				content: "What should the barcode say?",
+				payee: "Jane Doe",
+				iban: "FR76 3000 6000 0112 3456 7890 189",
+				bic: "Optional",
+				amount: "Optional, in euros",
+				reference: "Invoice 42",
 			},
 			library: {
 				title: "Collection",
@@ -568,6 +573,19 @@ export default {
 				add_logo: "Add a logo",
 				change_logo: "Change logo",
 				remove_logo: "Remove logo",
+				sturdy: "Sturdier code",
+				sturdy_hint:
+					"More dots, but it still scans when worn, scratched or partly covered",
+				sturdy_logo: "Already as sturdy as it gets: a logo needs it",
+				shape: "Shape",
+				shape_square: "Square",
+				shape_rectangle: "Rectangle",
+				isbn_invalid:
+					"Not a valid ISBN: check the digits, the last one is a check digit",
+				gs1_invalid:
+					"Write GS1 data as each value after its AI in brackets, like (01)…(17)…",
+				bic_invalid: "8 or 11 letters and digits",
+				amount_invalid: "An amount like 12.50",
 				save: "Save to collection",
 				saved: "Saved to your collection",
 			},
@@ -576,6 +594,10 @@ export default {
 				ean8: "Small products, 8 digits",
 				upc_a: "Products, US, 12 digits",
 				upc_e: "Small products, US, 8 digits",
+				isbn: "Books and sheet music",
+				gs1_128: "Shipping labels: product, lot, expiry",
+				code93: "Compact labels, letters and numbers",
+				gs1_datamatrix: "Medicines and parts: product, lot, expiry",
 				code128: "Letters and numbers",
 				code39: "Labels and badges",
 				itf14: "Cartons and pallets, 14 digits",
@@ -597,6 +619,12 @@ export default {
 				pdf417: "Up to 2335 ASCII characters",
 				upc_a: "11 or 12 digits",
 				upc_e: "7 or 8 digits, starting with 0 or 1",
+				isbn: "ISBN-13 or ISBN-10. Type its hyphens as printed on the book to add the ISBN line above the bars",
+				gs1_128:
+					"Each value after its AI in brackets: (01) product, (17) expiry YYMMDD, (10) lot…",
+				code93: "Uppercase letters, digits, space and - . $ / + %",
+				gs1_datamatrix:
+					"Each value after its AI in brackets: (01) product, (17) expiry YYMMDD, (10) lot, (21) serial…",
 			},
 			lock: {
 				settings_title: "Lock",

@@ -8,10 +8,11 @@ import bwipjs, {
 	type RenderOptions,
 } from "bwip-js/generic";
 import {
-	bwipIds,
 	type GeneratableBarcode,
 	isLinearBarcode,
 } from "@/domain/codes/formats";
+import type { CodeShape } from "@/domain/codes/style";
+import { symbologiesOf } from "@/domain/codes/symbology";
 
 export type BarcodeGeometry = {
 	width: number;
@@ -160,38 +161,64 @@ const skiaDrawing = (): DrawingContext<BarcodeGeometry> => {
 	};
 };
 
+export type BarcodeOptions = {
+	/** Adds the human-readable line under linear codes. */
+	includeText?: boolean;
+	shape?: CodeShape;
+	/**
+	 * Only the symbology the content calls for (GS1-128 for GS1 data, the
+	 * ISBN line for a hyphenated ISBN…), never the plain fallback: what the
+	 * workshop checks before it saves.
+	 */
+	strict?: boolean;
+};
+
 /**
- * Draws a barcode with bwip-js into Skia paths. Throws when `content` is not
- * valid for the symbology. `includeText` adds the human-readable line under
- * linear codes.
+ * Draws a barcode with bwip-js into Skia paths, in the symbology its content
+ * calls for (`symbologiesOf`), falling back to the plain one. Throws when
+ * `content` can't be encoded as `type`.
  */
 export const buildBarcode = (
 	type: GeneratableBarcode,
 	content: string,
-	{ includeText = true }: { includeText?: boolean } = {},
-): BarcodeGeometry =>
-	bwipjs.render(
-		{
-			bcid: bwipIds[type],
-			text: content,
-			scale: 3,
-			padding: 0,
-			...(isLinearBarcode(type)
-				? {
-						height: 12,
-						includetext: includeText,
-						textxalign: "center",
-						textyalign: "below",
-					}
-				: {}),
-		},
-		skiaDrawing(),
-	);
+	{ includeText = true, shape, strict = false }: BarcodeOptions = {},
+): BarcodeGeometry => {
+	const candidates = symbologiesOf(type, content, { shape });
+	let failure: unknown;
+	for (const { bcid, text } of strict ? candidates.slice(0, 1) : candidates) {
+		try {
+			return bwipjs.render(
+				{
+					bcid,
+					text,
+					scale: 3,
+					padding: 0,
+					...(isLinearBarcode(type)
+						? {
+								height: 12,
+								includetext: includeText,
+								textxalign: "center",
+								textyalign: "below",
+							}
+						: {}),
+				},
+				skiaDrawing(),
+			);
+		} catch (error) {
+			failure ??= error;
+		}
+	}
+	throw failure;
+};
 
 /** Why `content` can't be encoded as `type`, or `null` when it can. */
-export const validateBarcode = (type: GeneratableBarcode, content: string) => {
+export const validateBarcode = (
+	type: GeneratableBarcode,
+	content: string,
+	options: Omit<BarcodeOptions, "includeText"> = {},
+) => {
 	try {
-		buildBarcode(type, content);
+		buildBarcode(type, content, options);
 		return null;
 	} catch (error) {
 		return error instanceof Error

@@ -5,8 +5,18 @@ import {
 	hasPaper,
 	inkOf,
 	paperOf,
+	qrErrorCorrection,
 	scanRisk,
 } from "./style";
+
+describe("qrErrorCorrection", () => {
+	it("is medium, and the most for sturdy codes or under a logo", () => {
+		expect(qrErrorCorrection()).toBe("medium");
+		expect(qrErrorCorrection({})).toBe("medium");
+		expect(qrErrorCorrection({ sturdy: true })).toBe("high");
+		expect(qrErrorCorrection({ logo: "file:///logo.png" })).toBe("high");
+	});
+});
 
 describe("inkOf / paperOf", () => {
 	it("default to dark ink on white paper", () => {

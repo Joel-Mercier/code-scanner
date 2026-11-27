@@ -1,10 +1,10 @@
-import encodeQR, { type ErrorCorrection } from "@paulmillr/qr";
 import {
 	FillType,
 	Skia,
 	type SkPath,
 	type SkPathBuilder,
 } from "@shopify/react-native-skia";
+import encodeQR, { type ErrorCorrection } from "qr";
 import type { QRDotStyle } from "@/domain/codes/style";
 
 export type QRGeometry = {
@@ -70,7 +70,11 @@ export const buildQR = (
 		logoRatio = 0,
 	}: { ecc?: ErrorCorrection; style?: QRDotStyle; logoRatio?: number } = {},
 ): QRGeometry => {
-	const matrix = encodeQR(text || " ", "raw", { ecc, border: 0 });
+	// The encoder insists on a quiet zone: ask for one module and slice it
+	// off (the card draws its own margin).
+	const matrix = encodeQR(text || " ", "raw", { ecc, border: 1 })
+		.slice(1, -1)
+		.map((row) => row.slice(1, -1));
 	const n = matrix.length;
 	const dots = Skia.PathBuilder.Make();
 	const eyes = Skia.PathBuilder.Make();

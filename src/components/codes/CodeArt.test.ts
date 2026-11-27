@@ -27,10 +27,39 @@ describe("buildGeometry", () => {
 		});
 	});
 
+	it("makes sturdy QR codes as robust as ones with a logo", () => {
+		const data = "https://example.com/a-long-path";
+		const plain = buildGeometry("qr", data, { color: "ink" });
+		const sturdy = buildGeometry("qr", data, { color: "ink", sturdy: true });
+		const both = buildGeometry("qr", data, {
+			color: "ink",
+			sturdy: true,
+			logo: "file:///logo.png",
+		});
+		if (plain.type !== "qr" || sturdy.type !== "qr" || both.type !== "qr") {
+			throw new Error("expected QR geometry");
+		}
+		expect(sturdy.qr.modules).toBeGreaterThan(plain.qr.modules);
+		expect(both.qr.modules).toBe(sturdy.qr.modules);
+	});
+
+	it("draws rectangular Data Matrix codes when asked", () => {
+		const square = buildGeometry("datamatrix", "Hello world 123");
+		const rectangle = buildGeometry("datamatrix", "Hello world 123", {
+			color: "ink",
+			shape: "rectangle",
+		});
+		if (square.type !== "barcode" || rectangle.type !== "barcode") {
+			throw new Error("expected barcode geometry");
+		}
+		expect(square.barcode.width).toBe(square.barcode.height);
+		expect(rectangle.barcode.width).toBeGreaterThan(rectangle.barcode.height);
+	});
+
 	it("reports formats it can't draw and invalid content", () => {
-		expect(buildGeometry("code93", "ABC")).toEqual({
+		expect(buildGeometry("maxicode" as never, "ABC")).toEqual({
 			type: "error",
-			message: "code93",
+			message: "maxicode",
 		});
 		expect(buildGeometry("ean13", "letters")).toMatchObject({
 			type: "error",

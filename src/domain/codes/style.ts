@@ -29,6 +29,9 @@ export const codeDefaults = { ink: codeInks.ink, paper: codePapers.white };
 
 export type QRDotStyle = "square" | "rounded" | "dots";
 
+/** Data Matrix symbols are square, or rectangular for narrow labels. */
+export type CodeShape = "square" | "rectangle";
+
 /** How a created code is drawn. Scanned codes have none. */
 export type CodeStyle = {
 	/** A `codeInks` preset, or a custom `#rrggbb` colour. */
@@ -38,7 +41,19 @@ export type CodeStyle = {
 	dots?: QRDotStyle;
 	/** A logo image in the app's documents, drawn in the middle of QR codes. */
 	logo?: string;
+	/** QR codes: the most error correction, so a worn or smudged print still scans. */
+	sturdy?: boolean;
+	/** Data Matrix: square unless set. */
+	shape?: CodeShape;
 };
+
+/**
+ * How much of a QR code can be lost and still read. A logo covers modules,
+ * so it gets the most, like a sturdy code.
+ */
+export const qrErrorCorrection = (
+	style?: Pick<CodeStyle, "logo" | "sturdy">,
+) => (style?.logo || style?.sturdy ? ("high" as const) : ("medium" as const));
 
 const isCodeInk = (value: string): value is CodeInk => value in codeInks;
 const isCodePaper = (value: string): value is CodePaper => value in codePapers;

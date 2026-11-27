@@ -77,8 +77,29 @@ describe("describeItem", () => {
 			),
 		).toMatchObject({
 			kind: "barcode",
-			subtitle: "Data Matrix",
+			subtitle: "GS1 DataMatrix",
 			barcode: { type: "gs1", gtin: "3400930000120", lot: "12AB" },
+		});
+	});
+
+	it("names the symbology the content calls for", () => {
+		const subtitle = (format: CodeItem["format"], data: string) =>
+			describeItem(code({ format, data })).subtitle;
+		expect(subtitle("code128", "(01)09506000134352(10)A1")).toBe("GS1-128");
+		expect(subtitle("code128", "HELLO")).toBe("Code 128");
+		expect(subtitle("ean13", "978-2-07-036822-8")).toBe("ISBN");
+		expect(subtitle("ean13", "9770317847001")).toBe("ISSN");
+		expect(subtitle("itf14", "123456")).toBe("ITF");
+		expect(subtitle("itf14", "00012345600012")).toBe("ITF-14");
+		expect(subtitle("code93", "CODE-93")).toBe("Code 93");
+	});
+
+	it("reads a hyphenated ISBN as the book it is", () => {
+		expect(
+			describeItem(code({ format: "ean13", data: "978-2-07-036822-8" })),
+		).toMatchObject({
+			title: "978-2-07-036822-8",
+			barcode: { type: "book", gtin: "9782070368228", isbn10: "207036822X" },
 		});
 	});
 

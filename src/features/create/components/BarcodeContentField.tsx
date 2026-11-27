@@ -2,9 +2,8 @@ import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Eyebrow, Text } from "@/components/ui/Text";
 import { TextField } from "@/components/ui/TextField";
-import type { GeneratableBarcode } from "@/domain/codes/formats";
 import { makeStyles, useTheme } from "@/theme";
-import { numericBarcodes } from "../barcodeOptions";
+import { type BarcodeChoice, contentKeyboard } from "../barcodeOptions";
 
 /** A barcode's content, with the format's rules or the current error below. */
 export function BarcodeContentField({
@@ -14,7 +13,7 @@ export function BarcodeContentField({
 	onBlur,
 	error,
 }: {
-	type: GeneratableBarcode;
+	type: BarcodeChoice;
 	value: string;
 	onChange: (value: string) => void;
 	onBlur: () => void;
@@ -31,8 +30,7 @@ export function BarcodeContentField({
 				value={value}
 				onChangeText={onChange}
 				onBlur={onBlur}
-				keyboardType={numericBarcodes.includes(type) ? "number-pad" : "default"}
-				autoCapitalize={type === "code39" ? "characters" : "none"}
+				{...contentKeyboard(type)}
 				autoCorrect={false}
 				placeholder={t("app.placeholders.content")}
 				invalid={!!error}

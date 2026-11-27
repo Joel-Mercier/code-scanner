@@ -1,7 +1,11 @@
 import type { CodeItem } from "@/domain/library/types";
 import i18n from "@/i18n";
 import { type BarcodeInfo, classifyBarcode } from "./barcode";
-import { barcodeLabels, normalizeBarcodeType } from "./formats";
+import {
+	barcodeLabels,
+	isGeneratableBarcode,
+	normalizeBarcodeType,
+} from "./formats";
 import {
 	describeCode,
 	type ParsedCode,
@@ -10,6 +14,7 @@ import {
 	type QRKind,
 	type ScanOnlyKind,
 } from "./payload";
+import { symbologyLabel } from "./symbology";
 
 /** What a code holds, as shown to the user: a payload kind, or "barcode". */
 export type DisplayKind = PayloadKind | "barcode";
@@ -25,12 +30,12 @@ export const qrKinds: QRKind[] = [
 	"vcard",
 	"event",
 	"geoPoint",
+	"payment",
 ];
 
 /** Kinds that only come from scans, after the ones the workshop offers. */
 export const scanOnlyKinds: ScanOnlyKind[] = [
 	"otp",
-	"payment",
 	"boardingPass",
 	"frenchDoc",
 	"app",
@@ -66,13 +71,17 @@ export const describeItem = (item: CodeItem): DescribedCode => {
 		parsed.kind === "text"
 			? classifyBarcode(format, data, createdAt)
 			: undefined;
+	// "GS1-128" or "ISBN" rather than the scanner's "Code 128" or "EAN-13".
+	const label = isGeneratableBarcode(format)
+		? symbologyLabel(format, data)
+		: (barcodeLabels[format] ?? String(format));
 	if (format !== "qr" && parsed.kind === "text") {
 		return {
 			kind: "barcode",
 			parsed,
 			barcode,
 			title: item.name || data,
-			subtitle: barcodeLabels[format] ?? String(format),
+			subtitle: label,
 		};
 	}
 	return {
@@ -83,6 +92,6 @@ export const describeItem = (item: CodeItem): DescribedCode => {
 		subtitle:
 			format === "qr"
 				? i18n.t(`app.kinds.${parsed.kind}`)
-				: `${barcodeLabels[format] ?? format} · ${i18n.t(`app.kinds.${parsed.kind}`)}`,
+				: `${label} · ${i18n.t(`app.kinds.${parsed.kind}`)}`,
 	};
 };

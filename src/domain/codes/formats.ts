@@ -33,8 +33,8 @@ export const barcodeLabels: Partial<Record<BarcodeType, string>> = {
 	qr: "QR",
 };
 
-/** Barcodes bwip-js can draw (QR codes are drawn by `@paulmillr/qr`). */
-export type GeneratableBarcode = Exclude<BarcodeType, "qr" | "code93">;
+/** Barcodes bwip-js can draw (QR codes are drawn by `qr`). */
+export type GeneratableBarcode = Exclude<BarcodeType, "qr">;
 
 /** bwip-js symbology ids. */
 export const bwipIds: Record<GeneratableBarcode, string> = {
@@ -42,6 +42,7 @@ export const bwipIds: Record<GeneratableBarcode, string> = {
 	codabar: "rationalizedCodabar",
 	code128: "code128",
 	code39: "code39",
+	code93: "code93",
 	datamatrix: "datamatrix",
 	ean13: "ean13",
 	ean8: "ean8",

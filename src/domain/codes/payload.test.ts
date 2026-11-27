@@ -478,6 +478,40 @@ describe("buildPayload", () => {
 	});
 });
 
+describe("buildPayload: EPC payments", () => {
+	it("writes an EPC v002 transfer, leaving out empty trailing fields", () => {
+		expect(
+			buildPayload("payment", {
+				name: "Ada Lovelace",
+				iban: "FR76 3000 6000 0112 3456 7890 189",
+			}),
+		).toBe("BCD\n002\n1\nSCT\n\nAda Lovelace\nFR7630006000011234567890189");
+	});
+
+	it("writes the amount in euros with two decimals, and the message last", () => {
+		expect(
+			buildPayload("payment", {
+				name: "Ada",
+				iban: "FR7630006000011234567890189",
+				amount: 5,
+				message: "Line one\nline two",
+			}).split("\n"),
+		).toEqual([
+			"BCD",
+			"002",
+			"1",
+			"SCT",
+			"",
+			"Ada",
+			"FR7630006000011234567890189",
+			"EUR5.00",
+			"",
+			"",
+			"Line one line two",
+		]);
+	});
+});
+
 describe("buildPayload → parseCode round trip", () => {
 	const cases: { [K in QRKind]: [QRFormValues[K], Partial<ParsedCode>] } = {
 		url: [{ url: "https://example.com/x" }, { url: "https://example.com/x" }],
@@ -534,6 +568,24 @@ describe("buildPayload → parseCode round trip", () => {
 		geoPoint: [
 			{ lat: -33.8568, lng: 151.2153, alt: 12 },
 			{ lat: -33.8568, lng: 151.2153, alt: 12 },
+		],
+		payment: [
+			{
+				name: "Ada Lovelace",
+				iban: "FR76 3000 6000 0112 3456 7890 189",
+				bic: "bnpafrpp",
+				amount: 12.5,
+				message: "Invoice 42",
+			},
+			{
+				standard: "epc",
+				name: "Ada Lovelace",
+				iban: "FR7630006000011234567890189",
+				bic: "BNPAFRPP",
+				amount: 12.5,
+				currency: "EUR",
+				message: "Invoice 42",
+			},
 		],
 	};
 

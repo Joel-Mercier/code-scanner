@@ -283,6 +283,11 @@ export default {
 				longitude: "2.2945",
 				altitude: "Facultatif",
 				content: "Que doit contenir le code-barres ?",
+				payee: "Marie Dupont",
+				iban: "FR76 3000 6000 0112 3456 7890 189",
+				bic: "Facultatif",
+				amount: "Facultatif, en euros",
+				reference: "Facture 42",
 			},
 			library: {
 				title: "Collection",
@@ -589,6 +594,19 @@ export default {
 				add_logo: "Ajouter un logo",
 				change_logo: "Changer de logo",
 				remove_logo: "Retirer le logo",
+				sturdy: "Code plus robuste",
+				sturdy_hint:
+					"Plus de points, mais il se lit encore usé, rayé ou en partie caché",
+				sturdy_logo: "Déjà au plus robuste : le logo l'exige",
+				shape: "Forme",
+				shape_square: "Carré",
+				shape_rectangle: "Rectangle",
+				isbn_invalid:
+					"ISBN non valide : vérifie les chiffres, le dernier est une clé de contrôle",
+				gs1_invalid:
+					"Écris les données GS1 valeur par valeur, chacune après son AI entre parenthèses : (01)…(17)…",
+				bic_invalid: "8 ou 11 lettres et chiffres",
+				amount_invalid: "Un montant comme 12,50",
 				save: "Ajouter à la collection",
 				saved: "Ajouté à ta collection",
 			},
@@ -597,6 +615,10 @@ export default {
 				ean8: "Petits produits, 8 chiffres",
 				upc_a: "Produits, États-Unis, 12 chiffres",
 				upc_e: "Petits produits, États-Unis, 8 chiffres",
+				isbn: "Livres et partitions",
+				gs1_128: "Étiquettes d'expédition : produit, lot, péremption",
+				code93: "Étiquettes compactes, lettres et chiffres",
+				gs1_datamatrix: "Médicaments et pièces : produit, lot, péremption",
 				code128: "Lettres et chiffres",
 				code39: "Étiquettes et badges",
 				itf14: "Cartons et palettes, 14 chiffres",
@@ -618,6 +640,12 @@ export default {
 				pdf417: "Jusqu'à 2335 caractères ASCII",
 				upc_a: "11 ou 12 chiffres",
 				upc_e: "7 ou 8 chiffres, commençant par 0 ou 1",
+				isbn: "ISBN-13 ou ISBN-10. Tape ses tirets comme sur le livre pour ajouter la ligne ISBN au-dessus des barres",
+				gs1_128:
+					"Chaque valeur après son AI entre parenthèses : (01) produit, (17) péremption AAMMJJ, (10) lot…",
+				code93: "Majuscules, chiffres, espace et - . $ / + %",
+				gs1_datamatrix:
+					"Chaque valeur après son AI entre parenthèses : (01) produit, (17) péremption AAMMJJ, (10) lot, (21) série…",
 			},
 			lock: {
 				settings_title: "Verrouillage",

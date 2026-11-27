@@ -90,7 +90,7 @@ export function ImportScreen() {
 		setBusy(true);
 		const found = [];
 		for (const image of images)
-			found.push(...(await findCodes(toUri(image.path))));
+			found.push(...(await findCodes(toUri(image.path), { thorough: true })));
 		setBusy(false);
 		if (found.length === 0) {
 			haptics.warning();

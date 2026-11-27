@@ -30,13 +30,16 @@ describe("normalizeBarcodeType", () => {
 });
 
 describe("format capabilities", () => {
-	it("draws QR codes and every bwip-js symbology, but not Code 93", () => {
+	it("draws QR codes and every format the scanner reads", () => {
 		expect(canRender("qr")).toBe(true);
-		for (const format of Object.keys(bwipIds)) {
-			expect(canRender(format as never)).toBe(true);
+		for (const format of scannableFormats) {
+			expect(canRender(format)).toBe(true);
 		}
-		expect(canRender("code93")).toBe(false);
+		for (const format of Object.keys(bwipIds)) {
+			expect(isGeneratableBarcode(format as never)).toBe(true);
+		}
 		expect(isGeneratableBarcode("qr")).toBe(false);
+		expect(canRender("maxicode" as never)).toBe(false);
 	});
 
 	it("tells linear barcodes from 2D ones", () => {
@@ -47,8 +50,7 @@ describe("format capabilities", () => {
 		expect(isLinearBarcode("aztec")).toBe(false);
 		expect(isLinearBarcode("datamatrix")).toBe(false);
 		expect(isLinearBarcode("pdf417")).toBe(false);
-		// Not drawable, so never drawn as bars.
-		expect(isLinearBarcode("code93")).toBe(false);
+		expect(isLinearBarcode("code93")).toBe(true);
 	});
 
 	it("has a label for every scannable format", () => {

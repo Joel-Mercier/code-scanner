@@ -42,6 +42,16 @@ describe("classifyBarcode", () => {
 		});
 	});
 
+	it("reads ISBNs written with their hyphens (made in the workshop)", () => {
+		expect(classifyBarcode("ean13", "978-2-07-061275-8")).toEqual({
+			type: "book",
+			gtin: "9782070612758",
+			isbn10: "2070612759",
+		});
+		// Hyphens only count for ISBNs: other product numbers stay digits.
+		expect(classifyBarcode("ean13", "590-1234-12345-7")).toBeUndefined();
+	});
+
 	it("recognises French medicines and codes that only mean something in one shop", () => {
 		expect(classifyBarcode("ean13", "3400930000120")).toMatchObject({
 			type: "medicine",

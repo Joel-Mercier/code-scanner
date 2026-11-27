@@ -16,6 +16,7 @@ import {
 	codeDefaults,
 	inkOf,
 	paperOf,
+	qrErrorCorrection,
 } from "@/domain/codes/style";
 import { useTheme } from "@/theme";
 import { type BarcodeGeometry, buildBarcode } from "./geometry/barcode";
@@ -37,8 +38,7 @@ export const buildGeometry = (
 			return {
 				type: "qr",
 				qr: buildQR(data, {
-					// A logo hides modules: high error correction keeps it readable.
-					ecc: style?.logo ? "high" : "medium",
+					ecc: qrErrorCorrection(style),
 					style: style?.dots ?? "dots",
 					logoRatio: style?.logo ? 0.24 : 0,
 				}),
@@ -47,7 +47,10 @@ export const buildGeometry = (
 		if (isGeneratableBarcode(format)) {
 			return {
 				type: "barcode",
-				barcode: buildBarcode(format, data, { includeText }),
+				barcode: buildBarcode(format, data, {
+					includeText,
+					shape: style?.shape,
+				}),
 				linear: isLinearBarcode(format),
 			};
 		}

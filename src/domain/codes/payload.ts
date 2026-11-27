@@ -9,6 +9,7 @@ import {
 	parsePayment,
 } from "./extraPayloads";
 import { decode, lineFields, queryParams, semicolonFields } from "./fields";
+import { compactIban } from "./iban";
 
 /** Payload kinds the workshop can create. */
 export type QRKind =
@@ -20,15 +21,11 @@ export type QRKind =
 	| "sms"
 	| "vcard"
 	| "event"
-	| "geoPoint";
+	| "geoPoint"
+	| "payment";
 
 /** Payload kinds that are only ever read from scans. */
-export type ScanOnlyKind =
-	| "otp"
-	| "payment"
-	| "boardingPass"
-	| "frenchDoc"
-	| "app";
+export type ScanOnlyKind = "otp" | "boardingPass" | "frenchDoc" | "app";
 
 export type PayloadKind = QRKind | ScanOnlyKind;
 
@@ -457,7 +454,19 @@ export type QRFormValues = {
 		start?: Date;
 	};
 	geoPoint: { lat: number; lng: number; alt?: number };
+	payment: {
+		name: string;
+		iban: string;
+		bic?: string;
+		/** In euros. */
+		amount?: number;
+		message?: string;
+	};
 };
+
+/** EPC fields are single lines. */
+const epcLine = (value?: string) =>
+	value?.replace(/\s*\n\s*/g, " ").trim() ?? "";
 
 export const buildPayload = <K extends QRKind>(
 	kind: K,
@@ -520,6 +529,26 @@ export const buildPayload = <K extends QRKind>(
 		case "geoPoint": {
 			const geo = v as QRFormValues["geoPoint"];
 			return `geo:${geo.lat},${geo.lng}${geo.alt !== undefined ? `,${geo.alt}` : ""}`;
+		}
+		case "payment": {
+			// EPC069-12 v002: a SEPA credit transfer, in UTF-8 (character set 1).
+			const pay = v as QRFormValues["payment"];
+			const lines = [
+				"BCD",
+				"002",
+				"1",
+				"SCT",
+				epcLine(pay.bic).toUpperCase(),
+				epcLine(pay.name),
+				compactIban(pay.iban),
+				pay.amount !== undefined ? `EUR${pay.amount.toFixed(2)}` : "",
+				"", // purpose code
+				"", // structured creditor reference
+				epcLine(pay.message),
+			];
+			// Empty trailing fields are left out.
+			while (lines.at(-1) === "") lines.pop();
+			return lines.join("\n");
 		}
 		default:
 			return "";

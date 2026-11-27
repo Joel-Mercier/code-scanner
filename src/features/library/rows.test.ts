@@ -11,15 +11,15 @@ import {
 } from "./rows";
 
 describe("kinds", () => {
-	it("lists the 9 QR kinds, 5 scan-only kinds, barcodes and documents", () => {
+	it("lists the 10 QR kinds, 4 scan-only kinds, barcodes and documents", () => {
 		expect(KINDS).toHaveLength(16);
 		expect(new Set(KINDS).size).toBe(16);
 	});
 
 	it("shows scan-only kinds in the strip once one is found", () => {
-		expect(stripKinds(new Set())).toHaveLength(11);
+		expect(stripKinds(new Set())).toHaveLength(12);
 		expect(stripKinds(new Set(["otp"]))).toContain("otp");
-		expect(stripKinds(new Set(["otp"]))).toHaveLength(12);
+		expect(stripKinds(new Set(["otp"]))).toHaveLength(13);
 	});
 
 	it("tells the kind of an item", () => {

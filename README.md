@@ -61,7 +61,7 @@
 - **Lists & sheets**: `@legendapp/list`, `@gorhom/bottom-sheet`
 - **Graphics & motion**: `@shopify/react-native-skia`, `react-native-reanimated` 4, `react-native-gesture-handler` 3, `expo-haptics`
 - **Camera & scanning**: `expo-camera` (live scanning, image scanning, document scanner)
-- **Code generation**: `@paulmillr/qr` (QR matrix), `bwip-js` (barcodes), both rendered as Skia paths
+- **Code generation**: `qr` (QR matrix), `bwip-js` (barcodes), both rendered as Skia paths
 - **State**: zustand persisted to `react-native-mmkv`; files in `expo-file-system`
 - **Validation**: zod (localised messages)
 - **i18n**: i18next / react-i18next

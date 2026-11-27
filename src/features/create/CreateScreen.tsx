@@ -4,7 +4,6 @@ import { useEffect, useEffectEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { validateBarcode } from "@/components/codes/geometry/barcode";
 import { kindIcons } from "@/components/codes/kindIcons";
 import { Button } from "@/components/ui/Button";
 import { Header } from "@/components/ui/Header";
@@ -14,9 +13,8 @@ import { StatusBar } from "@/components/ui/StatusBar";
 import { Text } from "@/components/ui/Text";
 import { toast } from "@/components/ui/Toast";
 import { useColorPicker } from "@/components/ui/useColorPicker";
-import { barcodeLabels, type GeneratableBarcode } from "@/domain/codes/formats";
 import type { QRKind } from "@/domain/codes/payload";
-import type { CodeStyle, QRDotStyle } from "@/domain/codes/style";
+import type { CodeShape, CodeStyle, QRDotStyle } from "@/domain/codes/style";
 import { attempt } from "@/lib/attempt";
 import { haptics } from "@/lib/haptics";
 import { persistLogo } from "@/services/logos";
@@ -28,7 +26,13 @@ import {
 	useSharedStyles,
 	useTheme,
 } from "@/theme";
-import { sampleBarcodes } from "./barcodeOptions";
+import {
+	type BarcodeChoice,
+	choiceFormat,
+	choiceLabel,
+	prepareBarcode,
+	sampleBarcodes,
+} from "./barcodeOptions";
 import { BarcodeContentField } from "./components/BarcodeContentField";
 import { CodePreview } from "./components/CodePreview";
 import { FormFields } from "./components/FormFields";
@@ -43,7 +47,7 @@ import {
 
 type Selection =
 	| { tab: "qr"; kind: QRKind }
-	| { tab: "barcode"; type: GeneratableBarcode };
+	| { tab: "barcode"; type: BarcodeChoice };
 
 const TEXT_MAX = 2000;
 
@@ -70,6 +74,8 @@ export function CreateScreen() {
 	const [paper, setPaper] = useState<string>("white");
 	const [dots, setDots] = useState<QRDotStyle>("rounded");
 	const [logo, setLogo] = useState<string | undefined>();
+	const [sturdy, setSturdy] = useState(false);
+	const [shape, setShape] = useState<CodeShape>("square");
 	const [saving, setSaving] = useState(false);
 
 	// Android's back button goes back to the type picker first.
@@ -91,7 +97,7 @@ export function CreateScreen() {
 		setTouched({});
 		setSelection({ tab: "qr", kind });
 	};
-	const pickBarcode = (type: GeneratableBarcode) => {
+	const pickBarcode = (type: BarcodeChoice) => {
 		setBarcodeContent(sampleBarcodes[type] ?? "");
 		setTouched({});
 		setSelection({ tab: "barcode", type });
@@ -99,32 +105,42 @@ export function CreateScreen() {
 
 	const qrValidation =
 		selection?.tab === "qr" ? validateQR(selection.kind, form) : null;
-	const barcodeError =
-		selection?.tab === "barcode"
-			? barcodeContent.trim()
-				? validateBarcode(selection.type, barcodeContent.trim())
-				: t("app.create.content_required")
-			: null;
-
-	const payload =
-		selection?.tab === "qr"
-			? qrValidation?.ok
-				? qrValidation.payload
-				: null
-			: selection && !barcodeError
-				? barcodeContent.trim()
-				: null;
 	const format: BarcodeType | null = selection
 		? selection.tab === "qr"
 			? "qr"
-			: selection.type
+			: choiceFormat(selection.type)
 		: null;
 	const style: CodeStyle = {
 		color: ink,
 		background: paper === "white" ? undefined : paper,
 		dots: selection?.tab === "qr" ? dots : undefined,
 		logo: selection?.tab === "qr" ? logo : undefined,
+		sturdy: selection?.tab === "qr" && sturdy ? true : undefined,
+		shape: format === "datamatrix" && shape !== "square" ? shape : undefined,
 	};
+	const barcode =
+		selection?.tab === "barcode" && barcodeContent.trim()
+			? prepareBarcode(selection.type, barcodeContent, { shape: style.shape })
+			: null;
+	const barcodeError =
+		selection?.tab !== "barcode"
+			? null
+			: !barcode
+				? t("app.create.content_required")
+				: barcode.ok
+					? null
+					: "key" in barcode.error
+						? t(`app.create.${barcode.error.key}`)
+						: barcode.error.message;
+
+	const payload =
+		selection?.tab === "qr"
+			? qrValidation?.ok
+				? qrValidation.payload
+				: null
+			: barcode?.ok
+				? barcode.data
+				: null;
 
 	const save = async () => {
 		if (!payload || !format || !selection) {
@@ -181,7 +197,7 @@ export function CreateScreen() {
 	const qr = selection.tab === "qr";
 	const selectionLabel = qr
 		? t(`app.kinds.${selection.kind}`)
-		: (barcodeLabels[selection.type] ?? selection.type);
+		: choiceLabel(selection.type);
 
 	return (
 		<View style={shared.screen}>
@@ -255,6 +271,9 @@ export function CreateScreen() {
 					onPaperChange={setPaper}
 					onDotsChange={setDots}
 					onLogoChange={setLogo}
+					shapes={format === "datamatrix"}
+					onSturdyChange={setSturdy}
+					onShapeChange={setShape}
 					onPickColor={colorPicker.open}
 				/>
 

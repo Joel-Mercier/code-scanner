@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { IconButton } from "@/components/ui/IconButton";
 import { Segmented } from "@/components/ui/Segmented";
+import { Switch } from "@/components/ui/Switch";
 import { Eyebrow, Text } from "@/components/ui/Text";
 import {
 	type CodeInk,
 	type CodePaper,
+	type CodeShape,
 	type CodeStyle,
 	codeInks,
 	codePapers,
@@ -25,15 +27,20 @@ import { ColorSwatches } from "./ColorSwatches";
 import { DotGlyph } from "./DotGlyph";
 
 const DOT_STYLES: QRDotStyle[] = ["square", "rounded", "dots"];
+const SHAPES: CodeShape[] = ["square", "rectangle"];
 
 type StylePanelProps = {
 	style: CodeStyle;
-	/** QR codes also get dot shapes and a logo. */
+	/** QR codes also get dot shapes, a logo and a sturdier build. */
 	qr: boolean;
+	/** Data Matrix codes can be square or rectangular. */
+	shapes: boolean;
 	onInkChange: (ink: string) => void;
 	onPaperChange: (paper: string) => void;
 	onDotsChange: (dots: QRDotStyle) => void;
 	onLogoChange: (logo: string | undefined) => void;
+	onSturdyChange: (sturdy: boolean) => void;
+	onShapeChange: (shape: CodeShape) => void;
 	/** Opens the custom colour picker. */
 	onPickColor: (request: {
 		title: string;
@@ -42,14 +49,20 @@ type StylePanelProps = {
 	}) => void;
 };
 
-/** The "Style" card: ink, paper, a scan-risk warning, dots and logo. */
+/**
+ * The "Style" card: ink, paper, a scan-risk warning; then dots, sturdiness
+ * and logo for QR codes, or the shape of a Data Matrix.
+ */
 export function StylePanel({
 	style,
 	qr,
+	shapes,
 	onInkChange,
 	onPaperChange,
 	onDotsChange,
 	onLogoChange,
+	onSturdyChange,
+	onShapeChange,
 	onPickColor,
 }: StylePanelProps) {
 	const shared = useSharedStyles();
@@ -125,6 +138,23 @@ export function StylePanel({
 					</Text>
 				</Animated.View>
 			)}
+			{shapes && (
+				<View style={styles.field}>
+					<Eyebrow>{t("app.create.shape")}</Eyebrow>
+					<Segmented
+						value={style.shape ?? "square"}
+						onChange={onShapeChange}
+						tone="tile"
+						height={48}
+						weight="medium"
+						accessibilityLabel={t("app.create.shape")}
+						options={SHAPES.map((value) => ({
+							value,
+							label: t(`app.create.shape_${value}`),
+						}))}
+					/>
+				</View>
+			)}
 			{qr && (
 				<>
 					<View style={styles.field}>
@@ -144,6 +174,26 @@ export function StylePanel({
 								),
 							}))}
 						/>
+					</View>
+					<View style={styles.sturdy}>
+						<View style={[shared.flex, styles.sturdyText]}>
+							<Text size={16}>{t("app.create.sturdy")}</Text>
+							<Text size={13} leading={1.4} color={colors.muted}>
+								{t(
+									style.logo
+										? "app.create.sturdy_logo"
+										: "app.create.sturdy_hint",
+								)}
+							</Text>
+						</View>
+						{/* A logo already needs the most error correction. */}
+						{!style.logo && (
+							<Switch
+								value={!!style.sturdy}
+								onChange={onSturdyChange}
+								accessibilityLabel={t("app.create.sturdy")}
+							/>
+						)}
 					</View>
 					<View style={styles.field}>
 						<Eyebrow>{t("app.create.logo")}</Eyebrow>
@@ -193,6 +243,8 @@ const useStyles = makeStyles(() => ({
 		gap: 22,
 	},
 	field: { gap: 10 },
+	sturdy: { flexDirection: "row", alignItems: "center", gap: 12 },
+	sturdyText: { gap: 4 },
 	logoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
 	logo: { width: 52, height: 52, borderRadius: radii.md },
 }));

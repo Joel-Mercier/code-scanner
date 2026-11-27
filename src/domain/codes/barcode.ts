@@ -12,6 +12,7 @@ import {
 	gtinCheckDigit,
 	parseElementString,
 } from "./gs1";
+import { isHyphenatedIsbn } from "./symbology";
 
 export type Gs1Data = {
 	type: "gs1";
@@ -294,7 +295,12 @@ export const classifyBarcode = (
 	raw: string,
 	now = new Date(),
 ): BarcodeInfo | undefined => {
-	const data = raw.trim();
+	const trimmed = raw.trim();
+	// ISBNs made in the workshop keep the hyphens printed above their bars.
+	const data =
+		format === "ean13" && isHyphenatedIsbn(trimmed)
+			? trimmed.replace(/-/g, "")
+			: trimmed;
 	if (PRODUCT_FORMATS.has(format) && /^\d+$/.test(data)) {
 		if (format === "upc_e") {
 			const upcA = expandUpcE(data);

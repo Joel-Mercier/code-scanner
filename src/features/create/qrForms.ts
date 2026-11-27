@@ -1,10 +1,12 @@
 import type { KeyboardTypeOptions } from "react-native";
 import * as z from "zod";
+import { compactIban, isValidIban } from "@/domain/codes/iban";
 import {
 	buildPayload,
 	type QRFormValues,
 	type QRKind,
 } from "@/domain/codes/payload";
+import i18n from "@/i18n";
 
 export type FieldValue = string | boolean | Date | undefined;
 export type FormState = Record<string, FieldValue>;
@@ -17,7 +19,7 @@ export type FieldDef =
 			placeholder?: string;
 			keyboard?: KeyboardTypeOptions;
 			multiline?: boolean;
-			autoCapitalize?: "none" | "sentences" | "words";
+			autoCapitalize?: "none" | "sentences" | "words" | "characters";
 			secure?: boolean;
 	  }
 	| { type: "encryption"; name: string; label: string }
@@ -26,6 +28,9 @@ export type FieldDef =
 
 const optionalText = z.string().trim().optional();
 const requiredNumber = z.string().trim().min(1).transform(Number);
+
+/** Messages of our own checks, in the current language when they fail. */
+const message = (key: string) => () => i18n.t(key);
 
 export const qrForms: Record<
 	QRKind,
@@ -222,6 +227,57 @@ export const qrForms: Record<
 				.pipe(z.number().optional()),
 		}),
 		initial: { lat: "", lng: "", alt: "" },
+	},
+	payment: {
+		fields: [
+			{ type: "text", name: "name", label: "payee", autoCapitalize: "words" },
+			{
+				type: "text",
+				name: "iban",
+				label: "iban",
+				autoCapitalize: "characters",
+			},
+			{ type: "text", name: "bic", label: "bic", autoCapitalize: "characters" },
+			{
+				type: "text",
+				name: "amount",
+				label: "amount",
+				keyboard: "decimal-pad",
+			},
+			{ type: "text", name: "message", label: "reference", multiline: true },
+		],
+		// EPC limits: 70 characters for the name, 140 for the message.
+		schema: z.object({
+			name: z.string().trim().min(1).max(70),
+			iban: z
+				.string()
+				.trim()
+				.refine(isValidIban, { error: message("app.fields.iban_invalid") })
+				.transform(compactIban),
+			bic: z
+				.string()
+				.trim()
+				.toUpperCase()
+				.regex(/^([A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?)?$/, {
+					error: message("app.create.bic_invalid"),
+				})
+				.optional(),
+			amount: z
+				.string()
+				.trim()
+				.regex(/^(\d{1,9}([.,]\d{1,2})?)?$/, {
+					error: message("app.create.amount_invalid"),
+				})
+				.transform((value) =>
+					value ? Number(value.replace(",", ".")) : undefined,
+				)
+				.refine((value) => value === undefined || value > 0, {
+					error: message("app.create.amount_invalid"),
+				})
+				.optional(),
+			message: optionalText.pipe(z.string().max(140).optional()),
+		}),
+		initial: { name: "", iban: "", bic: "", amount: "", message: "" },
 	},
 };
 
